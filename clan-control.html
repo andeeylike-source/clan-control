@@ -2200,12 +2200,15 @@
                 // Иначе — группируем по паку из ростера
                 const hasCommandChannel = cmdChannel.length > 0;
 
-                // Уникальный ID блока для раскрытия всех паков
+                // Уникальный ID блока
                 const blockId = 'leaders_' + dateStr.replace(/-/g,'');
+                const containerId = 'lc_' + dateStr.replace(/-/g,'');
+                const btnId = 'lb_' + dateStr.replace(/-/g,'');
 
                 const leadersHtml = hasCommandChannel ? cmdChannel.map((cc, idx) => {
                     const packName = Object.entries(packLeadersMap).find(([,l]) => l.toLowerCase() === cc.leader.toLowerCase())?.[0];
-                    // Берём игроков: приоритет screenPlayers по индексу, иначе по паку из ростера
+
+                    // Берём игроков: screenPlayers[idx] -> по паку из ростера -> из всех dayPlayers с этим паком
                     const screenParty = (dayData && dayData.screenPlayers) ? (dayData.screenPlayers[idx] || []) : [];
                     const rosterParty = packName
                         ? dayPlayers.filter(p => {
@@ -2213,26 +2216,31 @@
                             return rp && rp.pac === packName;
                           })
                         : [];
-                    const partyPlayers = screenParty.length > 0 ? screenParty : rosterParty;
+                    // Последний fallback — берём всех из dayPlayers у кого есть имя
+                    const partyPlayers = screenParty.length > 0 ? screenParty
+                                       : rosterParty.length > 0 ? rosterParty
+                                       : [];
 
                     const partyHtml = partyPlayers.length > 0 ? partyPlayers.map(p => {
                         const inRoster = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
                         const badge = !inRoster
-                            ? `<span title="Не в ростере" style="color:#f87171;font-size:11px;margin-left:4px">⚠️</span>`
-                            : (inRoster.pac === 'СОЛО' ? `<span style="font-size:9px;color:#64748b;background:#1e2530;padding:1px 5px;border-radius:3px;margin-left:4px">соло</span>` : '');
+                            ? `<span title="Не в ростере" style="color:#f87171;font-size:11px;margin-left:5px">⚠️</span>`
+                            : (inRoster.pac === 'СОЛО'
+                                ? `<span style="font-size:9px;color:#64748b;background:#1e2530;padding:1px 5px;border-radius:3px;margin-left:5px">соло</span>`
+                                : '');
                         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0b0e14;border-radius:6px;margin-bottom:4px;font-size:12px">
                             <span style="font-weight:600;display:flex;align-items:center">${p.name}${badge}</span>
-                            <span style="display:flex;gap:10px;color:#94a3b8">
+                            <span style="display:flex;gap:12px">
                                 <span style="color:#f59e0b">⚔️ ${p.kills||0}</span>
                                 <span style="color:#ef4444">💀 ${p.deaths||0}</span>
                                 <span style="color:#818cf8">🗡️ ${(p.pvp_dmg||0).toLocaleString()}</span>
                                 <span style="color:#22c55e">🐉 ${(p.pve_dmg||0).toLocaleString()}</span>
                             </span>
                         </div>`;
-                    }).join('') : '<div style="font-size:11px;color:#475569;padding:6px 12px">Нет данных скрина</div>';
+                    }).join('') : `<div style="font-size:11px;color:#475569;padding:6px 12px;font-style:italic">— список игроков появится после нового анализа скринов</div>`;
 
-                    return `<div class="pack-block-${blockId}" style="border:1px solid #1e2530;border-radius:10px;margin-bottom:8px;overflow:hidden">
-                        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.arr').textContent=this.nextElementSibling.style.display==='none'?'▼':'▲'"
+                    return `<div style="border:1px solid #1e2530;border-radius:10px;margin-bottom:6px;overflow:hidden">
+                        <div onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='block'?'none':'block';this.querySelector('.arr').textContent=b.style.display==='block'?'▲':'▼'"
                              style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#1a1f29;cursor:pointer">
                             <div style="display:flex;align-items:center;gap:10px">
                                 <span style="font-weight:800;font-size:13px">${cc.leader}</span>
@@ -2244,12 +2252,10 @@
                                 <span style="color:#ef4444">💀 ${cc.deaths||0}</span>
                                 <span style="color:#818cf8">🗡️ ${(cc.pvp_dmg||0).toLocaleString()}</span>
                                 <span style="color:#22c55e">🐉 ${(cc.pve_dmg||0).toLocaleString()}</span>
-                                <span class="arr" style="color:#475569;font-size:10px;width:12px">▼</span>
+                                <span class="arr" style="color:#475569;font-size:10px;margin-left:4px">▼</span>
                             </div>
                         </div>
-                        <div style="display:none;padding:8px">
-                            ${partyHtml}
-                        </div>
+                        <div style="display:none;padding:8px">${partyHtml}</div>
                     </div>`;
                 }).join('') : '';
 
@@ -2266,22 +2272,19 @@
                         <button onclick="openCalendarDay('${dateStr}')" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Открыть в календаре</button>
                     </div>
                     ${hasCommandChannel ? `
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
                             <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700">⚔️ Лидеры паков</div>
-                            <button onclick="(function(){
-                                const blocks = document.querySelectorAll('.pack-block-${blockId}');
-                                const allOpen = [...blocks].every(b => b.querySelector('div:last-child').style.display !== 'none');
-                                blocks.forEach(b => {
-                                    const body = b.querySelector('div:last-child');
-                                    const arr = b.querySelector('.arr');
-                                    body.style.display = allOpen ? 'none' : 'block';
-                                    if(arr) arr.textContent = allOpen ? '▼' : '▲';
-                                });
-                                this.textContent = allOpen ? '▼ Раскрыть все' : '▲ Свернуть все';
-                            }).call(this)"
-                            style="background:#1e2530;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:4px 12px;font-size:11px;cursor:pointer">▼ Раскрыть все</button>
+                            <button id="${btnId}" onclick="(function(btn){
+                                var c=document.getElementById('${containerId}');
+                                var open=c.style.display!=='none';
+                                c.style.display=open?'none':'block';
+                                btn.textContent=open?'▼ Показать паки':'▲ Скрыть паки';
+                            })(this)"
+                            style="background:#1e2530;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:4px 12px;font-size:11px;cursor:pointer">▲ Скрыть паки</button>
                         </div>
+                        <div id="${containerId}">
                         ${leadersHtml}
+                        </div>
                     ` : topKills.length > 0 ? `
                         <div style="font-size:11px;color:#64748b;margin-bottom:8px;text-transform:uppercase;font-weight:700">🏆 Топ убийств</div>
                         <div style="display:flex;flex-wrap:wrap;gap:6px">
