@@ -2113,12 +2113,15 @@
                     if (!exists) mergedPlayers.push({...old});
                 });
             }
+            // Мёржим screenPlayersMap — сохраняем паки из предыдущего анализа
+            const mergedScreenMap = Object.assign({}, prevSnap ? (prevSnap.screenPlayersMap || {}) : {}, dayScreenPlayersMap || {});
+
             appliedStatsByDate[dateStr] = {
                 players: mergedPlayers,
                 raidTotal: dayExpectedTotal,
                 commandChannel: dayCommandChannel || [],
-                packLeaders: dayPackLeaders || {},
-                screenPlayersMap: dayScreenPlayersMap || {},
+                packLeaders: Object.assign({}, prevSnap ? (prevSnap.packLeaders || {}) : {}, dayPackLeaders || {}),
+                screenPlayersMap: mergedScreenMap,
                 appliedAt: new Date().toISOString()
             };
             // Суммируем по всем датам (каждая дата уже содержит max значения)
