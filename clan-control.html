@@ -286,7 +286,7 @@
 
     <aside class="sidebar">
         <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:10px;color:#22c55e;background:#14532d22;border:1px solid #22c55e44;border-radius:4px;padding:2px 8px;margin-bottom:32px;display:inline-block">v2 · total_count fix</div>
+        
         <nav>
             <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
             <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
@@ -1775,6 +1775,7 @@
             const allPlayers = {};
             let firstError = null;
             const skippedScreenshots = []; // лог пропущенных скриншотов
+            let expectedTotal = null; // ожидаемое кол-во игроков из командного канала
 
             for (let i = 0; i < shots.length; i++) {
                 const shot = shots[i];
@@ -1782,6 +1783,7 @@
                 const mediaType = shot.dataUrl.split(';')[0].split(':')[1] || 'image/png';
 
                 try {
+                    const isFirst = (i === 0);
                     const geminiPrompt = `Это скриншот из игры Lineage 2. На экране ДВА окна рядом.
 
 ЛЕВОЕ ОКНО (нужное) — называется по имени пака/группы (например "NKIZIMO"):
@@ -1791,19 +1793,20 @@
 - Таблица "Член группы" с колонками: имя | иконка класса | × | 💀 | PvP урон | PvE урон
 - Содержит 5-9 обычных игроков
 
-ПРАВОЕ ОКНО (ИГНОРИРОВАТЬ) — называется "Командный канал":
+ПРАВОЕ ОКНО — называется "Командный канал":
 - Заголовок: "Командный канал"
-- Строка: "Состав: N груп. / N чел." (число ГРУПП)  
+- Строка: "Состав: N груп. / N чел. / N рядом" — здесь N чел. = ОБЩЕЕ число игроков всего рейда
 - Таблица с колонками: Лидер | 👥(число) | × | 💀 | PvP урон | PvE урон
 - Каждая строка = лидер целого пака, не рядовой игрок
 
-ИЗВЛЕКИ ТОЛЬКО игроков из ЛЕВОГО окна "Член группы".
+ИЗВЛЕКИ ТОЛЬКО игроков из ЛЕВОГО окна "Член группы".${isFirst ? `
+Также прочитай из ПРАВОГО окна строку "Состав" и извлеки общее число игроков (N чел.).` : ''}
 
 Верни ТОЛЬКО JSON без markdown:
-{"total_count":8,"players":[{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
+{"total_count":8,${isFirst ? '"raid_total":92,' : ''}"players":[{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
 
 Требования:
-- total_count = сколько строк игроков ты видишь в таблице "Член группы" (включая тех кого не смог прочитать)
+- total_count = сколько строк игроков ты видишь в таблице "Член группы" (включая тех кого не смог прочитать)${isFirst ? '\n- raid_total = число после "/ N чел." в строке Состав правого окна "Командный канал"' : ''}
 - Имена точно как написано (регистр важен)
 - kills = число в колонке × , deaths = число в колонке 💀/череп
 - pvp_dmg и pve_dmg = числа из соответствующих колонок
@@ -1873,6 +1876,12 @@
 
                     // Поддержка нового формата {total_count, players} и старого формата []
                     const players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+
+                    // Сохраняем raid_total с первого скриншота
+                    if (i === 0 && parsed.raid_total) {
+                        expectedTotal = parsed.raid_total;
+                        console.log(`Командный канал: ожидается ${expectedTotal} игроков`);
+                    }
                     const totalCount = parsed.total_count || players.length;
 
                     if (Array.isArray(players)) {
@@ -1950,10 +1959,18 @@
 
                 // Формируем итоговый счётчик
                 let statusMsg = `✅ Готово: ${dayLastParsed.length} уникальных игроков из ${shots.length} скриншотов`;
-                if (skippedScreenshots.length > 0) {
-                    statusMsg += ` | ⚠️ Пропущено: ${skippedScreenshots.length} скриншот(а) — №${skippedScreenshots.map(s => s.num + ' (' + s.reason + ')').join(', №')}`;
+                if (expectedTotal) {
+                    const diff = expectedTotal - dayLastParsed.length;
+                    if (diff > 0) {
+                        statusMsg += ` | ⚠️ Ожидалось ${expectedTotal} (из командного канала) — не хватает ${diff} чел.`;
+                    } else {
+                        statusMsg += ` | ✅ Все ${expectedTotal} найдены`;
+                    }
                 }
-                setDayStatus(skippedScreenshots.length > 0 ? 'warning' : 'success', statusMsg);
+                if (skippedScreenshots.length > 0) {
+                    statusMsg += ` | Пропущено скриншотов: ${skippedScreenshots.length} — №${skippedScreenshots.map(s => s.num + ' (' + s.reason + ')').join(', №')}`;
+                }
+                setDayStatus(skippedScreenshots.length > 0 || (expectedTotal && expectedTotal > dayLastParsed.length) ? 'warning' : 'success', statusMsg);
             });
         }
 
