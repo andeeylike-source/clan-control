@@ -1692,6 +1692,48 @@
         // ===== СИСТЕМА АЛИАСОВ =====
         let nickAliases = {}; // { "бос": "6oc" } — ключи в нижнем регистре
 
+        // Нормализация ников для визуального сравнения (латиница ↔ кириллица, цифры ↔ буквы)
+        function normalizeNick(name) {
+            let s = name;
+            // Многосимвольные паттерны (порядок важен — сначала длиннее)
+            s = s.replace(/[Ii][Ii][Ii]/g, 'ш');  // III → Ш
+            s = s.replace(/[lL][lL][lL]/g, 'ш');  // lll → Ш
+            s = s.replace(/[Jj][lL]/g,     'л');  // Jl → Л
+            s = s.replace(/[lL][Jj]/g,     'л');  // lJ → Л
+            s = s.replace(/[Ii][Ii]/g,     'й');  // II → Й
+            s = s.replace(/[lL][lL]/g,     'й');  // ll → Й
+            s = s.replace(/\/\//g,         'й');  // // → Й
+            s = s.replace(/\|\|/g,         'й');  // || → Й
+            // Посимвольная таблица замен
+            const map = {
+                // Цифры → буквы
+                '0':'о',  // 0 → О
+                '3':'з',  // 3 → З (зеркальное З)
+                '4':'ч',  // 4 → Ч (иногда)
+                '6':'б',  // 6 → Б (иногда)
+                '8':'в',  // 8 → В (иногда)
+                // Латиница → кириллица (строчные)
+                'a':'а', 'e':'е', 'o':'о', 'p':'р', 'c':'с', 'd':'д', 'g':'г', 'z':'з', 'f':'ф', 's':'с', 'q':'я',
+                'x':'х', 'y':'у', 'b':'ь', 'h':'н', 'k':'к',
+                'm':'м', 't':'т', 'u':'и', 'n':'п', 'r':'г',
+                'i':'и', 'l':'л', 'w':'ш', 'v':'у', 'j':'й',
+                // Латиница → кириллица (заглавные)
+                'A':'а', 'E':'е', 'O':'о', 'P':'р', 'C':'с', 'D':'д', 'G':'г', 'Z':'з', 'F':'ф', 'S':'с', 'Q':'я',
+                'X':'х', 'Y':'у', 'B':'в', 'H':'н', 'K':'к',
+                'M':'м', 'T':'т', 'U':'и', 'N':'п', 'R':'г',
+                'I':'и', 'L':'л', 'W':'ш', 'V':'у', 'J':'й',
+                // Кириллица → латиница (нормализуем всё к одному виду)
+                'А':'а', 'Е':'е', 'О':'о', 'Р':'р', 'С':'с',
+                'Х':'х', 'У':'у', 'В':'в', 'Н':'н', 'К':'к',
+                'М':'м', 'Т':'т', 'И':'и', 'Й':'й', 'З':'з',
+                'Б':'б', 'Л':'л', 'Ш':'ш', 'Щ':'щ', 'Ч':'ч',
+                'Ж':'ж', 'Ф':'ф', 'Д':'д', 'Г':'г', 'Ю':'ю',
+                'Я':'я', 'Ь':'ь', 'Ъ':'ъ', 'Э':'э', 'Ё':'е',
+                'П':'п', 'Ц':'ц', 'Ъ':'ъ', 'Ы':'ы',
+            };
+            return s.split('').map(ch => map[ch] !== undefined ? map[ch] : ch.toLowerCase()).join('');
+        }
+
         function levenshtein(a, b) {
             const m = a.length, n = b.length;
             const dp = Array.from({length:m+1}, (_,i) => Array.from({length:n+1}, (_,j) => j===0?i:0));
@@ -1706,11 +1748,14 @@
         }
 
         function findSimilarNick(name) {
-            const low = name.toLowerCase();
+            const normName = normalizeNick(name);
             let best = null, bestDist = Infinity;
             for (const p of roster) {
-                const dist = levenshtein(low, p.name.toLowerCase());
-                if (dist > 0 && dist <= 3 && dist < bestDist) { bestDist = dist; best = p; }
+                const normRoster = normalizeNick(p.name);
+                // Точное совпадение после нормализации — это тот же игрок
+                if (normName === normRoster && name.toLowerCase() !== p.name.toLowerCase()) return p;
+                const dist = levenshtein(normName, normRoster);
+                if (dist > 0 && dist <= 4 && dist < bestDist) { bestDist = dist; best = p; }
             }
             return best;
         }
@@ -2018,7 +2063,7 @@
         function renderDayAnalyzedPlayers(players) {
             const list = document.getElementById('dayAnalyzedPlayersList');
             list.innerHTML = players.map((p, i) => {
-                const inRoster = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                const inRoster = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                 const isNew = !inRoster;
                 const pacLabel = inRoster ? (inRoster.pac || 'СОЛО') : '';
                 const badgeBg = isNew ? '#22c55e' : '#475569';
@@ -2057,7 +2102,7 @@
             const newPlayers = [];
             if (prev && prev.players) {
                 dayLastParsed.forEach(p => {
-                    const oldP = prev.players.find(o => o.name.toLowerCase() === p.name.toLowerCase());
+                    const oldP = prev.players.find(o => normalizeNick(o.name) === normalizeNick(p.name));
                     if (!oldP) {
                         newPlayers.push(p.name);
                     } else {
@@ -2073,7 +2118,7 @@
             let newCount = 0;
             dayLastParsed.forEach(p => {
                 const nameLower = p.name.toLowerCase();
-                const existing = roster.find(r => r.name.toLowerCase() === nameLower);
+                const existing = roster.find(r => normalizeNick(r.name) === normalizeNick(name));
                 if (!existing) {
                     roster.push({
                         id: Date.now() + Math.random(),
@@ -2097,7 +2142,7 @@
             if (prevSnap && prevSnap.players) {
                 // Для каждого игрока в новом снапшоте — берём max с предыдущим
                 mergedPlayers = mergedPlayers.map(p => {
-                    const old = prevSnap.players.find(o => o.name.toLowerCase() === p.name.toLowerCase());
+                    const old = prevSnap.players.find(o => normalizeNick(o.name) === normalizeNick(p.name));
                     if (!old) return p;
                     return {
                         ...p,
@@ -2127,7 +2172,7 @@
             // Суммируем по всем датам (каждая дата уже содержит max значения)
             Object.values(appliedStatsByDate).forEach(snap => {
                 snap.players.forEach(p => {
-                    const r = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                    const r = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                     if (r) {
                         r.kills   = (r.kills   || 0) + (p.kills   || 0);
                         r.deaths  = (r.deaths  || 0) + (p.deaths  || 0);
@@ -2243,7 +2288,7 @@
                     if (!hasStats) {
                         // Снапшот старый — берём статистику из ростера по именам
                         dayPlayers = dayPlayers.map(p => {
-                            const r = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                            const r = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                             return r ? { ...p, kills: r.kills||0, deaths: r.deaths||0, pvp_dmg: r.pvp_dmg||0, pve_dmg: r.pve_dmg||0 } : p;
                         });
                     }
@@ -2319,7 +2364,7 @@
                     }
                     const rosterParty = packName
                         ? dayPlayers.filter(p => {
-                            const rp = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                            const rp = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                             return rp && rp.pac && rp.pac.toLowerCase() === packName.toLowerCase();
                           })
                         : [];
@@ -2328,7 +2373,7 @@
                                        : [];
 
                     const partyHtml = partyPlayers.length > 0 ? partyPlayers.map(p => {
-                        const inRoster = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                        const inRoster = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                         const notInRoster = !inRoster;
                         const pacLabel = inRoster && inRoster.pac === 'СОЛО' ? 'соло' : (inRoster ? inRoster.pac : '');
                         const badgeHtml = notInRoster
@@ -2498,7 +2543,7 @@
         function renderParsedPlayers(players) {
             const container = document.getElementById('screenshotParsedPlayers');
             container.innerHTML = players.map(p => {
-                const inRoster = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                const inRoster = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                 const isNew = !inRoster;
                 return `
                     <div class="flex items-center justify-between bg-[#1a1f29] rounded-lg px-3 py-2 border border-[#1e2530]">
@@ -2522,7 +2567,7 @@
             let newCount = 0, updCount = 0;
 
             lastParsedPlayers.forEach(p => {
-                const existing = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                const existing = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
                 if (existing) {
                     // Суммируем статистику
                     existing.kills   = (existing.kills   || 0) + (p.kills   || 0);
