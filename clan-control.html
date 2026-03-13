@@ -1773,6 +1773,7 @@
 
             const allPlayers = {};
             let firstError = null;
+            const skippedScreenshots = []; // лог пропущенных скриншотов
 
             for (let i = 0; i < shots.length; i++) {
                 const shot = shots[i];
@@ -1798,9 +1799,10 @@
 ИЗВЛЕКИ ТОЛЬКО игроков из ЛЕВОГО окна "Член группы".
 
 Верни ТОЛЬКО JSON без markdown:
-[{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]
+{"total_count":8,"players":[{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
 
 Требования:
+- total_count = сколько строк игроков ты видишь в таблице "Член группы" (включая тех кого не смог прочитать)
 - Имена точно как написано (регистр важен)
 - kills = число в колонке × , deaths = число в колонке 💀/череп
 - pvp_dmg и pve_dmg = числа из соответствующих колонок
@@ -1859,21 +1861,33 @@
                     const rawText = (data.choices?.[0]?.message?.content || data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
                     const text = rawText.replace(/```json|```/g, '').trim();
 
-                    let players;
+                    let parsed;
                     try {
-                        players = JSON.parse(text);
+                        parsed = JSON.parse(text);
                     } catch(parseErr) {
                         console.warn(`Скриншот ${i+1}: не удалось распарсить JSON:`, text.slice(0,200));
+                        skippedScreenshots.push({ num: i+1, reason: 'ошибка парсинга JSON' });
                         continue;
                     }
+
+                    // Поддержка нового формата {total_count, players} и старого формата []
+                    const players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    const totalCount = parsed.total_count || players.length;
 
                     if (Array.isArray(players)) {
                         // Защита: один пак = максимум 12 игроков
                         // Если больше — Gemini прочитал правую таблицу "Командный канал", пропускаем
                         if (players.length > 10) {
                             console.warn(`Скриншот ${i+1}: AI вернул ${players.length} игроков — похоже прочитал командный канал, пропускаем`);
+                            skippedScreenshots.push({ num: i+1, reason: `AI вернул ${players.length} строк (лимит 10)` });
                             setDayStatus('warning', `⚠️ Скриншот ${i+1}: AI распознал ${players.length} строк — слишком много для одного пака. Пропущен.`);
                             continue;
+                        }
+                        // Проверяем потери: AI видел больше строк чем вернул
+                        if (totalCount > players.length) {
+                            const lost = totalCount - players.length;
+                            console.warn(`Скриншот ${i+1}: AI видел ${totalCount} игроков, вернул только ${players.length} — потеряно ${lost}`);
+                            skippedScreenshots.push({ num: i+1, reason: `AI видел ${totalCount} игроков, распознал только ${players.length} (потеряно ${lost})` });
                         }
                         players.forEach(p => {
                             if (!p.name) return;
@@ -1932,7 +1946,13 @@
             checkSimilarNicks(dayLastParsed, () => {
                 renderDayAnalyzedPlayers(dayLastParsed);
                 document.getElementById('dayAnalyzeResults').style.display = '';
-                setDayStatus('success', `✅ Готово: ${dayLastParsed.length} уникальных игроков`);
+
+                // Формируем итоговый счётчик
+                let statusMsg = `✅ Готово: ${dayLastParsed.length} уникальных игроков из ${shots.length} скриншотов`;
+                if (skippedScreenshots.length > 0) {
+                    statusMsg += ` | ⚠️ Пропущено: ${skippedScreenshots.length} скриншот(а) — №${skippedScreenshots.map(s => s.num + ' (' + s.reason + ')').join(', №')}`;
+                }
+                setDayStatus(skippedScreenshots.length > 0 ? 'warning' : 'success', statusMsg);
             });
         }
 
@@ -2038,7 +2058,7 @@
             };
             el.style.cssText = `display:block;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:8px;${colors[type]}`;
             el.innerText = text;
-            if (type !== 'loading') setTimeout(() => { if(el) el.style.display = 'none'; }, 5000);
+            if (type !== 'loading') setTimeout(() => { if(el) el.style.display = 'none'; }, type === 'warning' ? 12000 : 5000);
         }
 
         // ===== СКРИНШОТЫ КМ =====
