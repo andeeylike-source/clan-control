@@ -927,6 +927,8 @@
                 });
             });
         }
+
+        function toggleEventDone(dateStr, eventKey) {
             const fullKey = dateStr + '|' + eventKey;
             // Пишем в pending — не сохраняется до нажатия "Сохранить"
             if (pendingStatuses[fullKey]) {
