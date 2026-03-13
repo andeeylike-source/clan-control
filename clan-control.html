@@ -605,7 +605,7 @@
             </div>
 
             <!-- Статус обработки -->
-            <div id="dayScreenshotStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:8px"></div>
+            <div id="dayScreenshotStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:8px;position:relative;padding-right:28px"><span id="dayScreenshotStatusText"></span><button onclick="document.getElementById('dayScreenshotStatus').style.display='none'" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:0.6;line-height:1" title="Закрыть">✕</button></div>
 
             <!-- Результаты анализа -->
             <div id="dayAnalyzeResults" style="display:none;margin-bottom:8px">
@@ -1606,6 +1606,7 @@
 
 
         let dayLastParsed = []; // результат анализа для текущего дня
+        let dayExpectedTotal = null; // raid_total из командного канала
 
         // ===== ПУЛ API КЛЮЧЕЙ GEMINI (из localStorage) =====
         function getGeminiKeys() {
@@ -1923,6 +1924,7 @@
             }
 
             dayLastParsed = Object.values(allPlayers);
+            dayExpectedTotal = expectedTotal;
 
             btn.disabled = false;
             btn.innerText = '🔍 Анализировать';
@@ -2002,34 +2004,59 @@
             }).join('');
         }
 
+        // Хранит уже применённую статистику по датам для сравнения и защиты от двойного счёта
+        // { [dateStr]: { players: [{name, kills, deaths, pvp_dmg, pve_dmg}], raidTotal, appliedAt } }
+        let appliedStatsByDate = {};
+
         function applyDayParsedStats() {
             if (!dayLastParsed.length) return;
-            let newCount = 0, updCount = 0, skippedCount = 0;
+            const dateStr = activeDayDate;
+            const prev = appliedStatsByDate[dateStr];
 
+            // ===== ЗАЩИТА ОТ ДВОЙНОГО СЧЁТА =====
+            // Если уже применяли для этой даты — сначала вычитаем старую стату, потом добавляем новую
+            if (prev && prev.players) {
+                prev.players.forEach(old => {
+                    const existing = roster.find(r => r.name.toLowerCase() === old.name.toLowerCase());
+                    if (existing) {
+                        existing.kills   = Math.max(0, (existing.kills   || 0) - (old.kills   || 0));
+                        existing.deaths  = Math.max(0, (existing.deaths  || 0) - (old.deaths  || 0));
+                        existing.pvp_dmg = Math.max(0, (existing.pvp_dmg || 0) - (old.pvp_dmg || 0));
+                        existing.pve_dmg = Math.max(0, (existing.pve_dmg || 0) - (old.pve_dmg || 0));
+                    }
+                });
+            }
+
+            // ===== СРАВНЕНИЕ С ПРОШЛЫМ АНАЛИЗОМ (несостыковки) =====
+            const mismatches = [];
+            const newPlayers = [];
+            if (prev && prev.players) {
+                dayLastParsed.forEach(p => {
+                    const oldP = prev.players.find(o => o.name.toLowerCase() === p.name.toLowerCase());
+                    if (!oldP) {
+                        newPlayers.push(p.name); // был пропущен в прошлый раз
+                    } else {
+                        // Проверяем расхождения
+                        const fields = [['kills','⚔️'],['deaths','💀'],['pvp_dmg','🗡️'],['pve_dmg','🐉']];
+                        const diffs = fields.filter(([k]) => (p[k]||0) !== (oldP[k]||0))
+                            .map(([k,icon]) => `${icon} ${oldP[k]||0}→${p[k]||0}`);
+                        if (diffs.length) mismatches.push(`${p.name}: ${diffs.join(', ')}`);
+                    }
+                });
+            }
+
+            // ===== ПРИМЕНЯЕМ НОВУЮ СТАТУ =====
+            let newCount = 0, updCount = 0;
             dayLastParsed.forEach(p => {
                 const nameLower = p.name.toLowerCase();
-                // Ищем игрока в ростере (точное совпадение по нику)
                 const existing = roster.find(r => r.name.toLowerCase() === nameLower);
-
                 if (existing) {
-                    // Проверяем: игрок должен состоять в паке (не СОЛО)
-                    // Статистика пака — только участники паков
-                    if (existing.pac && existing.pac !== 'СОЛО') {
-                        existing.kills   = (existing.kills   || 0) + (p.kills   || 0);
-                        existing.deaths  = (existing.deaths  || 0) + (p.deaths  || 0);
-                        existing.pvp_dmg = (existing.pvp_dmg || 0) + (p.pvp_dmg || 0);
-                        existing.pve_dmg = (existing.pve_dmg || 0) + (p.pve_dmg || 0);
-                        updCount++;
-                    } else {
-                        // Игрок в ростере но СОЛО — тоже обновляем статистику
-                        existing.kills   = (existing.kills   || 0) + (p.kills   || 0);
-                        existing.deaths  = (existing.deaths  || 0) + (p.deaths  || 0);
-                        existing.pvp_dmg = (existing.pvp_dmg || 0) + (p.pvp_dmg || 0);
-                        existing.pve_dmg = (existing.pve_dmg || 0) + (p.pve_dmg || 0);
-                        updCount++;
-                    }
+                    existing.kills   = (existing.kills   || 0) + (p.kills   || 0);
+                    existing.deaths  = (existing.deaths  || 0) + (p.deaths  || 0);
+                    existing.pvp_dmg = (existing.pvp_dmg || 0) + (p.pvp_dmg || 0);
+                    existing.pve_dmg = (existing.pve_dmg || 0) + (p.pve_dmg || 0);
+                    updCount++;
                 } else {
-                    // Нет в ростере — добавляем как NEW (возможно из чужого пака/клана)
                     roster.push({
                         id: Date.now() + Math.random(),
                         name: p.name,
@@ -2047,9 +2074,20 @@
                 }
             });
 
-            let msg = `✅ Обновлено: ${updCount}`;
-            if (newCount > 0) msg += `, новых в ростере: ${newCount} (NEW)`;
-            setDayStatus('success', msg);
+            // Сохраняем снапшот применённой статистики по дате
+            appliedStatsByDate[dateStr] = {
+                players: dayLastParsed.map(p => ({...p})),
+                raidTotal: dayExpectedTotal,
+                appliedAt: new Date().toISOString()
+            };
+
+            // Формируем итоговый статус
+            let msg = prev ? `🔄 Перезаписано (двойной счёт защищён)` : `✅ Обновлено: ${updCount}`;
+            if (newCount > 0) msg += ` · +${newCount} новых (NEW)`;
+            if (newPlayers.length > 0) msg += ` · 🆕 Найдены пропавшие: ${newPlayers.join(', ')}`;
+            if (mismatches.length > 0) msg += ` · ⚠️ Несостыковки: ${mismatches.join(' | ')}`;
+            setDayStatus(mismatches.length || newPlayers.length ? 'warning' : 'success', msg);
+
             document.getElementById('dayAnalyzeResults').style.display = 'none';
             dayLastParsed = [];
 
@@ -2067,16 +2105,18 @@
 
         function setDayStatus(type, text) {
             const el = document.getElementById('dayScreenshotStatus');
-            if (!el) return;
+            const textEl = document.getElementById('dayScreenshotStatusText');
+            if (!el || !textEl) return;
             const colors = {
                 loading: 'background:#1e1b4b;border:1px solid #6366f144;color:#a5b4fc',
                 success: 'background:#14532d22;border:1px solid #22c55e44;color:#4ade80',
                 warning: 'background:#78350f22;border:1px solid #f59e0b44;color:#fbbf24',
                 error:   'background:#7f1d1d22;border:1px solid #ef444444;color:#f87171'
             };
-            el.style.cssText = `display:block;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:8px;${colors[type]}`;
-            el.innerText = text;
-            if (type !== 'loading') setTimeout(() => { if(el) el.style.display = 'none'; }, type === 'warning' ? 12000 : 5000);
+            el.style.cssText = `display:block;font-size:12px;padding:8px 28px 8px 12px;border-radius:8px;margin-bottom:8px;position:relative;${colors[type]}`;
+            textEl.innerText = text;
+            // Только loading исчезает само — остальные закрываются крестиком
+            if (type === 'loading') setTimeout(() => { if(el && textEl.innerText === text) el.style.display = 'none'; }, 30000);
         }
 
         // ===== СКРИНШОТЫ КМ =====
@@ -2118,31 +2158,77 @@
                     return ov ? ov.title : e.title;
                 }).join(' · ');
 
-                // Участники — игроки у которых есть статистика (из ростера)
-                // Показываем топ по kills за всё время — история по датам будет в следующей версии
-                // Пока показываем кто вообще в ростере
-                const members = roster.filter(p => p.pac !== 'СОЛО' && (p.kills || p.deaths || p.pvp_dmg));
-                const topPlayers = [...members].sort((a,b) => (b.kills||0)-(a.kills||0)).slice(0,5);
+                // Данные из применённой статистики за этот день
+                const dayData = appliedStatsByDate[dateStr];
+                const dayPlayers = dayData ? dayData.players : [];
+                const raidTotal = dayData ? dayData.raidTotal : null;
+                const recognized = dayPlayers.length;
+                const missing = raidTotal ? raidTotal - recognized : null;
+
+                // Группируем по паку (из ростера)
+                const byPack = {};
+                dayPlayers.forEach(p => {
+                    const rp = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                    const packName = (rp && rp.pac && rp.pac !== 'СОЛО') ? rp.pac : 'СОЛО/NEW';
+                    if (!byPack[packName]) byPack[packName] = { kills:0, deaths:0, pvp_dmg:0, pve_dmg:0, count:0 };
+                    byPack[packName].kills   += p.kills   || 0;
+                    byPack[packName].deaths  += p.deaths  || 0;
+                    byPack[packName].pvp_dmg += p.pvp_dmg || 0;
+                    byPack[packName].pve_dmg += p.pve_dmg || 0;
+                    byPack[packName].count++;
+                });
+
+                // Топ игроков за этот день
+                const topKills = [...dayPlayers].sort((a,b)=>(b.kills||0)-(a.kills||0)).slice(0,5);
+                const topPvp   = [...dayPlayers].sort((a,b)=>(b.pvp_dmg||0)-(a.pvp_dmg||0)).slice(0,3);
+
+                const packRows = Object.entries(byPack).filter(([,v])=>v.kills+v.deaths+v.pvp_dmg>0).sort((a,b)=>b[1].kills-a[1].kills).map(([name,v]) => `
+                    <tr style="border-bottom:1px solid #1e2530">
+                        <td style="padding:8px 12px;font-weight:800;font-size:12px;text-transform:uppercase">${name}</td>
+                        <td style="padding:8px 12px;text-align:center;color:#64748b;font-size:12px">${v.count}</td>
+                        <td style="padding:8px 12px;text-align:center;color:#f59e0b;font-weight:700;font-size:12px">${v.kills}</td>
+                        <td style="padding:8px 12px;text-align:center;color:#ef4444;font-size:12px">${v.deaths}</td>
+                        <td style="padding:8px 12px;text-align:center;color:#818cf8;font-size:12px">${v.pvp_dmg.toLocaleString()}</td>
+                        <td style="padding:8px 12px;text-align:center;color:#22c55e;font-size:12px">${v.pve_dmg.toLocaleString()}</td>
+                    </tr>`).join('');
 
                 return `<div class="card mb-6">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
                         <div>
                             <div style="font-size:18px;font-weight:800">${dateFormatted}</div>
                             <div style="font-size:12px;color:#f59e0b;font-weight:700;text-transform:uppercase;margin-top:2px">⚔️ ${eventLabel}</div>
+                            ${recognized > 0 ? `<div style="font-size:11px;color:#64748b;margin-top:3px">👥 ${recognized} игроков${missing > 0 ? ` · <span style="color:#f87171">⚠️ не хватает ${missing}</span>` : ''}</div>` : ''}
                         </div>
                         <button onclick="openCalendarDay('${dateStr}')" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Открыть в календаре</button>
                     </div>
-                    ${topPlayers.length > 0 ? `
-                    <div style="font-size:11px;color:#64748b;margin-bottom:8px;text-transform:uppercase;font-weight:700">Топ по убийствам</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px">
-                        ${topPlayers.map((p,i) => `
-                        <div style="background:#1a1f29;border:1px solid #1e2530;border-radius:8px;padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:8px">
-                            <span style="color:#64748b;font-size:10px">#${i+1}</span>
-                            <span style="font-weight:700">${p.name}</span>
-                            <span style="color:#f59e0b">⚔️ ${p.kills||0}</span>
-                            <span style="color:#ef4444">💀 ${p.deaths||0}</span>
-                        </div>`).join('')}
-                    </div>` : '<div style="color:#475569;font-size:13px">Статистика не загружена</div>'}
+                    ${packRows ? `
+                    <div style="font-size:11px;color:#64748b;margin-bottom:8px;text-transform:uppercase;font-weight:700">⚔️ По пакам</div>
+                    <div style="overflow-x:auto;margin-bottom:16px">
+                    <table style="width:100%;border-collapse:collapse">
+                        <thead><tr>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:left;border-bottom:1px solid #1e2530">Пак</th>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:center;border-bottom:1px solid #1e2530">Чел.</th>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:center;border-bottom:1px solid #1e2530">⚔️</th>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:center;border-bottom:1px solid #1e2530">💀</th>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:center;border-bottom:1px solid #1e2530">PvP</th>
+                            <th style="color:#64748b;font-size:10px;text-transform:uppercase;padding:6px 12px;text-align:center;border-bottom:1px solid #1e2530">PvE</th>
+                        </tr></thead>
+                        <tbody>${packRows}</tbody>
+                    </table></div>` : ''}
+                    ${topKills.length > 0 ? `
+                    <div style="font-size:11px;color:#64748b;margin-bottom:8px;text-transform:uppercase;font-weight:700">🏆 Топ убийств</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+                        ${topKills.map((p,i) => {
+                            const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+                            return `<div style="background:#1a1f29;border:1px solid #1e2530;border-radius:8px;padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:6px">
+                                <span>${medals[i]}</span>
+                                <span style="font-weight:700">${p.name}</span>
+                                <span style="color:#f59e0b">⚔️${p.kills||0}</span>
+                                <span style="color:#ef4444">💀${p.deaths||0}</span>
+                                <span style="color:#818cf8">🗡️${(p.pvp_dmg||0).toLocaleString()}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>` : '<div style="color:#475569;font-size:13px">Статистика не загружена — нажми "Применить в ростер" после анализа</div>'}
                 </div>`;
             }).filter(Boolean).join('') || `<div class="card text-center py-16 text-slate-600">
                     <div class="text-4xl mb-4">📭</div>
@@ -2266,7 +2352,8 @@
                     eventOverrides,
                     kmStats,
                     nickAliases,
-                    exhaustedKeys
+                    exhaustedKeys,
+                    appliedStatsByDate
                 };
                 localStorage.setItem(LS_KEY, JSON.stringify(data));
             } catch(e) {
@@ -2288,6 +2375,7 @@
                 if (data.kmStats)      kmStats       = data.kmStats;
                 if (data.nickAliases)  nickAliases   = data.nickAliases;
                 if (data.exhaustedKeys) exhaustedKeys = data.exhaustedKeys;
+                if (data.appliedStatsByDate) appliedStatsByDate = data.appliedStatsByDate;
                 return true;
             } catch(e) {
                 console.warn('localStorage load failed:', e);
