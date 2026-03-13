@@ -390,6 +390,7 @@
                     <thead>
                         <tr>
                             <th onclick="handleSort('name')">Ник <span id="sort-name"></span></th>
+                            <th onclick="handleSort('isNew')" style="cursor:pointer">NEW <span id="sort-isNew"></span></th>
                             <th onclick="handleSort('profa')">Профа <span id="sort-profa"></span></th>
                             <th onclick="handleSort('pac')">Пак <span id="sort-pac"></span></th>
                             <th onclick="handleSort('attendance')">КМ % <span id="sort-attendance"></span></th>
@@ -1194,6 +1195,11 @@
                 }
                 if (currentSort.field === 'attendance') {
                     return currentSort.direction === 'asc' ? a.attendance - b.attendance : b.attendance - a.attendance;
+                }
+                if (currentSort.field === 'isNew') {
+                    const nA = a.isNew ? 1 : 0;
+                    const nB = b.isNew ? 1 : 0;
+                    return currentSort.direction === 'asc' ? nB - nA : nA - nB; // по умолч. NEW сверху
                 }
                 let vA = a[currentSort.field];
                 let vB = b[currentSort.field];
@@ -2781,7 +2787,15 @@
                     </div>` : '';
 
                 const leadersHtml = hasCommandChannel ? cmdChannel.map((cc) => {
-                    const packName = Object.entries(packLeadersMap).find(([,l]) => l.toLowerCase() === cc.leader.toLowerCase())?.[0];
+                    // Ищем пак по нормализованному имени лидера
+                    const normLeader = normalizeNick(cc.leader);
+                    let packName = Object.entries(packLeadersMap).find(([,l]) => normalizeNick(l) === normLeader)?.[0];
+                    // Fallback: ищем в screenPlayersMap по нормализованному ключу пака
+                    if (!packName) {
+                        for (const spKey of Object.keys(screenPlayersMapDay)) {
+                            if (normalizeNick(spKey) === normLeader) { packName = spKey; break; }
+                        }
+                    }
 
                     // Берём игроков из screenPlayersMap:
                     // 1) По точному имени пака
@@ -2864,7 +2878,7 @@
                             <div style="display:flex;align-items:center;gap:10px">
                                 <span style="font-weight:800;font-size:13px">${cc.leader}</span>
                                 ${packName ? `<span style="font-size:9px;background:#1e2530;color:#94a3b8;padding:1px 6px;border-radius:3px;text-transform:uppercase">${packName}</span>` : ''}
-                                <span style="font-size:10px;color:#64748b">👥 ${cc.members||0}</span>
+                                <span style="font-size:10px;color:#64748b">👥 ${partyPlayers.length > 0 ? partyPlayers.length : (cc.members||0)}</span>
                             </div>
                             <div style="display:flex;gap:12px;font-size:12px;align-items:center">
                                 <span style="color:#f59e0b">⚔️ ${dispKills}</span>
