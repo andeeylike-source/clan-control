@@ -1817,20 +1817,20 @@
 - Таблица с колонками: Лидер | 👥(число) | × | 💀 | PvP урон | PvE урон
 - Каждая строка = лидер целого пака со статистикой его группы
 
-ИЗВЛЕКИ игроков из ЛЕВОГО окна "Член группы" и лидера этого пака.${isFirst ? `
+ИЗВЛЕКИ ВСЕХ игроков из ЛЕВОГО окна включая лидера.${isFirst ? `
 Также прочитай из ПРАВОГО окна: общее число игроков (N чел.) и всех лидеров паков с их статистикой.` : ''}
 
 Верни ТОЛЬКО JSON без markdown:
-{"pack_name":"ИМЯ ПАКА","pack_leader":"ИМЯ ЛИДЕРА","total_count":8,${isFirst ? '"raid_total":92,"command_channel":[{"leader":"ИМЯ","members":9,"kills":6,"deaths":87,"pvp_dmg":366,"pve_dmg":287}],' : ''}"players":[{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
+{"pack_name":"ИМЯ ПАКА","pack_leader":"ИМЯ ЛИДЕРА","total_count":9,${isFirst ? '"raid_total":92,"command_channel":[{"leader":"ИМЯ","members":9,"kills":6,"deaths":87,"pvp_dmg":366,"pve_dmg":287}],' : ''}"players":[{"name":"ВИЗАРД","kills":6,"deaths":87,"pvp_dmg":370,"pve_dmg":717},{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
 
 Требования:
 - pack_name = название пака (заголовок левого окна)
 - pack_leader = имя лидера из строки "Лидер: ИМЯ" левого окна
-- total_count = сколько строк игроков в таблице "Член группы" (включая нечитаемые)${isFirst ? '\n- raid_total = число после "/ N чел." в строке Состав правого окна\n- command_channel = все строки из таблицы правого окна (лидер + его статистика)' : ''}
+- total_count = ПОЛНОЕ число людей в группе включая лидера${isFirst ? '\n- raid_total = число после "/ N чел." в строке Состав правого окна\n- command_channel = все строки из таблицы правого окна (лидер + его статистика)' : ''}
+- ВКЛЮЧАЙ лидера первым в массив players — его статистику бери из правого окна (его строка в таблице Командного канала)
 - Имена точно как написано (регистр важен)
 - kills = колонка × , deaths = колонка 💀, pvp_dmg и pve_dmg из соответствующих колонок
-- Если значение не видно — ставь 0
-- НЕ включай строку лидера в массив players`;
+- Если значение не видно — ставь 0`;
 
                     // Пауза между запросами чтобы не превышать rate limit
                     if (i > 0) await new Promise(r => setTimeout(r, 2000));
@@ -1911,9 +1911,9 @@
                     if (Array.isArray(players)) {
                         // Защита: один пак = максимум 12 игроков
                         // Если больше — Gemini прочитал правую таблицу "Командный канал", пропускаем
-                        if (players.length > 10) {
+                        if (players.length > 12) {
                             console.warn(`Скриншот ${i+1}: AI вернул ${players.length} игроков — похоже прочитал командный канал, пропускаем`);
-                            skippedScreenshots.push({ num: i+1, reason: `AI вернул ${players.length} строк (лимит 10)` });
+                            skippedScreenshots.push({ num: i+1, reason: `AI вернул ${players.length} строк (лимит 12)` });
                             setDayStatus('warning', `⚠️ Скриншот ${i+1}: AI распознал ${players.length} строк — слишком много для одного пака. Пропущен.`);
                             continue;
                         }
@@ -1922,6 +1922,21 @@
                             const lost = totalCount - players.length;
                             console.warn(`Скриншот ${i+1}: AI видел ${totalCount} игроков, вернул только ${players.length} — потеряно ${lost}`);
                             skippedScreenshots.push({ num: i+1, reason: `AI видел ${totalCount} игроков, распознал только ${players.length} (потеряно ${lost})` });
+                        }
+                        // Fallback: если лидер не попал в players — добавляем его из command_channel
+                        if (parsed.pack_leader) {
+                            const leaderInPlayers = players.find(p => p.name && p.name.toLowerCase() === parsed.pack_leader.toLowerCase());
+                            if (!leaderInPlayers) {
+                                // Ищем статистику лидера в commandChannel (только на первом скрине)
+                                const ccEntry = commandChannel.find(cc => cc.leader && cc.leader.toLowerCase() === parsed.pack_leader.toLowerCase());
+                                players.unshift({
+                                    name: parsed.pack_leader,
+                                    kills:   ccEntry ? (ccEntry.kills   || 0) : 0,
+                                    deaths:  ccEntry ? (ccEntry.deaths  || 0) : 0,
+                                    pvp_dmg: ccEntry ? (ccEntry.pvp_dmg || 0) : 0,
+                                    pve_dmg: ccEntry ? (ccEntry.pve_dmg || 0) : 0
+                                });
+                            }
                         }
                         // Сохраняем игроков этого скрина в screenPlayersMap по имени пака
                         if (parsed.pack_name && players.length > 0) {
@@ -2150,20 +2165,19 @@
         function debugSnapshotData() {
             var dates = Object.keys(appliedStatsByDate);
             if (dates.length === 0) { alert("No snapshots"); return; }
-            var info = "Snapshots:\n\n";
             dates.forEach(function(d) {
                 var s = appliedStatsByDate[d];
-                info += d + ":\n";
-                info += "  players: " + (s.players ? s.players.length : 0) + "\n";
-                var hasStats = s.players && s.players.some(function(p){ return (p.kills||0)+(p.deaths||0)+(p.pvp_dmg||0)+(p.pve_dmg||0) > 0; });
-                info += "  has stats: " + (hasStats ? "YES" : "NO (zeros)") + "\n";
-                info += "  cmdChannel: " + (s.commandChannel ? s.commandChannel.length : 0) + "\n";
-                info += "  screenPlayersMap keys: " + Object.keys(s.screenPlayersMap||{}).length + "\n";
-                if (s.players && s.players.length > 0) { info += "  p[0]: " + JSON.stringify(s.players[0]) + "\n"; }
-                info += "\n";
+                var info = d + "\n";
+                info += "players: " + (s.players ? s.players.length : 0) + "\n";
+                info += "cmdChannel leaders:\n";
+                (s.commandChannel||[]).forEach(function(cc){ info += "  [" + cc.leader + "]\n"; });
+                info += "screenPlayersMap packs:\n";
+                Object.keys(s.screenPlayersMap||{}).forEach(function(k){ info += "  [" + k + "] = " + s.screenPlayersMap[k].length + " players\n"; });
+                info += "\npackLeaders map:\n";
+                Object.entries(s.packLeaders||{}).forEach(function(e){ info += "  pack[" + e[0] + "] -> leader[" + e[1] + "]\n"; });
+                console.log(info);
+                alert(info);
             });
-            info += "Roster with stats: " + roster.filter(function(p){ return (p.kills||0)+(p.deaths||0)>0; }).length;
-            console.log(info); alert(info);
         }
 
         function renderKmHistory() {
