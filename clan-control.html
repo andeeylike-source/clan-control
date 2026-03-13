@@ -643,11 +643,7 @@
     <script>
         // ===== ДАННЫЕ =====
         let roster = [
-            { id: 1, name: "Tonik", rank: "КЛ", profa: "Grand Khavatari (Tyrant)", pac: "ТРИЛЛИОН", attendance: 100 },
-            { id: 2, name: "Neon", rank: "ПЛ", profa: "Cardinal (BP)", pac: "АРМАТУРА", attendance: 95 },
-            { id: 3, name: "Rixor", rank: "ПЛ", profa: "Duelist (Glad)", pac: "ТРИЛЛИОН", attendance: 75 },
-            { id: 4, name: "Amon", rank: "ИГРОК", profa: "Storm Screamer (SH)", pac: "АРМАТУРА", attendance: 40 },
-            { id: 5, name: "Zaur", rank: "ИГРОК", profa: "Adventurer", pac: "СОЛО", attendance: 60 }
+            { id: 1, name: "ВИЗАРД", rank: "КЛ", profa: "Bishop", pac: "СОЛО", attendance: 100, kills: 0, deaths: 0, pvp_dmg: 0, pve_dmg: 0 }
         ];
 
         let archive = [];
@@ -2204,42 +2200,51 @@
                 // Иначе — группируем по паку из ростера
                 const hasCommandChannel = cmdChannel.length > 0;
 
+                // Уникальный ID блока для раскрытия всех паков
+                const blockId = 'leaders_' + dateStr.replace(/-/g,'');
+
                 const leadersHtml = hasCommandChannel ? cmdChannel.map((cc, idx) => {
-                    // Находим игроков этого лидера — ищем пак лидера в packLeadersMap
                     const packName = Object.entries(packLeadersMap).find(([,l]) => l.toLowerCase() === cc.leader.toLowerCase())?.[0];
-                    const partyPlayers = packName
+                    // Берём игроков: приоритет screenPlayers по индексу, иначе по паку из ростера
+                    const screenParty = (dayData && dayData.screenPlayers) ? (dayData.screenPlayers[idx] || []) : [];
+                    const rosterParty = packName
                         ? dayPlayers.filter(p => {
                             const rp = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
                             return rp && rp.pac === packName;
                           })
                         : [];
+                    const partyPlayers = screenParty.length > 0 ? screenParty : rosterParty;
 
-                    const partyHtml = partyPlayers.length > 0 ? partyPlayers.map(p =>
-                        `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0b0e14;border-radius:6px;margin-bottom:4px;font-size:12px">
-                            <span style="font-weight:600">${p.name}</span>
+                    const partyHtml = partyPlayers.length > 0 ? partyPlayers.map(p => {
+                        const inRoster = roster.find(r => r.name.toLowerCase() === p.name.toLowerCase());
+                        const badge = !inRoster
+                            ? `<span title="Не в ростере" style="color:#f87171;font-size:11px;margin-left:4px">⚠️</span>`
+                            : (inRoster.pac === 'СОЛО' ? `<span style="font-size:9px;color:#64748b;background:#1e2530;padding:1px 5px;border-radius:3px;margin-left:4px">соло</span>` : '');
+                        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0b0e14;border-radius:6px;margin-bottom:4px;font-size:12px">
+                            <span style="font-weight:600;display:flex;align-items:center">${p.name}${badge}</span>
                             <span style="display:flex;gap:10px;color:#94a3b8">
                                 <span style="color:#f59e0b">⚔️ ${p.kills||0}</span>
                                 <span style="color:#ef4444">💀 ${p.deaths||0}</span>
                                 <span style="color:#818cf8">🗡️ ${(p.pvp_dmg||0).toLocaleString()}</span>
                                 <span style="color:#22c55e">🐉 ${(p.pve_dmg||0).toLocaleString()}</span>
                             </span>
-                        </div>`
-                    ).join('') : '<div style="font-size:11px;color:#475569;padding:6px 12px">Игроки не распознаны (назначь пак в ростере)</div>';
+                        </div>`;
+                    }).join('') : '<div style="font-size:11px;color:#475569;padding:6px 12px">Нет данных скрина</div>';
 
-                    return `<div style="border:1px solid #1e2530;border-radius:10px;margin-bottom:8px;overflow:hidden">
-                        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+                    return `<div class="pack-block-${blockId}" style="border:1px solid #1e2530;border-radius:10px;margin-bottom:8px;overflow:hidden">
+                        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.arr').textContent=this.nextElementSibling.style.display==='none'?'▼':'▲'"
                              style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#1a1f29;cursor:pointer">
                             <div style="display:flex;align-items:center;gap:10px">
                                 <span style="font-weight:800;font-size:13px">${cc.leader}</span>
                                 ${packName ? `<span style="font-size:9px;background:#1e2530;color:#94a3b8;padding:1px 6px;border-radius:3px;text-transform:uppercase">${packName}</span>` : ''}
                                 <span style="font-size:10px;color:#64748b">👥 ${cc.members||0}</span>
                             </div>
-                            <div style="display:flex;gap:12px;font-size:12px">
+                            <div style="display:flex;gap:12px;font-size:12px;align-items:center">
                                 <span style="color:#f59e0b">⚔️ ${cc.kills||0}</span>
                                 <span style="color:#ef4444">💀 ${cc.deaths||0}</span>
                                 <span style="color:#818cf8">🗡️ ${(cc.pvp_dmg||0).toLocaleString()}</span>
                                 <span style="color:#22c55e">🐉 ${(cc.pve_dmg||0).toLocaleString()}</span>
-                                <span style="color:#475569;font-size:10px">▼</span>
+                                <span class="arr" style="color:#475569;font-size:10px;width:12px">▼</span>
                             </div>
                         </div>
                         <div style="display:none;padding:8px">
@@ -2261,7 +2266,21 @@
                         <button onclick="openCalendarDay('${dateStr}')" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Открыть в календаре</button>
                     </div>
                     ${hasCommandChannel ? `
-                        <div style="font-size:11px;color:#64748b;margin-bottom:10px;text-transform:uppercase;font-weight:700">⚔️ Лидеры паков (нажми чтобы раскрыть)</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                            <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700">⚔️ Лидеры паков</div>
+                            <button onclick="(function(){
+                                const blocks = document.querySelectorAll('.pack-block-${blockId}');
+                                const allOpen = [...blocks].every(b => b.querySelector('div:last-child').style.display !== 'none');
+                                blocks.forEach(b => {
+                                    const body = b.querySelector('div:last-child');
+                                    const arr = b.querySelector('.arr');
+                                    body.style.display = allOpen ? 'none' : 'block';
+                                    if(arr) arr.textContent = allOpen ? '▼' : '▲';
+                                });
+                                this.textContent = allOpen ? '▼ Раскрыть все' : '▲ Свернуть все';
+                            }).call(this)"
+                            style="background:#1e2530;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:4px 12px;font-size:11px;cursor:pointer">▼ Раскрыть все</button>
+                        </div>
                         ${leadersHtml}
                     ` : topKills.length > 0 ? `
                         <div style="font-size:11px;color:#64748b;margin-bottom:8px;text-transform:uppercase;font-weight:700">🏆 Топ убийств</div>
@@ -2433,11 +2452,21 @@
 
         function clearStorage() {
             showConfirm(
-                '⚠️ Сбросить все данные?',
-                'Ростер, статистика, архив, события — всё будет удалено. Это действие нельзя отменить.',
+                '⚠️ Сбросить данные?',
+                'Ростер (кроме КЛ Визарда), статистика и история КМ будут удалены. Паки и API ключи сохранятся.',
                 () => {
-                    localStorage.removeItem(LS_KEY);
-                    location.reload();
+                    const kl = roster.find(p => p.name.toUpperCase() === 'ВИЗАРД') ||
+                               { id: 1, name: 'ВИЗАРД', rank: 'КЛ', profa: 'Bishop', pac: 'СОЛО' };
+                    roster = [{ ...kl, kills:0, deaths:0, pvp_dmg:0, pve_dmg:0 }];
+                    appliedStatsByDate = {};
+                    archive = [];
+                    eventStatuses = {};
+                    eventOverrides = {};
+                    dayScreenshots = {};
+                    saveToStorage();
+                    renderRoster();
+                    renderStats();
+                    showPage('roster');
                 },
                 true
             );
