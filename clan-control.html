@@ -479,6 +479,7 @@
             <div class="flex justify-between items-center mb-8">
                 <h1 class="text-3xl font-bold">📋 История КМ</h1>
                 <button onclick="debugSnapshotData()" style="background:#1e2530;border:1px solid #2d3748;color:#f59e0b;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer" title="Показать данные снапшота в консоли">🔍 Диагностика</button>
+                <button onclick="debugDuplicates()" style="background:#1e2530;border:1px solid #2d3748;color:#a78bfa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">🔬 Найти скрытые дубли</button>
             </div>
             <div id="kmHistoryContent"></div>
         </section>
@@ -1934,7 +1935,8 @@
             let s = name;
             // Многосимвольные паттерны (порядок важен — сначала длиннее)
             // Убираем пробелы (ФРЕНЧ 75 = ФРЕНЧ75)
-            s = s.replace(/\s+/g, '');
+            // Убираем пробелы и невидимые символы
+            s = s.replace(/[\s\u00a0\u200b\u200c\u200d\u2060\ufeff]/g, '');
             // Многосимвольные паттерны
             s = s.replace(/[Ii][Ii][Ii]/g, 'ш');  // III → Ш
             s = s.replace(/[lL][lL][lL]/g, 'ш');  // lll → Ш
@@ -2463,6 +2465,31 @@
         let lastParsedPlayers = [];     // результат последнего анализа (для глобальной вкладки)
 
         function renderScreenshotArchive() { renderKmHistory(); }
+
+        function debugDuplicates() {
+            // Ищем игроков с одинаковым нормализованным ключом
+            const groups = {};
+            roster.forEach(p => {
+                const key = normalizeNick(p.name);
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(p.name);
+            });
+            const dupes = Object.entries(groups).filter(([,names]) => names.length > 1);
+            if (dupes.length === 0) {
+                alert('Скрытых дублей не найдено.\n\nВсе нормализованные ключи уникальны.');
+                return;
+            }
+            let msg = `Найдено ${dupes.length} групп скрытых дублей:\n\n`;
+            dupes.forEach(([key, names]) => {
+                msg += `Ключ: "${key}"\n`;
+                names.forEach(n => {
+                    const bytes = [...n].map(c => c.charCodeAt(0)).join(',');
+                    msg += `  → "${n}" [${bytes}]\n`;
+                });
+                msg += '\n';
+            });
+            alert(msg);
+        }
 
         function debugSnapshotData() {
             var dates = Object.keys(appliedStatsByDate);
