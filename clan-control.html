@@ -999,15 +999,13 @@
                 return currentSort.direction === 'asc' ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
             });
 
-            body.innerHTML = sorted.map(p => `
-
             // Обновляем счётчик
             const statsEl = document.getElementById('rosterStats');
             if (statsEl) {
                 const total = roster.length;
                 const newCount = roster.filter(p => p.isNew).length;
-                const packs = [...new Set(roster.filter(p => p.pac !== 'СОЛО').map(p => p.pac))].length;
-                statsEl.innerHTML = `👥 Всего: <b style="color:#e2e8f0">${total}</b> игроков · Паков: <b style="color:#e2e8f0">${packs}</b>${newCount > 0 ? ` · <span style="color:#10b981">NEW: ${newCount}</span>` : ''}`;
+                const packsCount = [...new Set(roster.filter(p => p.pac !== 'СОЛО').map(p => p.pac))].length;
+                statsEl.innerHTML = `👥 Всего: <b style="color:#e2e8f0">${total}</b> игроков · Паков: <b style="color:#e2e8f0">${packsCount}</b>${newCount > 0 ? ` · <span style="color:#10b981">NEW: ${newCount}</span>` : ''}`;
             }
 
             body.innerHTML = sorted.map(p => `
