@@ -872,10 +872,8 @@
 
             if (events.length === 0) {
                 container.innerHTML = '<p class="text-slate-600 text-sm italic mb-2">КМ событий нет</p>';
-                return;
-            }
-
-            container.innerHTML = `<div class="section-label">КМ события</div>` + events.map(ev => {
+            } else {
+                container.innerHTML = `<div class="section-label">КМ события</div>` + events.map(ev => {
                 const status = getEventStatus(dateStr, ev.key);
                 const isDone = status === 'done';
                 const doneClass = isDone ? ' is-done' : '';
@@ -884,7 +882,6 @@
                 let dotColor = isDone ? '#22c55e' : status === 'past' ? '#ef4444' : '#3b82f6';
                 let dotBlink = status === 'past' && !isDone ? 'dot-blink' : '';
 
-                // Проверяем кастомные переопределения названия/времени
                 const overrideKey = dateStr + '|override|' + ev.key;
                 const override = ((activeDayDate === dateStr) ? pendingOverrides : eventOverrides)[overrideKey] || {};
                 const displayTitle = override.title || ev.title;
@@ -908,9 +905,28 @@
                     </div>
                 `;
             }).join('');
+            }
+
+            // Кнопка добавить ручное событие — всегда внизу
+            container.innerHTML += `
+                <div style="margin-top:8px">
+                    <button onclick="addManualEventToDay('${dateStr}')" style="background:none;border:1px dashed #2d3748;color:#64748b;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;width:100%;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#64748b'">+ Добавить событие</button>
+                </div>
+            `;
         }
 
-        function toggleEventDone(dateStr, eventKey) {
+        function addManualEventToDay(dateStr) {
+            showPrompt('Название события', 'Например: Антарас, Баюм, Осада...', (title) => {
+                if (!title) return;
+                showPrompt('Время (необязательно)', 'Например: 20:00', (time) => {
+                    const id = Date.now();
+                    manualEvents.push({ id, title: title.trim(), date: dateStr, time: (time||'').trim() });
+                    saveToStorage();
+                    renderDayEventsList(dateStr);
+                    renderCalendar();
+                });
+            });
+        }
             const fullKey = dateStr + '|' + eventKey;
             // Пишем в pending — не сохраняется до нажатия "Сохранить"
             if (pendingStatuses[fullKey]) {
