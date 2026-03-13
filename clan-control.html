@@ -281,6 +281,38 @@
             margin-bottom: 10px;
             margin-top: 16px;
         }
+        /* Кастомный date picker */
+        .dp-wrap { position:relative; display:inline-block; }
+        .dp-btn { background:#0b0e14; border:1px solid #2d3748; border-radius:8px; padding:5px 12px; color:#e2e8f0; font-size:12px; cursor:pointer; min-width:110px; text-align:center; transition:border-color .2s; }
+        .dp-btn:hover { border-color:#6366f1; }
+        .dp-btn.active { border-color:#6366f1; color:#a5b4fc; }
+        .dp-popup { display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:1000; background:#12171f; border:1px solid #2d3748; border-radius:12px; padding:16px; width:260px; box-shadow:0 8px 32px rgba(0,0,0,.6); }
+        .dp-popup.open { display:block; }
+        .dp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .dp-nav { background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; padding:4px 8px; border-radius:6px; }
+        .dp-nav:hover { background:#1e2530; color:#fff; }
+        .dp-month-label { color:#e2e8f0; font-weight:700; font-size:13px; cursor:pointer; padding:4px 8px; border-radius:6px; }
+        .dp-month-label:hover { background:#1e2530; }
+        .dp-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+        .dp-dow { color:#475569; font-size:10px; text-align:center; padding:4px 0; font-weight:700; text-transform:uppercase; }
+        .dp-day { text-align:center; padding:6px 2px; font-size:12px; border-radius:6px; cursor:pointer; color:#94a3b8; }
+        .dp-day:hover { background:#1e2530; color:#fff; }
+        .dp-day.today { color:#6366f1; font-weight:700; }
+        .dp-day.selected { background:#6366f1; color:#fff; font-weight:700; }
+        .dp-day.in-range { background:#6366f122; color:#a5b4fc; }
+        .dp-day.empty { cursor:default; }
+        .dp-day.empty:hover { background:none; }
+        .dp-month-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+        .dp-month-btn { background:#1a1f29; border:none; color:#94a3b8; border-radius:8px; padding:8px 4px; font-size:12px; cursor:pointer; }
+        .dp-month-btn:hover { background:#2d3748; color:#fff; }
+        .dp-month-btn.selected { background:#6366f1; color:#fff; }
+        .dp-year-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+        .dp-year-btn { background:#1a1f29; border:none; color:#94a3b8; border-radius:8px; padding:8px 4px; font-size:11px; cursor:pointer; }
+        .dp-year-btn:hover { background:#2d3748; color:#fff; }
+        .dp-year-btn.selected { background:#6366f1; color:#fff; }
+        .dp-shortcuts { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+        .dp-shortcut { background:#1a1f29; border:none; color:#64748b; border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; }
+        .dp-shortcut:hover { background:#2d3748; color:#a5b4fc; }
     </style>
 </head>
 <body>
@@ -334,10 +366,10 @@
                 <div class="flex gap-3 items-center flex-wrap justify-end">
                     <div style="display:flex;align-items:center;gap:6px;background:#12171f;border:1px solid #1e2530;border-radius:10px;padding:6px 12px">
                         <span style="font-size:11px;color:#64748b">Период КМ%:</span>
-                        <input type="date" id="rosterFrom" onchange="rosterDateFrom=this.value;renderRoster()" style="background:#0b0e14;border:1px solid #2d3748;border-radius:6px;padding:3px 6px;color:#e2e8f0;font-size:11px">
+                        <div class="dp-wrap"><button class="dp-btn" id="rosterFromBtn" onclick="openDatePicker('rosterFrom',this)">Начало</button></div>
                         <span style="color:#475569;font-size:11px">—</span>
-                        <input type="date" id="rosterTo" onchange="rosterDateTo=this.value;renderRoster()" style="background:#0b0e14;border:1px solid #2d3748;border-radius:6px;padding:3px 6px;color:#e2e8f0;font-size:11px">
-                        <button onclick="rosterDateFrom='';rosterDateTo='';document.getElementById('rosterFrom').value='';document.getElementById('rosterTo').value='';renderRoster()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:10px" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#475569'">✕</button>
+                        <div class="dp-wrap"><button class="dp-btn" id="rosterToBtn" onclick="openDatePicker('rosterTo',this)">Конец</button></div>
+                        <button onclick="clearPeriod('roster')" style="background:none;border:none;color:#475569;cursor:pointer;font-size:10px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#475569'">✕</button>
                     </div>
                     <button onclick="removeDuplicates()" class="px-4 py-2 border border-red-900 text-red-400 rounded-lg text-sm font-medium hover:bg-red-900/20">Дубли</button>
                     <button onclick="resetAllStats()" class="px-4 py-2 border border-red-900 text-red-500 rounded-lg text-sm font-medium hover:bg-red-900/20">Сброс статы</button>
@@ -383,10 +415,10 @@
                 <h1 class="text-3xl font-bold">Статистика КМ</h1>
                 <div style="display:flex;align-items:center;gap:8px;background:#12171f;border:1px solid #1e2530;border-radius:10px;padding:8px 14px">
                     <span style="font-size:12px;color:#64748b">Период:</span>
-                    <input type="date" id="statsFrom" onchange="statsDateFrom=this.value;renderStats()" style="background:#0b0e14;border:1px solid #2d3748;border-radius:6px;padding:4px 8px;color:#e2e8f0;font-size:12px">
+                    <div class="dp-wrap"><button class="dp-btn" id="statsFromBtn" onclick="openDatePicker('statsFrom',this)">Начало</button></div>
                     <span style="color:#475569;font-size:12px">—</span>
-                    <input type="date" id="statsTo" onchange="statsDateTo=this.value;renderStats()" style="background:#0b0e14;border:1px solid #2d3748;border-radius:6px;padding:4px 8px;color:#e2e8f0;font-size:12px">
-                    <button onclick="statsDateFrom='';statsDateTo='';document.getElementById('statsFrom').value='';document.getElementById('statsTo').value='';renderStats()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#475569'">Сбросить</button>
+                    <div class="dp-wrap"><button class="dp-btn" id="statsToBtn" onclick="openDatePicker('statsTo',this)">Конец</button></div>
+                    <button onclick="clearPeriod('stats')" style="background:none;border:none;color:#475569;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#475569'">Сбросить</button>
                 </div>
             </div>
             <p id="statsPeriodLabel" class="text-slate-500 text-sm mb-6"></p>
@@ -1901,6 +1933,9 @@
         function normalizeNick(name) {
             let s = name;
             // Многосимвольные паттерны (порядок важен — сначала длиннее)
+            // Убираем пробелы (ФРЕНЧ 75 = ФРЕНЧ75)
+            s = s.replace(/\s+/g, '');
+            // Многосимвольные паттерны
             s = s.replace(/[Ii][Ii][Ii]/g, 'ш');  // III → Ш
             s = s.replace(/[lL][lL][lL]/g, 'ш');  // lll → Ш
             s = s.replace(/[Jj][lL]/g,     'л');  // Jl → Л
@@ -1913,6 +1948,7 @@
             const map = {
                 // Цифры → буквы
                 '0':'о',  // 0 → О
+                '1':'и',  // 1 → И/i (L1nkinpark = Linkinpark)
                 '3':'з',  // 3 → З (зеркальное З)
                 '4':'ч',  // 4 → Ч (иногда)
                 '6':'б',  // 6 → Б (иногда)
@@ -2384,6 +2420,20 @@
             if (activeDayDate) {
                 delete dayScreenshots[activeDayDate];
                 renderDayScreenshotPreviews(activeDayDate);
+            }
+
+            // Снимаем NEW у игроков которые уже встречались более чем в одном снапшоте
+            const allSnapDates = Object.keys(appliedStatsByDate);
+            if (allSnapDates.length > 1) {
+                roster.forEach(p => {
+                    if (!p.isNew) return;
+                    const key = normalizeNick(p.name);
+                    const datesPresent = allSnapDates.filter(d =>
+                        appliedStatsByDate[d].players &&
+                        appliedStatsByDate[d].players.some(sp => normalizeNick(sp.name) === key)
+                    );
+                    if (datesPresent.length >= 2) p.isNew = false;
+                });
             }
 
             saveToStorage();
@@ -2980,6 +3030,168 @@
             }
         }
 
+        // ===== КАСТОМНЫЙ DATE PICKER =====
+        let dpTarget = null; // 'statsFrom' | 'statsTo' | 'rosterFrom' | 'rosterTo'
+        let dpAnchor = null;
+        let dpYear = new Date().getFullYear();
+        let dpMonth = new Date().getMonth();
+
+        function openDatePicker(target, anchorEl) {
+            dpTarget = target;
+            dpAnchor = anchorEl;
+            // Закрываем если уже открыт для этого же
+            const popup = document.getElementById('dpPopup');
+            if (popup.classList.contains('open') && dpAnchor === anchorEl) {
+                closeDatePicker(); return;
+            }
+            // Позиционируем под кнопкой
+            const rect = anchorEl.closest('.dp-wrap').getBoundingClientRect();
+            popup.style.left = rect.left + 'px';
+            popup.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+            popup.style.position = 'fixed';
+            popup.style.top = (rect.bottom + 4) + 'px';
+            anchorEl.closest('.dp-wrap').appendChild(popup);
+
+            // Восстанавливаем текущее значение
+            const cur = target === 'statsFrom' ? statsDateFrom : target === 'statsTo' ? statsDateTo : target === 'rosterFrom' ? rosterDateFrom : rosterDateTo;
+            if (cur) { const d = new Date(cur); dpYear = d.getFullYear(); dpMonth = d.getMonth(); }
+            else { dpYear = new Date().getFullYear(); dpMonth = new Date().getMonth(); }
+
+            dpShowCal();
+            popup.classList.add('open');
+            anchorEl.classList.add('active');
+
+            // Шорткаты — даты из снапшотов
+            renderDpShortcuts();
+        }
+
+        function closeDatePicker() {
+            const popup = document.getElementById('dpPopup');
+            popup.classList.remove('open');
+            if (dpAnchor) dpAnchor.classList.remove('active');
+            dpAnchor = null; dpTarget = null;
+        }
+
+        function dpShowCal() {
+            document.getElementById('dpCalView').style.display = '';
+            document.getElementById('dpMonthView').style.display = 'none';
+            document.getElementById('dpYearView').style.display = 'none';
+            const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+            document.getElementById('dpMonthLabel').textContent = months[dpMonth] + ' ' + dpYear;
+            renderDpDays();
+        }
+
+        function dpShowMonths() {
+            document.getElementById('dpCalView').style.display = 'none';
+            document.getElementById('dpMonthView').style.display = '';
+            document.getElementById('dpYearLabel').textContent = dpYear;
+            const months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+            document.getElementById('dpMonths').innerHTML = months.map((m,i) =>
+                `<button class="dp-month-btn${i===dpMonth?' selected':''}" onclick="dpSelectMonth(${i})">${m}</button>`
+            ).join('');
+        }
+
+        function dpSelectMonth(m) { dpMonth = m; dpShowCal(); }
+
+        function dpShowYears() {
+            document.getElementById('dpMonthView').style.display = 'none';
+            document.getElementById('dpYearView').style.display = '';
+            const base = Math.floor(dpYear/10)*10;
+            document.getElementById('dpDecadeLabel').textContent = base + '–' + (base+11);
+            document.getElementById('dpYears').innerHTML = Array.from({length:12},(_,i)=>base+i).map(y =>
+                `<button class="dp-year-btn${y===dpYear?' selected':''}" onclick="dpSelectYear(${y})">${y}</button>`
+            ).join('');
+        }
+
+        function dpSelectYear(y) { dpYear = y; dpShowMonths(); }
+        function dpNavYear(d) { dpYear += d; dpShowMonths(); }
+        function dpNavDecade(d) {
+            const base = Math.floor(dpYear/10)*10 + d*12;
+            dpYear = base; dpShowYears();
+        }
+        function dpNavMonth(d) {
+            dpMonth += d;
+            if (dpMonth > 11) { dpMonth = 0; dpYear++; }
+            if (dpMonth < 0)  { dpMonth = 11; dpYear--; }
+            dpShowCal();
+        }
+
+        function renderDpDays() {
+            const today = todayStr();
+            const from = dpTarget === 'statsFrom' ? statsDateFrom : dpTarget === 'rosterFrom' ? rosterDateFrom : null;
+            const to   = dpTarget === 'statsTo'   ? statsDateTo   : dpTarget === 'rosterTo'   ? rosterDateTo   : null;
+            // Also get the other end of range
+            const otherFrom = dpTarget === 'statsTo' ? statsDateFrom : dpTarget === 'rosterTo' ? rosterDateFrom : null;
+            const otherTo   = dpTarget === 'statsFrom' ? statsDateTo : dpTarget === 'rosterFrom' ? rosterDateTo : null;
+
+            const first = new Date(dpYear, dpMonth, 1);
+            let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+            const daysInMonth = new Date(dpYear, dpMonth+1, 0).getDate();
+
+            let html = '';
+            for (let i = 0; i < startDow; i++) html += '<div class="dp-day empty"></div>';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const ds = dpYear + '-' + String(dpMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                let cls = 'dp-day';
+                if (ds === today) cls += ' today';
+                const curVal = dpTarget === 'statsFrom' ? statsDateFrom : dpTarget === 'statsTo' ? statsDateTo : dpTarget === 'rosterFrom' ? rosterDateFrom : rosterDateTo;
+                if (ds === curVal) cls += ' selected';
+                // In range highlight
+                const rangeFrom = otherFrom || (dpTarget.endsWith('To') ? null : null);
+                const lo = otherFrom || from, hi = otherTo || to;
+                if (lo && hi && ds > lo && ds < hi) cls += ' in-range';
+                html += `<div class="${cls}" onclick="dpSelectDay('${ds}')">${d}</div>`;
+            }
+            document.getElementById('dpDays').outerHTML = `<div id="dpDays" style="display:contents">${html}</div>`;
+        }
+
+        function dpSelectDay(ds) {
+            if (dpTarget === 'statsFrom')  { statsDateFrom = ds; renderStats(); }
+            if (dpTarget === 'statsTo')    { statsDateTo   = ds; renderStats(); }
+            if (dpTarget === 'rosterFrom') { rosterDateFrom = ds; renderRoster(); }
+            if (dpTarget === 'rosterTo')   { rosterDateTo   = ds; renderRoster(); }
+            // Update button label
+            const btnId = dpTarget + 'Btn';
+            const btn = document.getElementById(btnId);
+            if (btn) { btn.textContent = ds.split('-').reverse().join('.'); }
+            closeDatePicker();
+        }
+
+        function renderDpShortcuts() {
+            const dates = Object.keys(appliedStatsByDate).sort();
+            if (dates.length === 0) { document.getElementById('dpShortcuts').innerHTML = ''; return; }
+            const first = dates[0], last = dates[dates.length-1];
+            document.getElementById('dpShortcuts').innerHTML =
+                `<button class="dp-shortcut" onclick="dpSelectDay('${first}')">Первый КМ</button>` +
+                `<button class="dp-shortcut" onclick="dpSelectDay('${last}')">Последний КМ</button>` +
+                `<button class="dp-shortcut" onclick="dpSelectDay('${new Date().toISOString().slice(0,10)}')">Сегодня</button>`;
+        }
+
+        function clearPeriod(which) {
+            if (which === 'stats') {
+                statsDateFrom = ''; statsDateTo = '';
+                const fb = document.getElementById('statsFromBtn'), tb = document.getElementById('statsToBtn');
+                if (fb) fb.textContent = 'Начало';
+                if (tb) tb.textContent = 'Конец';
+                renderStats();
+            } else {
+                rosterDateFrom = ''; rosterDateTo = '';
+                const fb = document.getElementById('rosterFromBtn'), tb = document.getElementById('rosterToBtn');
+                if (fb) fb.textContent = 'Начало';
+                if (tb) tb.textContent = 'Конец';
+                renderRoster();
+            }
+        }
+
+        // Закрываем пикер при клике вне
+        document.addEventListener('click', e => {
+            const popup = document.getElementById('dpPopup');
+            if (!popup.classList.contains('open')) return;
+            if (popup.contains(e.target)) return;
+            if (dpAnchor && (dpAnchor === e.target || dpAnchor.contains(e.target))) return;
+            closeDatePicker();
+        });
+
         window.onload = () => {
             loadFromStorage();
             renderCalendar();
@@ -2987,5 +3199,38 @@
             renderRoster();
         };
     </script>
+    <!-- DATE PICKER POPUP -->
+    <div id="dpPopup" class="dp-popup">
+        <div id="dpCalView">
+            <div class="dp-header">
+                <button class="dp-nav" onclick="dpNavMonth(-1)">‹</button>
+                <span class="dp-month-label" onclick="dpShowMonths()" id="dpMonthLabel"></span>
+                <button class="dp-nav" onclick="dpNavMonth(1)">›</button>
+            </div>
+            <div class="dp-grid">
+                <div class="dp-dow">Пн</div><div class="dp-dow">Вт</div><div class="dp-dow">Ср</div>
+                <div class="dp-dow">Чт</div><div class="dp-dow">Пт</div><div class="dp-dow">Сб</div><div class="dp-dow">Вс</div>
+                <div id="dpDays"></div>
+            </div>
+            <div class="dp-shortcuts" id="dpShortcuts"></div>
+        </div>
+        <div id="dpMonthView" style="display:none">
+            <div class="dp-header">
+                <button class="dp-nav" onclick="dpNavYear(-1)">‹</button>
+                <span class="dp-month-label" onclick="dpShowYears()" id="dpYearLabel"></span>
+                <button class="dp-nav" onclick="dpNavYear(1)">›</button>
+            </div>
+            <div class="dp-month-grid" id="dpMonths"></div>
+        </div>
+        <div id="dpYearView" style="display:none">
+            <div class="dp-header">
+                <button class="dp-nav" onclick="dpNavDecade(-1)">‹</button>
+                <span class="dp-month-label" id="dpDecadeLabel"></span>
+                <button class="dp-nav" onclick="dpNavDecade(1)">›</button>
+            </div>
+            <div class="dp-year-grid" id="dpYears"></div>
+        </div>
+    </div>
+
 </body>
 </html>
