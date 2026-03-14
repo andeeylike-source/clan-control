@@ -1269,6 +1269,13 @@
             showConfirm("Удаление в архив", `Переместить ${player.name} в архив?`, () => {
                 archive.push(player);
                 roster.splice(playerIndex, 1);
+                // Предлагаем добавить алиас — чтобы этот ник больше не добавлялся
+                const correctName = roster.find(r => r.name !== player.name &&
+                    levenshtein(normalizeNick(r.name), normalizeNick(player.name)) <= 3)?.name;
+                if (correctName) {
+                    nickAliases[player.name.toLowerCase()] = correctName;
+                    console.log(`Алиас добавлен: ${player.name} → ${correctName}`);
+                }
                 saveToStorage();
                 renderRoster();
                 if (document.getElementById('page-archive').classList.contains('active')) renderArchive();
@@ -3474,6 +3481,30 @@
 
         window.onload = () => {
             loadFromStorage();
+
+            // ===== ОЧИСТКА РОСТЕРА ПРИ СТАРТЕ =====
+            // Снимаем NEW у всех у кого есть хоть один снапшот
+            const snapDates = Object.keys(appliedStatsByDate);
+            if (snapDates.length > 0) {
+                roster.forEach(p => {
+                    if (!p.isNew) return;
+                    const key = normalizeNick(p.name);
+                    const found = snapDates.some(d =>
+                        appliedStatsByDate[d].players &&
+                        appliedStatsByDate[d].players.some(sp => normalizeNick(sp.name) === key)
+                    );
+                    if (found) p.isNew = false;
+                });
+            }
+            // Удаляем дубли по нормализованному ключу (оставляем первого встреченного)
+            const seenKeys = {};
+            roster = roster.filter(p => {
+                const k = normalizeNick(p.name);
+                if (seenKeys[k]) return false;
+                seenKeys[k] = true;
+                return true;
+            });
+
             renderCalendar();
             renderPacks();
             renderRoster();
