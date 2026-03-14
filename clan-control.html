@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clan Control v6</title>
+    <title>Clan Control v7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -319,7 +319,7 @@
 
     <aside class="sidebar">
         <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v6</div>
+        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v7</div>
         
         <nav>
             <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
@@ -2257,6 +2257,7 @@
                             },
                             body: JSON.stringify({
                                 model: 'google/gemini-2.0-flash-lite-001',
+                                max_tokens: 1500,
                                 messages: [{
                                     role: 'user',
                                     content: [
@@ -2276,7 +2277,7 @@
                             break;
                         }
                         // Квота исчерпана — помечаем ключ и пробуем следующий на следующей итерации
-                        if (response.status === 429 || (response.status === 400 && msg.includes('quota'))) {
+                        if (response.status === 429 || (response.status === 400 && (msg.includes('quota') || msg.includes('credits') || msg.includes('afford')))) {
                             markCurrentKeyExhausted();
                             updateApiKeyIndicator();
                             const nextKey = getNextApiKey();
