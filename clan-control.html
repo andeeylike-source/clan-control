@@ -2587,14 +2587,16 @@
                     const normA = normalizeNick(a.name);
                     const normB = normalizeNick(b.name);
                     const dist = levenshtein(normA, normB);
-                    // Пары с расстоянием 1-2 — подозрительно похожи
                     if (dist >= 1 && dist <= 2) {
-                        // Не показываем уже известные алиасы
                         const aLow = a.name.toLowerCase();
                         const bLow = b.name.toLowerCase();
-                        if (!nickAliases[aLow] && !nickAliases[bLow]) {
-                            pairs.push({ a, b, dist });
-                        }
+                        // Пропускаем если уже есть алиас
+                        if (nickAliases[aLow] || nickAliases[bLow]) continue;
+                        // Пропускаем если уже помечены как разные
+                        const diffKey1 = '__diff__' + aLow + '__' + bLow;
+                        const diffKey2 = '__diff__' + bLow + '__' + aLow;
+                        if (nickAliases[diffKey1] || nickAliases[diffKey2]) continue;
+                        pairs.push({ a, b, dist });
                     }
                 }
             }
@@ -2623,7 +2625,7 @@
                             style="flex:1;background:#6366f122;border:1px solid #6366f144;color:#a5b4fc;border-radius:8px;padding:6px;font-size:11px;font-weight:700;cursor:pointer">
                             Оставить «${b.name}»
                         </button>
-                        <button onclick="this.closest('[data-pair]').remove();checkEmptySimilarModal()"
+                        <button onclick="markDifferentPair('${a.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}',this)"
                             style="background:#1e2530;border:1px solid #2d3748;color:#64748b;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer">
                             Разные
                         </button>
@@ -2643,6 +2645,15 @@
                     <div id="similarPairsList">${rowsHtml}</div>
                 </div>`;
             document.body.appendChild(overlay);
+        }
+
+        function markDifferentPair(nameA, nameB, btn) {
+            // Сохраняем в обоих направлениях — больше не спрашиваем
+            nickAliases['__diff__' + nameA.toLowerCase() + '__' + nameB.toLowerCase()] = 'different';
+            nickAliases['__diff__' + nameB.toLowerCase() + '__' + nameA.toLowerCase()] = 'different';
+            saveToStorage();
+            btn.closest('[data-pair]').remove();
+            checkEmptySimilarModal();
         }
 
         function mergeNickPair(nameA, nameB, keepName, btn) {
