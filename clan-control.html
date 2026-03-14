@@ -313,7 +313,20 @@
         .dp-shortcuts { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
         .dp-shortcut { background:#1a1f29; border:none; color:#64748b; border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; }
         .dp-shortcut:hover { background:#2d3748; color:#a5b4fc; }
-    </style>
+        .player-nick-link { cursor:pointer; color:inherit; text-decoration:none; border-bottom:1px dashed #475569; transition:color 0.15s, border-color 0.15s; }
+        .player-nick-link:hover { color:#a5b4fc; border-color:#a5b4fc; }
+
+        .profile-stat-card { background:#0b0e14; border:1px solid #1e2530; border-radius:10px; padding:16px; text-align:center; }
+        .profile-stat-val { font-size:22px; font-weight:900; }
+        .profile-stat-label { font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:.05em; margin-top:4px; }
+
+        .trend-up   { color:#22c55e; }
+        .trend-down { color:#ef4444; }
+        .trend-flat { color:#64748b; }
+
+        .km-timeline-bar { height:24px; border-radius:4px; background:#6366f1; min-width:2px; transition:width 0.3s; position:relative; }
+        .km-timeline-bar:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100%+4px); left:50%; transform:translateX(-50%); background:#1a1f29; color:#e2e8f0; padding:4px 8px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:99; border:1px solid #2d3748; pointer-events:none; }
+    
 </head>
 <body>
 
@@ -325,6 +338,7 @@
             <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
             <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
             <div onclick="showPage('roster')" id="nav-roster" class="nav-item">👥 Ростер</div>
+            <div onclick="showPage('profile')" id="nav-profile" class="nav-item" style="display:none">👤 Профиль</div>
             <div onclick="showPage('packs')" id="nav-packs" class="nav-item active">⚔️ Рейд Паки</div>
             <div onclick="showPage('archive')" id="nav-archive" class="nav-item">🗄️ Архив</div>
             <div onclick="showPage('screenshots')" id="nav-screenshots" class="nav-item">📋 История КМ</div>
@@ -426,6 +440,11 @@
             </div>
             <p id="statsPeriodLabel" class="text-slate-500 text-sm mb-6"></p>
             <div id="statsContent"></div>
+        </section>
+
+        <!-- ПРОФИЛЬ ИГРОКА -->
+        <section id="page-profile" class="page-section">
+            <div id="profileContent"></div>
         </section>
 
         <!-- АРХИВ -->
@@ -1237,7 +1256,7 @@
             body.innerHTML = sorted.map(p => `
                 <tr class="hover:bg-[#1a1f29] transition-colors group">
                     <td>
-                        <span class="font-bold text-slate-200">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
+                        <span class="font-bold text-slate-200 player-nick-link" onclick="openPlayerProfile('${p.name}')">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td class="text-slate-400 text-xs">${p.profa}</td>
@@ -1523,6 +1542,199 @@
             if(pageId === 'settings') { renderApiKeys(); renderAliases(); }
         }
 
+        // ===== ЗАМЕТКИ ОФИЦЕРА =====
+        let playerNotes = {}; // { [normName]: "текст заметки" }
+
+        // ===== ПРОФИЛЬ ИГРОКА =====
+        let currentProfileName = null;
+
+        function openPlayerProfile(playerName) {
+            currentProfileName = playerName;
+            // Показываем пункт профиля в навигации
+            const navProfile = document.getElementById('nav-profile');
+            if (navProfile) navProfile.style.display = '';
+            showPage('profile');
+            renderPlayerProfile(playerName);
+        }
+
+        function renderPlayerProfile(playerName) {
+            const el = document.getElementById('profileContent');
+            const player = roster.find(r => r.name === playerName) ||
+                           roster.find(r => normalizeNick(r.name) === normalizeNick(playerName));
+            if (!player) {
+                el.innerHTML = `<div class="card text-center py-16 text-slate-600"><p>Игрок не найден</p></div>`;
+                return;
+            }
+
+            const normKey = normalizeNick(player.name);
+
+            // Все даты КМ
+            const allDates = Object.keys(appliedStatsByDate).sort();
+            // Даты где игрок присутствовал
+            const presentDates = allDates.filter(d => {
+                const snap = appliedStatsByDate[d];
+                return snap && snap.players && snap.players.some(p => normalizeNick(p.name) === normKey);
+            });
+            const attendance = allDates.length > 0 ? Math.round(presentDates.length / allDates.length * 100) : 0;
+
+            // Стата по каждому дню
+            const dayStats = presentDates.map(d => {
+                const snap = appliedStatsByDate[d];
+                const p = snap.players.find(p => normalizeNick(p.name) === normKey);
+                return { date: d, kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 };
+            });
+
+            // Сумм. стата
+            const totalKills  = dayStats.reduce((s,d)=>s+d.kills,0);
+            const totalDeaths = dayStats.reduce((s,d)=>s+d.deaths,0);
+            const totalPvp    = dayStats.reduce((s,d)=>s+d.pvp_dmg,0);
+            const totalPve    = dayStats.reduce((s,d)=>s+d.pve_dmg,0);
+            const kda         = (totalKills / Math.max(totalDeaths,1)).toFixed(2);
+
+            // Лучший и худший КМ по убийствам
+            const bestKm  = dayStats.length > 0 ? dayStats.reduce((a,b)=>(b.kills>a.kills?b:a)) : null;
+            const worstKm = dayStats.length > 0 ? dayStats.reduce((a,b)=>(b.kills<a.kills?b:a)) : null;
+
+            // Тренд: сравниваем последние 3 КМ с предыдущими 3
+            let trendHtml = '<span class="trend-flat">— нет данных</span>';
+            if (dayStats.length >= 4) {
+                const last3 = dayStats.slice(-3);
+                const prev3 = dayStats.slice(-6, -3);
+                if (prev3.length >= 2) {
+                    const avgLast = last3.reduce((s,d)=>s+d.kills,0) / last3.length;
+                    const avgPrev = prev3.reduce((s,d)=>s+d.kills,0) / prev3.length;
+                    const diff = avgLast - avgPrev;
+                    if (diff > 0.5) trendHtml = `<span class="trend-up">↑ Растёт (+${diff.toFixed(1)} убийств/КМ)</span>`;
+                    else if (diff < -0.5) trendHtml = `<span class="trend-down">↓ Падает (${diff.toFixed(1)} убийств/КМ)</span>`;
+                    else trendHtml = `<span class="trend-flat">→ Стабильно</span>`;
+                }
+            }
+
+            // Место в рейтинге клана по убийствам
+            const statsMap = calcStatsForPeriod('', '');
+            const allPlayersSorted = Object.values(statsMap).sort((a,b)=>(b.kills||0)-(a.kills||0));
+            const rankIdx = allPlayersSorted.findIndex(p => normalizeNick(p.name) === normKey);
+            const rankInClan = rankIdx >= 0 ? `#${rankIdx+1} из ${allPlayersSorted.length}` : '—';
+
+            // Заметки офицера
+            const note = playerNotes[normKey] || '';
+
+            // Максимум убийств для графика
+            const maxKills = dayStats.length > 0 ? Math.max(...dayStats.map(d=>d.kills), 1) : 1;
+
+            // Форматирование даты
+            const fmtDate = ds => {
+                const [y,m,d] = ds.split('-');
+                return `${d}.${m}.${y.slice(2)}`;
+            };
+
+            el.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+                    <button onclick="goBackFromProfile()" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">← Назад</button>
+                    <div>
+                        <h1 style="font-size:24px;font-weight:900">${player.name}</h1>
+                        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                            <span class="badge badge-${player.rank.toLowerCase()}">${player.rank}</span>
+                            ${player.pac && player.pac !== 'СОЛО' ? `<span class="pac-tag">${player.pac}</span>` : ''}
+                            ${player.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:1px 5px;border-radius:3px">NEW</span>' : ''}
+                            <span style="font-size:12px;color:#64748b">${player.profa}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Основная стата -->
+                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#6366f1">${attendance}%</div>
+                        <div class="profile-stat-label">КМ %</div>
+                        <div style="font-size:9px;color:#475569;margin-top:2px">${presentDates.length}/${allDates.length} КМ</div>
+                    </div>
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#f59e0b">${totalKills}</div>
+                        <div class="profile-stat-label">Убийства</div>
+                    </div>
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#ef4444">${totalDeaths}</div>
+                        <div class="profile-stat-label">Смерти</div>
+                    </div>
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#a78bfa">${kda}</div>
+                        <div class="profile-stat-label">KDA</div>
+                    </div>
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#818cf8;font-size:16px">${totalPvp.toLocaleString()}</div>
+                        <div class="profile-stat-label">PvP урон</div>
+                    </div>
+                    <div class="profile-stat-card">
+                        <div class="profile-stat-val" style="color:#22c55e;font-size:16px">${totalPve.toLocaleString()}</div>
+                        <div class="profile-stat-label">PvE урон</div>
+                    </div>
+                </div>
+
+                <!-- Доп. инфо -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+                    <div class="card">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">🏆 Лучший КМ</div>
+                        ${bestKm ? `<div style="font-size:14px;font-weight:700;color:#f59e0b">${fmtDate(bestKm.date)}</div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:4px">⚔️ ${bestKm.kills} убийств · 💀 ${bestKm.deaths} смертей</div>` : '<div style="color:#475569;font-size:12px">—</div>'}
+                    </div>
+                    <div class="card">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📉 Худший КМ</div>
+                        ${worstKm && worstKm !== bestKm ? `<div style="font-size:14px;font-weight:700;color:#ef4444">${fmtDate(worstKm.date)}</div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:4px">⚔️ ${worstKm.kills} убийств · 💀 ${worstKm.deaths} смертей</div>` : '<div style="color:#475569;font-size:12px">—</div>'}
+                    </div>
+                    <div class="card">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📊 Место в клане</div>
+                        <div style="font-size:18px;font-weight:900;color:#a78bfa">${rankInClan}</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:4px">по убийствам</div>
+                        <div style="font-size:11px;margin-top:4px">${trendHtml}</div>
+                    </div>
+                </div>
+
+                <!-- График убийств по КМ -->
+                ${dayStats.length > 0 ? `
+                <div class="card" style="margin-bottom:20px">
+                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:14px">📈 Динамика убийств по КМ</div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;overflow-x:auto;padding-bottom:4px">
+                        ${dayStats.map(d => {
+                            const h = Math.max(4, Math.round((d.kills / maxKills) * 72));
+                            const absent = d.kills === 0 && d.deaths === 0 && d.pvp_dmg === 0;
+                            const color = absent ? '#1e2530' : (d.kills === bestKm.kills && d.date === bestKm.date ? '#f59e0b' : '#6366f1');
+                            return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0" title="${fmtDate(d.date)}: ⚔️${d.kills} 💀${d.deaths}">
+                                <div style="height:${h}px;width:18px;border-radius:3px;background:${color};cursor:pointer" data-tip="${fmtDate(d.date)}: ⚔️${d.kills} 💀${d.deaths}" onmouseover="this.style.opacity=0.8;var t=document.getElementById('kmTip');t.textContent=this.dataset.tip;t.style.display='block'" onmouseout="this.style.opacity=1;document.getElementById('kmTip').style.display='none'"></div>
+                                <div style="font-size:8px;color:#475569;writing-mode:vertical-rl;transform:rotate(180deg)">${fmtDate(d.date)}</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <div id="kmTip" style="display:none;font-size:11px;color:#e2e8f0;background:#1a1f29;border:1px solid #2d3748;border-radius:6px;padding:4px 8px;margin-top:6px;width:fit-content"></div>
+                </div>` : ''}
+
+                <!-- Заметки офицера -->
+                <div class="card">
+                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📝 Заметки офицера</div>
+                    <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:13px;line-height:1.6" placeholder="Добавь заметку об игроке...">${note}</textarea>
+                    <button onclick="savePlayerNote('${normKey}')" style="background:#6366f1;color:white;border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px">💾 Сохранить заметку</button>
+                    <span id="noteSaved" style="display:none;color:#22c55e;font-size:12px;margin-left:12px">✓ Сохранено</span>
+                </div>
+            `;
+        }
+
+        function savePlayerNote(normKey) {
+            const val = document.getElementById('playerNoteInput').value;
+            playerNotes[normKey] = val;
+            saveToStorage();
+            const sp = document.getElementById('noteSaved');
+            sp.style.display = 'inline';
+            setTimeout(() => sp.style.display = 'none', 2000);
+        }
+
+        function goBackFromProfile() {
+            // Скрываем пункт профиля из навигации
+            document.getElementById('nav-profile').style.display = 'none';
+            showPage('roster');
+        }
+
+
         function handleDetailSearch(val) {
             const suggestions = document.getElementById('detailSearchSuggestions');
             if (val.length < 1 && val !== "") { suggestions.classList.add('hidden'); return; }
@@ -1640,7 +1852,7 @@
                     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0b0e14;border-radius:8px;margin-bottom:6px">
                         <div style="display:flex;align-items:center;gap:8px;min-width:0">
                             <span style="font-size:16px;flex-shrink:0">${medals[i]}</span>
-                            <span style="font-weight:700;font-size:14px">${p.name}</span>${pac}
+                            <span class="player-nick-link" onclick="openPlayerProfile('${p.name}')" style="font-weight:700;font-size:14px">${p.name}</span>${pac}
                         </div>
                         <span style="font-weight:900;font-size:15px;color:${color};flex-shrink:0;margin-left:8px">${display}</span>
                     </div>`;
@@ -1836,7 +2048,7 @@
             });
             tbody.innerHTML = sorted.map(p => `
                 <tr style="border-bottom:1px solid #1e2530">
-                    <td style="padding:10px 14px;font-weight:700">${p.name} ${p.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:1px 4px;border-radius:3px;text-transform:uppercase">NEW</span>' : ''}</td>
+                    <td style="padding:10px 14px;font-weight:700"><span class="player-nick-link" onclick="openPlayerProfile('${p.name}')">${p.name}</span> ${p.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:1px 4px;border-radius:3px;text-transform:uppercase">NEW</span>' : ''}</td>
                     <td style="padding:10px 14px"><span style="font-size:11px;background:#1e2530;color:#94a3b8;padding:2px 8px;border-radius:4px;text-transform:uppercase">${p.pac||'СОЛО'}</span></td>
                     <td style="padding:10px 14px;text-align:center;font-weight:700;color:${p.attendance>=70?'#22c55e':p.attendance>=40?'#f59e0b':'#ef4444'}">${p.attendance}%</td>
                     <td style="padding:10px 14px;text-align:center;color:#a78bfa;font-weight:700">${p.kda}</td>
@@ -3351,7 +3563,8 @@
                     kmStats,
                     nickAliases,
                     exhaustedKeys,
-                    appliedStatsByDate
+                    appliedStatsByDate,
+                    playerNotes
                 };
                 localStorage.setItem(LS_KEY, JSON.stringify(data));
             } catch(e) {
@@ -3374,6 +3587,7 @@
                 if (data.nickAliases)  nickAliases   = data.nickAliases;
                 if (data.exhaustedKeys) exhaustedKeys = data.exhaustedKeys;
                 if (data.appliedStatsByDate) appliedStatsByDate = data.appliedStatsByDate;
+                if (data.playerNotes)  playerNotes   = data.playerNotes;
                 return true;
             } catch(e) {
                 console.warn('localStorage load failed:', e);
