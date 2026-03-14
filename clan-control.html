@@ -1129,6 +1129,11 @@
             eventStatuses = Object.assign({}, pendingStatuses);
             // 2. Применяем переопределения из pending
             eventOverrides = Object.assign({}, pendingOverrides);
+            // 3. Удаляем скрины — при сохранении всегда очищаем
+            if (activeDayDate && dayScreenshots[activeDayDate]) {
+                delete dayScreenshots[activeDayDate];
+                renderDayScreenshotPreviews(activeDayDate);
+            }
             saveToStorage();
             renderCalendar();
             const btn = document.querySelector('#dayModal .btn-primary');
@@ -2199,17 +2204,21 @@
                     const isFirst = (i === 0);
                     const geminiPrompt = `Это скриншот из игры Lineage 2. На экране ДВА окна — они могут быть в любом порядке (слева или справа).
 
-ОКНО ГРУППЫ — определяй по содержимому:
+ОКНО ГРУППЫ — определяй строго по содержимому:
 - Есть строка "Лидер: ИМЯ"
 - Есть строка "Состав: N чел. / N рядом"
 - Есть таблица "Член группы" с колонками: имя | иконка | × | 💀 | PvP урон | PvE урон
-- Заголовок = название пака (например "NKIZIMO", "ВИЗАРД" и т.д.)
+- Заголовок окна = название пака (например "NKIZIMO", "ВИЗАРД" и т.д.)
+- НА ФОНЕ ИГРЫ могут быть случайные тексты — статусы персонажей, чат, сообщения — ПОЛНОСТЬЮ ИГНОРИРУЙ ИХ
+- pack_name берётся ТОЛЬКО из заголовка окна "Член группы", не из фонового текста
 
-ОКНО "КОМАНДНЫЙ КАНАЛ" — определяй по содержимому:
+ОКНО "КОМАНДНЫЙ КАНАЛ" — определяй строго по содержимому:
 - Заголовок: "Командный канал"
 - Есть строка "Состав: N груп. / N чел. / N рядом" — N чел. = ОБЩЕЕ число всех игроков рейда
 - Таблица с колонками: Лидер | 👥 | × | 💀 | PvP урон | PvE урон
 - Каждая строка = лидер пака и СУММАРНАЯ стата его группы (не личная!)
+
+СТРОГО БЕРИ ДАННЫЕ ТОЛЬКО ИЗ ТАБЛИЦ ЭТИХ ДВУХ ОКОН. Любой текст вне этих окон — игнорируй полностью.
 
 ИЗВЛЕКИ всех участников из окна ГРУППЫ (таблица "Член группы").${isFirst ? `
 Также прочитай из окна "Командный канал": общее число игроков и всех лидеров с их суммарной статой группы.` : ''}
@@ -2476,23 +2485,6 @@
             const dateStr = activeDayDate;
             const prev = appliedStatsByDate[dateStr];
 
-            // ===== СРАВНЕНИЕ С ПРОШЛЫМ АНАЛИЗОМ (несостыковки) =====
-            const mismatches = [];
-            const newPlayers = [];
-            if (prev && prev.players) {
-                dayLastParsed.forEach(p => {
-                    const oldP = prev.players.find(o => normalizeNick(o.name) === normalizeNick(p.name));
-                    if (!oldP) {
-                        newPlayers.push(p.name);
-                    } else {
-                        const fields = [['kills','⚔️'],['deaths','💀'],['pvp_dmg','🗡️'],['pve_dmg','🐉']];
-                        const diffs = fields.filter(([k]) => (p[k]||0) !== (oldP[k]||0))
-                            .map(([k,icon]) => `${icon} ${oldP[k]||0}→${p[k]||0}`);
-                        if (diffs.length) mismatches.push(`${p.name}: ${diffs.join(', ')}`);
-                    }
-                });
-            }
-
             // ===== ДОБАВЛЯЕМ НОВЫХ ИГРОКОВ В РОСТЕР (только если нет) =====
             let newCount = 0;
             dayLastParsed.forEach(p => {
@@ -2523,9 +2515,7 @@
             });
 
             // ===== СОХРАНЯЕМ СНАПШОТ (статистика теперь считается на лету из снапшотов) =====
-            // Сначала сбрасываем старые данные в ростере (они теперь не источник правды)
             roster.forEach(p => { p.kills = 0; p.deaths = 0; p.pvp_dmg = 0; p.pve_dmg = 0; });
-            // Мёржим с предыдущим снапшотом этого дня через MAX
             const prevSnap = appliedStatsByDate[dateStr];
             let mergedPlayers = dayLastParsed.map(p => ({...p}));
             if (prevSnap && prevSnap.players) {
@@ -2543,10 +2533,26 @@
                 prevSnap.players.forEach(old => {
                     const exists = mergedPlayers.find(p => normalizeNick(p.name) === normalizeNick(old.name));
                     if (!exists) {
-                        // Берём каноничное имя из ростера если есть
                         const rosterMatch = roster.find(r => normalizeNick(r.name) === normalizeNick(old.name));
                         mergedPlayers.push({...old, name: rosterMatch ? rosterMatch.name : old.name});
                     }
+                });
+            }
+
+            // ===== НЕСОСТЫКОВКИ — считаем ПОСЛЕ MAX =====
+            // Показываем только если итоговое значение всё равно меньше старого (MAX не помог)
+            const mismatches = [];
+            if (prevSnap && prevSnap.players) {
+                mergedPlayers.forEach(p => {
+                    const oldP = prevSnap.players.find(o => normalizeNick(o.name) === normalizeNick(p.name));
+                    if (!oldP) return;
+                    const fields = [['kills','⚔️'],['deaths','💀'],['pvp_dmg','🗡️'],['pve_dmg','🐉']];
+                    const diffs = fields.filter(([k]) => {
+                        const oldVal = oldP[k] || 0;
+                        const newVal = p[k] || 0;
+                        return oldVal > 0 && newVal < oldVal * 0.8 && (oldVal - newVal) > 3;
+                    }).map(([k,icon]) => `${icon} ${oldP[k]||0}→${p[k]||0}`);
+                    if (diffs.length) mismatches.push(`${p.name}: ${diffs.join(', ')}`);
                 });
             }
             const mergedScreenMap = Object.assign({}, prevSnap ? (prevSnap.screenPlayersMap || {}) : {}, dayScreenPlayersMap || {});
@@ -2561,7 +2567,7 @@
             };
 
             // Формируем итоговый статус
-            let msg = prev ? `🔄 Перезаписано (старая стата вычтена)` : `✅ Применено`;
+            let msg = prevSnap ? `🔄 Перезаписано (старая стата вычтена)` : `✅ Применено`;
             if (newCount > 0) msg += ` · +${newCount} новых (NEW)`;
             if (newPlayers.length > 0) msg += ` · 🆕 Найдены пропавшие: ${newPlayers.join(', ')}`;
             if (mismatches.length > 0) msg += ` · ⚠️ Несостыковки: ${mismatches.join(' | ')}`;
@@ -2570,8 +2576,14 @@
             document.getElementById('dayAnalyzeResults').style.display = 'none';
             dayLastParsed = [];
 
-            if (activeDayDate) {
+            // Удаляем скрины только если нет несостыковок
+            // Если есть несостыковки — скрины остаются для повторного анализа
+            // При нажатии "Сохранить" скрины удалятся в saveDayModal()
+            if (activeDayDate && mismatches.length === 0) {
                 delete dayScreenshots[activeDayDate];
+                renderDayScreenshotPreviews(activeDayDate);
+            } else if (activeDayDate && mismatches.length > 0) {
+                // Показываем кнопку анализа снова — можно переанализировать
                 renderDayScreenshotPreviews(activeDayDate);
             }
 
@@ -3001,11 +3013,14 @@
                         }
                     }
                     if (screenParty.length === 0) {
-                        // Ищем пак где лидер встречается среди любых игроков
-                        const leaderLower = cc.leader.toLowerCase();
+                        // Ищем пак где лидер встречается среди любых игроков (с нормализацией)
                         for (const [spKey, spPlayers] of Object.entries(screenPlayersMapDay)) {
-                            if (spPlayers.some(p => p.name && p.name.toLowerCase() === leaderLower)) {
+                            if (spPlayers.some(p => p.name && (
+                                p.name.toLowerCase() === cc.leader.toLowerCase() ||
+                                normalizeNick(p.name) === normLeader
+                            ))) {
                                 screenParty = spPlayers;
+                                packName = packName || spKey;
                                 break;
                             }
                         }
