@@ -501,6 +501,12 @@
                 </div>
                 <div id="apiKeyStatus" style="display:none;margin-top:12px;font-size:13px;padding:10px;border-radius:8px"></div>
             </div>
+            <div class="card mb-6">
+                <h2 class="text-lg font-bold mb-2">🔗 Алиасы ников</h2>
+                <p class="text-slate-500 text-sm mb-4">Если AI читает ник неправильно — укажи соответствие. Например: <code style="background:#1e2530;padding:1px 6px;border-radius:4px;font-size:11px">НигативВ → НигатиВ</code></p>
+                <div id="aliasesList" class="space-y-2 mb-4"></div>
+                <button onclick="addAliasRow()" style="background:none;border:1px dashed #2d3748;color:#64748b;border-radius:10px;padding:10px;width:100%;cursor:pointer;font-size:13px;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#64748b'">+ Добавить алиас</button>
+            </div>
             <div class="card">
                 <h2 class="text-lg font-bold mb-2">🗑️ Данные</h2>
                 <p class="text-slate-500 text-sm mb-4">Сбросить все данные приложения (ростер, статистика, события). Ключи сохранятся.</p>
@@ -1221,9 +1227,9 @@
             body.innerHTML = sorted.map(p => `
                 <tr class="hover:bg-[#1a1f29] transition-colors group">
                     <td>
-                        ${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase mr-1">NEW</span>' : ''}
                         <span class="font-bold text-slate-200">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
                     </td>
+                    <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td class="text-slate-400 text-xs">${p.profa}</td>
                     <td><span class="pac-tag">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
@@ -1485,7 +1491,7 @@
             if(pageId === 'archive') renderArchive();
             if(pageId === 'stats') renderStats();
             if(pageId === 'screenshots') renderScreenshotArchive();
-            if(pageId === 'settings') renderApiKeys();
+            if(pageId === 'settings') { renderApiKeys(); renderAliases(); }
         }
 
         function handleDetailSearch(val) {
@@ -2430,7 +2436,8 @@
             // ===== ДОБАВЛЯЕМ НОВЫХ ИГРОКОВ В РОСТЕР (только если нет) =====
             let newCount = 0;
             dayLastParsed.forEach(p => {
-                const existing = roster.find(r => normalizeNick(r.name) === normalizeNick(p.name));
+                const normKey = normalizeNick(p.name);
+                const existing = roster.find(r => normalizeNick(r.name) === normKey);
                 if (!existing) {
                     roster.push({
                         id: Date.now() + Math.random(),
@@ -2439,12 +2446,16 @@
                         profa: '—',
                         pac: 'СОЛО',
                         attendance: 0,
-                        isNew: true  // реально новый — не было в ростере
+                        isNew: true
                     });
                     newCount++;
                 } else {
-                    // Уже есть в ростере — снимаем NEW если вдруг стоит
+                    // Уже есть — снимаем NEW, и если имя в снапшоте отличается — нормализуем его
                     existing.isNew = false;
+                    if (existing.name !== p.name) {
+                        // Запоминаем алиас чтобы AI больше не путал
+                        nickAliases[p.name.toLowerCase()] = existing.name;
+                    }
                 }
             });
 
@@ -2468,7 +2479,11 @@
                 });
                 prevSnap.players.forEach(old => {
                     const exists = mergedPlayers.find(p => normalizeNick(p.name) === normalizeNick(old.name));
-                    if (!exists) mergedPlayers.push({...old});
+                    if (!exists) {
+                        // Берём каноничное имя из ростера если есть
+                        const rosterMatch = roster.find(r => normalizeNick(r.name) === normalizeNick(old.name));
+                        mergedPlayers.push({...old, name: rosterMatch ? rosterMatch.name : old.name});
+                    }
                 });
             }
             const mergedScreenMap = Object.assign({}, prevSnap ? (prevSnap.screenPlayersMap || {}) : {}, dayScreenPlayersMap || {});
@@ -3152,6 +3167,40 @@
         }
 
         // ===== НАСТРОЙКИ =====
+        function renderAliases() {
+            const list = document.getElementById('aliasesList');
+            if (!list) return;
+            const entries = Object.entries(nickAliases);
+            if (entries.length === 0) {
+                list.innerHTML = '<p style="color:#475569;font-size:13px">Алиасов нет</p>';
+                return;
+            }
+            list.innerHTML = entries.map(([from, to]) => `
+                <div style="display:flex;gap:8px;align-items:center">
+                    <input type="text" value="${from}" readonly style="flex:1;background:#0b0e14;border:1px solid #1e2530;border-radius:8px;padding:8px 12px;color:#94a3b8;font-size:12px;font-family:monospace">
+                    <span style="color:#475569">→</span>
+                    <input type="text" value="${to}" readonly style="flex:1;background:#0b0e14;border:1px solid #1e2530;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:12px;font-family:monospace">
+                    <button onclick="deleteAlias('${from.replace(/'/g,"\\'")}'); renderAliases()" style="background:#1e2530;border:none;color:#ef4444;padding:8px 12px;border-radius:8px;cursor:pointer">✕</button>
+                </div>`).join('');
+        }
+
+        function addAliasRow() {
+            showPrompt('Добавить алиас', 'Введи в формате: НигативВ→НигатиВ', (val) => {
+                if (!val || !val.includes('→')) { alert('Формат: ОткудаНик→КудаНик'); return; }
+                const [from, to] = val.split('→').map(s => s.trim());
+                if (from && to) {
+                    nickAliases[from.toLowerCase()] = to;
+                    saveToStorage();
+                    renderAliases();
+                }
+            });
+        }
+
+        function deleteAlias(key) {
+            delete nickAliases[key.toLowerCase()];
+            saveToStorage();
+        }
+
         function renderApiKeys() {
             const list = document.getElementById('apiKeysList');
             if (!list) return;
