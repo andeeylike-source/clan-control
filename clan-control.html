@@ -2550,6 +2550,100 @@
             if (document.getElementById('page-roster').classList.contains('active')) renderRoster();
             if (document.getElementById('page-stats').classList.contains('active')) renderStats();
             if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
+
+            // Проверяем ростер на похожие ники — показываем если нашли
+            setTimeout(() => checkRosterSimilarNicks(), 300);
+        }
+
+        function checkRosterSimilarNicks() {
+            const pairs = [];
+            for (let i = 0; i < roster.length; i++) {
+                for (let j = i + 1; j < roster.length; j++) {
+                    const a = roster[i], b = roster[j];
+                    const normA = normalizeNick(a.name);
+                    const normB = normalizeNick(b.name);
+                    const dist = levenshtein(normA, normB);
+                    // Пары с расстоянием 1-2 — подозрительно похожи
+                    if (dist >= 1 && dist <= 2) {
+                        // Не показываем уже известные алиасы
+                        const aLow = a.name.toLowerCase();
+                        const bLow = b.name.toLowerCase();
+                        if (!nickAliases[aLow] && !nickAliases[bLow]) {
+                            pairs.push({ a, b, dist });
+                        }
+                    }
+                }
+            }
+            if (pairs.length === 0) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'similarNicksOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+
+            const rowsHtml = pairs.map(({a, b, dist}) => `
+                <div style="background:#0b0e14;border:1px solid #2d3748;border-radius:10px;padding:12px 16px;margin-bottom:8px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                        <span style="font-weight:800">${a.name}</span>
+                        <span style="color:#475569;font-size:11px">[${[...a.name].map(c=>c.charCodeAt(0)).join(',')}]</span>
+                        <span style="color:#f59e0b;font-size:12px">≈</span>
+                        <span style="font-weight:800">${b.name}</span>
+                        <span style="color:#475569;font-size:11px">[${[...b.name].map(c=>c.charCodeAt(0)).join(',')}]</span>
+                        <span style="font-size:10px;color:#64748b;margin-left:auto">расст. ${dist}</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="mergeNickPair('${a.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}','${a.name.replace(/'/g,"\\'")}',this)"
+                            style="flex:1;background:#6366f122;border:1px solid #6366f144;color:#a5b4fc;border-radius:8px;padding:6px;font-size:11px;font-weight:700;cursor:pointer">
+                            Оставить «${a.name}»
+                        </button>
+                        <button onclick="mergeNickPair('${a.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}',this)"
+                            style="flex:1;background:#6366f122;border:1px solid #6366f144;color:#a5b4fc;border-radius:8px;padding:6px;font-size:11px;font-weight:700;cursor:pointer">
+                            Оставить «${b.name}»
+                        </button>
+                        <button onclick="this.closest('[data-pair]').remove();checkEmptySimilarModal()"
+                            style="background:#1e2530;border:1px solid #2d3748;color:#64748b;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer">
+                            Разные
+                        </button>
+                    </div>
+                </div>`
+            ).map((html, i) => `<div data-pair="${i}">${html}</div>`).join('');
+
+            overlay.innerHTML = `
+                <div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:28px;width:560px;max-height:80vh;overflow-y:auto">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <div>
+                            <div style="font-size:18px;font-weight:800">⚠️ Похожие ники в ростере</div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:2px">Это один игрок или разные? Байт-коды помогут разобраться.</div>
+                        </div>
+                        <button onclick="document.getElementById('similarNicksOverlay').remove()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:20px">✕</button>
+                    </div>
+                    <div id="similarPairsList">${rowsHtml}</div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        function mergeNickPair(nameA, nameB, keepName, btn) {
+            const removeName = keepName === nameA ? nameB : nameA;
+            // Добавляем алиас
+            nickAliases[removeName.toLowerCase()] = keepName;
+            nickAliases[removeName] = keepName;
+            // Удаляем из ростера
+            const removeIdx = roster.findIndex(p => p.name === removeName);
+            if (removeIdx >= 0) {
+                archive.push(roster[removeIdx]);
+                roster.splice(removeIdx, 1);
+            }
+            saveToStorage();
+            renderRoster();
+            // Убираем строку из модалки
+            btn.closest('[data-pair]').remove();
+            checkEmptySimilarModal();
+        }
+
+        function checkEmptySimilarModal() {
+            const list = document.getElementById('similarPairsList');
+            if (list && list.children.length === 0) {
+                document.getElementById('similarNicksOverlay')?.remove();
+            }
         }
 
         function setDayStatus(type, text) {
