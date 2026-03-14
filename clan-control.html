@@ -2085,11 +2085,17 @@
             for (const p of players) {
                 const resolved = resolveAlias(p.name);
                 const normResolved = normalizeNick(resolved);
-                // Точное совпадение по нормализованному ключу — уже знаем этого игрока
                 const exact = roster.find(r => normalizeNick(r.name) === normResolved);
                 if (!exact) {
                     const similar = findSimilarNick(resolved);
-                    if (similar) similarNickQueue.push({ player: p, similar, resolved });
+                    if (similar) {
+                        // Пропускаем пары которые уже помечены как разные
+                        const diffKey = '__diff__' + resolved.toLowerCase() + '__' + similar.name.toLowerCase();
+                        const diffKey2 = '__diff__' + similar.name.toLowerCase() + '__' + resolved.toLowerCase();
+                        if (!nickAliases[diffKey] && !nickAliases[diffKey2]) {
+                            similarNickQueue.push({ player: p, similar, resolved });
+                        }
+                    }
                 }
             }
             similarNickCallback = onDone;
@@ -2101,9 +2107,24 @@
             const { player, similar, resolved } = similarNickQueue.shift();
             showSimilarNickModal(resolved, similar.name, isSame => {
                 if (isSame) {
-                    saveAlias(player.name, similar.name);
-                    const idx = dayLastParsed.findIndex(p => p.name === player.name);
-                    if (idx >= 0) dayLastParsed[idx].name = similar.name;
+                    // Сохраняем алиас в обоих вариантах регистра
+                    nickAliases[player.name.toLowerCase()] = similar.name;
+                    nickAliases[player.name] = similar.name;
+                    if (player._rawName) {
+                        nickAliases[player._rawName.toLowerCase()] = similar.name;
+                        nickAliases[player._rawName] = similar.name;
+                    }
+                    // Меняем имя во всех вхождениях dayLastParsed
+                    dayLastParsed.forEach(p => {
+                        if (p.name === player.name || p.name === resolved) {
+                            p.name = similar.name;
+                        }
+                    });
+                    saveToStorage();
+                } else {
+                    // Разные — запоминаем чтобы не спрашивать снова
+                    nickAliases['__diff__' + player.name.toLowerCase() + '__' + similar.name.toLowerCase()] = 'different';
+                    saveToStorage();
                 }
                 processSimilarNickQueue();
             });
@@ -2455,12 +2476,15 @@
             // ===== ДОБАВЛЯЕМ НОВЫХ ИГРОКОВ В РОСТЕР (только если нет) =====
             let newCount = 0;
             dayLastParsed.forEach(p => {
-                const normKey = normalizeNick(p.name);
+                // 1. Сначала резолвим через алиас
+                const resolvedName = resolveAlias(p.name);
+                // 2. Потом ищем по нормализованному ключу
+                const normKey = normalizeNick(resolvedName);
                 const existing = roster.find(r => normalizeNick(r.name) === normKey);
                 if (!existing) {
                     roster.push({
                         id: Date.now() + Math.random(),
-                        name: p.name,
+                        name: resolvedName,
                         rank: 'ИГРОК',
                         profa: '—',
                         pac: 'СОЛО',
@@ -2469,11 +2493,11 @@
                     });
                     newCount++;
                 } else {
-                    // Уже есть — снимаем NEW, и если имя в снапшоте отличается — нормализуем его
                     existing.isNew = false;
-                    if (existing.name !== p.name) {
-                        // Запоминаем алиас чтобы AI больше не путал
+                    // Сохраняем алиас если имя отличалось
+                    if (p.name !== resolvedName || p.name !== existing.name) {
                         nickAliases[p.name.toLowerCase()] = existing.name;
+                        nickAliases[p.name] = existing.name;
                     }
                 }
             });
