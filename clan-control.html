@@ -1567,155 +1567,280 @@
             }
 
             const normKey = normalizeNick(player.name);
-
-            // Все даты КМ
             const allDates = Object.keys(appliedStatsByDate).sort();
-            // Даты где игрок присутствовал
             const presentDates = allDates.filter(d => {
                 const snap = appliedStatsByDate[d];
                 return snap && snap.players && snap.players.some(p => normalizeNick(p.name) === normKey);
             });
             const attendance = allDates.length > 0 ? Math.round(presentDates.length / allDates.length * 100) : 0;
 
-            // Стата по каждому дню
-            const dayStats = presentDates.map(d => {
+            const dayStats = allDates.map(d => {
                 const snap = appliedStatsByDate[d];
-                const p = snap.players.find(p => normalizeNick(p.name) === normKey);
-                return { date: d, kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 };
+                const p = snap && snap.players && snap.players.find(p => normalizeNick(p.name) === normKey);
+                return { date: d, present: !!p, kills: p ? (p.kills||0) : 0, deaths: p ? (p.deaths||0) : 0, pvp_dmg: p ? (p.pvp_dmg||0) : 0, pve_dmg: p ? (p.pve_dmg||0) : 0 };
             });
+            const presentStats = dayStats.filter(d => d.present);
 
-            // Сумм. стата
-            const totalKills  = dayStats.reduce((s,d)=>s+d.kills,0);
-            const totalDeaths = dayStats.reduce((s,d)=>s+d.deaths,0);
-            const totalPvp    = dayStats.reduce((s,d)=>s+d.pvp_dmg,0);
-            const totalPve    = dayStats.reduce((s,d)=>s+d.pve_dmg,0);
+            const totalKills  = presentStats.reduce((s,d)=>s+d.kills,0);
+            const totalDeaths = presentStats.reduce((s,d)=>s+d.deaths,0);
+            const totalPvp    = presentStats.reduce((s,d)=>s+d.pvp_dmg,0);
+            const totalPve    = presentStats.reduce((s,d)=>s+d.pve_dmg,0);
             const kda         = (totalKills / Math.max(totalDeaths,1)).toFixed(2);
+            const avgKills    = presentStats.length > 0 ? (totalKills / presentStats.length).toFixed(1) : 0;
+            const avgDeaths   = presentStats.length > 0 ? (totalDeaths / presentStats.length).toFixed(1) : 0;
 
-            // Лучший и худший КМ по убийствам
-            const bestKm  = dayStats.length > 0 ? dayStats.reduce((a,b)=>(b.kills>a.kills?b:a)) : null;
-            const worstKm = dayStats.length > 0 ? dayStats.reduce((a,b)=>(b.kills<a.kills?b:a)) : null;
+            const bestKm  = presentStats.length > 0 ? presentStats.reduce((a,b)=>(b.kills>a.kills?b:a)) : null;
+            const worstKm = presentStats.length > 0 ? presentStats.reduce((a,b)=>(b.kills<a.kills?b:a)) : null;
 
-            // Тренд: сравниваем последние 3 КМ с предыдущими 3
-            let trendHtml = '<span class="trend-flat">— нет данных</span>';
-            if (dayStats.length >= 4) {
-                const last3 = dayStats.slice(-3);
-                const prev3 = dayStats.slice(-6, -3);
+            // Тренд
+            let trendIcon = '→', trendColor = '#64748b', trendText = 'Стабильно';
+            if (presentStats.length >= 4) {
+                const last3 = presentStats.slice(-3);
+                const prev3 = presentStats.slice(-6,-3);
                 if (prev3.length >= 2) {
-                    const avgLast = last3.reduce((s,d)=>s+d.kills,0) / last3.length;
-                    const avgPrev = prev3.reduce((s,d)=>s+d.kills,0) / prev3.length;
-                    const diff = avgLast - avgPrev;
-                    if (diff > 0.5) trendHtml = `<span class="trend-up">↑ Растёт (+${diff.toFixed(1)} убийств/КМ)</span>`;
-                    else if (diff < -0.5) trendHtml = `<span class="trend-down">↓ Падает (${diff.toFixed(1)} убийств/КМ)</span>`;
-                    else trendHtml = `<span class="trend-flat">→ Стабильно</span>`;
+                    const avgL = last3.reduce((s,d)=>s+d.kills,0)/last3.length;
+                    const avgP = prev3.reduce((s,d)=>s+d.kills,0)/prev3.length;
+                    const diff = avgL - avgP;
+                    if (diff > 0.5)  { trendIcon='↑'; trendColor='#22c55e'; trendText=`+${diff.toFixed(1)} убийств/КМ`; }
+                    if (diff < -0.5) { trendIcon='↓'; trendColor='#ef4444'; trendText=`${diff.toFixed(1)} убийств/КМ`; }
                 }
             }
 
-            // Место в рейтинге клана по убийствам
+            // Место в клане
             const statsMap = calcStatsForPeriod('', '');
             const allPlayersSorted = Object.values(statsMap).sort((a,b)=>(b.kills||0)-(a.kills||0));
             const rankIdx = allPlayersSorted.findIndex(p => normalizeNick(p.name) === normKey);
-            const rankInClan = rankIdx >= 0 ? `#${rankIdx+1} из ${allPlayersSorted.length}` : '—';
+            const rankNum = rankIdx >= 0 ? rankIdx + 1 : null;
+            const rankTotal = allPlayersSorted.length;
 
-            // Заметки офицера
+            // Заметки
             const note = playerNotes[normKey] || '';
 
-            // Максимум убийств для графика
-            const maxKills = dayStats.length > 0 ? Math.max(...dayStats.map(d=>d.kills), 1) : 1;
+            // Радар-данные: агрессивность, живучесть, урон, присутствие, поддержка
+            const maxKillsAll = Math.max(...allPlayersSorted.map(p=>p.kills||0), 1);
+            const maxPvpAll   = Math.max(...allPlayersSorted.map(p=>p.pvp_dmg||0), 1);
+            const maxPveAll   = Math.max(...allPlayersSorted.map(p=>p.pve_dmg||0), 1);
+            const aggrScore   = Math.round((totalKills / maxKillsAll) * 100);
+            const survScore   = totalDeaths > 0 ? Math.round(Math.max(0, 100 - (totalDeaths / Math.max(totalKills,1)) * 30)) : 100;
+            const pvpScore    = Math.round((totalPvp / maxPvpAll) * 100);
+            const pveScore    = Math.round((totalPve / maxPveAll) * 100);
+            const presScore   = attendance;
 
-            // Форматирование даты
-            const fmtDate = ds => {
-                const [y,m,d] = ds.split('-');
-                return `${d}.${m}.${y.slice(2)}`;
-            };
+            const fmtDate = ds => { const [y,m,d] = ds.split('-'); return `${d}.${m}.${y.slice(2)}`; };
+            const fmtNum  = n => n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+
+            // Радар SVG
+            function radarSVG(scores, labels) {
+                const cx=110, cy=110, r=80, n=scores.length;
+                const pts = scores.map((s,i) => {
+                    const a = (Math.PI*2/n)*i - Math.PI/2;
+                    const rr = r * (s/100);
+                    return [cx + rr*Math.cos(a), cy + rr*Math.sin(a)];
+                });
+                const grid = [0.25,0.5,0.75,1].map(f => {
+                    const gpts = Array.from({length:n},(_,i)=>{
+                        const a=(Math.PI*2/n)*i-Math.PI/2;
+                        return `${cx+r*f*Math.cos(a)},${cy+r*f*Math.sin(a)}`;
+                    }).join(' ');
+                    return `<polygon points="${gpts}" fill="none" stroke="#1e2530" stroke-width="1"/>`;
+                }).join('');
+                const axes = Array.from({length:n},(_,i)=>{
+                    const a=(Math.PI*2/n)*i-Math.PI/2;
+                    return `<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(a)}" y2="${cy+r*Math.sin(a)}" stroke="#1e2530" stroke-width="1"/>`;
+                }).join('');
+                const poly = `<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="#6366f133" stroke="#6366f1" stroke-width="2"/>`;
+                const dots = pts.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#6366f1"/>`).join('');
+                const lbls = labels.map((lb,i) => {
+                    const a=(Math.PI*2/n)*i-Math.PI/2;
+                    const lx = cx+(r+22)*Math.cos(a), ly = cy+(r+22)*Math.sin(a);
+                    const anch = lx < cx-5 ? 'end' : lx > cx+5 ? 'start' : 'middle';
+                    return `<text x="${lx}" y="${ly+4}" text-anchor="${anch}" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="700">${lb}</text>`;
+                }).join('');
+                return `<svg viewBox="0 0 220 220" width="220" height="220">${grid}${axes}${poly}${dots}${lbls}</svg>`;
+            }
+
+            const radarHtml = radarSVG(
+                [aggrScore, pvpScore, pveScore, presScore, survScore],
+                ['АТАКА','PVP','PVE','ПОСЕЩ.','ЖИВУЧ.']
+            );
+
+            // Кольцо присутствия
+            const circR = 36, circC = 42, circ = 2*Math.PI*circR;
+            const circFill = circ * (attendance/100);
+            const attColor = attendance >= 70 ? '#22c55e' : attendance >= 40 ? '#f59e0b' : '#ef4444';
+
+            // История КМ (последние 8)
+            const recentStats = [...dayStats].slice(-10).reverse();
+            const maxKmKills = Math.max(...recentStats.map(d=>d.kills), 1);
+
+            const rankColor = rankNum ? (rankNum <= 10 ? '#f59e0b' : rankNum <= 30 ? '#6366f1' : '#64748b') : '#475569';
 
             el.innerHTML = `
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-                    <button onclick="goBackFromProfile()" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">← Назад</button>
+            <style>
+                .prf-section-title { font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#475569;margin-bottom:14px; }
+                .prf-card { background:#12171f;border:1px solid #1e2530;border-radius:14px;padding:20px; }
+                .prf-val-big { font-size:28px;font-weight:900;line-height:1; }
+                .prf-val-label { font-size:9px;font-weight:700;text-transform:uppercase;color:#475569;letter-spacing:.08em;margin-top:5px; }
+                .km-row { display:grid;grid-template-columns:60px 1fr 52px 52px 80px 80px;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;transition:background .15s;cursor:default; }
+                .km-row:hover { background:#1a1f29; }
+                .km-bar-wrap { height:6px;background:#1e2530;border-radius:3px;overflow:hidden; }
+                .km-bar-fill { height:100%;border-radius:3px;transition:width .3s; }
+            </style>
+
+            <!-- ШАПКА -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px">
+                <div style="display:flex;align-items:center;gap:20px">
+                    <!-- Аватар-заглушка -->
+                    <div style="width:72px;height:72px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;flex-shrink:0;box-shadow:0 0 20px #6366f133">
+                        ${player.name.charAt(0).toUpperCase()}
+                    </div>
                     <div>
-                        <h1 style="font-size:24px;font-weight:900">${player.name}</h1>
-                        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                            <h1 style="font-size:28px;font-weight:900;letter-spacing:-.5px">${player.name}</h1>
+                            ${player.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:2px 6px;border-radius:4px">NEW</span>' : ''}
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                             <span class="badge badge-${player.rank.toLowerCase()}">${player.rank}</span>
-                            ${player.pac && player.pac !== 'СОЛО' ? `<span class="pac-tag">${player.pac}</span>` : ''}
-                            ${player.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:1px 5px;border-radius:3px">NEW</span>' : ''}
-                            <span style="font-size:12px;color:#64748b">${player.profa}</span>
+                            ${player.pac && player.pac !== 'СОЛО' ? `<span class="pac-tag">${player.pac}</span>` : '<span style="font-size:10px;color:#475569;background:#1e2530;padding:2px 8px;border-radius:4px">СОЛО</span>'}
+                            <span style="font-size:11px;color:#64748b;background:#0b0e14;padding:3px 10px;border-radius:6px;border:1px solid #1e2530">${player.profa || '—'}</span>
                         </div>
                     </div>
                 </div>
+                <button onclick="goBackFromProfile()" style="background:#12171f;border:1px solid #1e2530;color:#64748b;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;flex-shrink:0" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#1e2530';this.style.color='#64748b'">← Назад</button>
+            </div>
 
-                <!-- Основная стата -->
-                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#6366f1">${attendance}%</div>
-                        <div class="profile-stat-label">КМ %</div>
-                        <div style="font-size:9px;color:#475569;margin-top:2px">${presentDates.length}/${allDates.length} КМ</div>
-                    </div>
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#f59e0b">${totalKills}</div>
-                        <div class="profile-stat-label">Убийства</div>
-                    </div>
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#ef4444">${totalDeaths}</div>
-                        <div class="profile-stat-label">Смерти</div>
-                    </div>
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#a78bfa">${kda}</div>
-                        <div class="profile-stat-label">KDA</div>
-                    </div>
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#818cf8;font-size:16px">${totalPvp.toLocaleString()}</div>
-                        <div class="profile-stat-label">PvP урон</div>
-                    </div>
-                    <div class="profile-stat-card">
-                        <div class="profile-stat-val" style="color:#22c55e;font-size:16px">${totalPve.toLocaleString()}</div>
-                        <div class="profile-stat-label">PvE урон</div>
-                    </div>
-                </div>
+            <!-- ГЛАВНАЯ СТРОКА СТАТ -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+                ${[
+                    ['⚔️', totalKills, 'Убийства', '#f59e0b'],
+                    ['💀', totalDeaths, 'Смерти', '#ef4444'],
+                    ['⚡', kda, 'KDA', '#a78bfa'],
+                    ['🗡️', fmtNum(totalPvp), 'PvP урон', '#818cf8'],
+                    ['🐉', fmtNum(totalPve), 'PvE урон', '#22c55e'],
+                ].map(([icon,val,label,color]) => `
+                <div class="prf-card" style="text-align:center;position:relative;overflow:hidden">
+                    <div style="position:absolute;top:10px;right:12px;font-size:18px;opacity:.15">${icon}</div>
+                    <div class="prf-val-big" style="color:${color}">${val}</div>
+                    <div class="prf-val-label">${label}</div>
+                </div>`).join('')}
+            </div>
 
-                <!-- Доп. инфо -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
-                    <div class="card">
-                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">🏆 Лучший КМ</div>
-                        ${bestKm ? `<div style="font-size:14px;font-weight:700;color:#f59e0b">${fmtDate(bestKm.date)}</div>
-                            <div style="font-size:12px;color:#94a3b8;margin-top:4px">⚔️ ${bestKm.kills} убийств · 💀 ${bestKm.deaths} смертей</div>` : '<div style="color:#475569;font-size:12px">—</div>'}
-                    </div>
-                    <div class="card">
-                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📉 Худший КМ</div>
-                        ${worstKm && worstKm !== bestKm ? `<div style="font-size:14px;font-weight:700;color:#ef4444">${fmtDate(worstKm.date)}</div>
-                            <div style="font-size:12px;color:#94a3b8;margin-top:4px">⚔️ ${worstKm.kills} убийств · 💀 ${worstKm.deaths} смертей</div>` : '<div style="color:#475569;font-size:12px">—</div>'}
-                    </div>
-                    <div class="card">
-                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📊 Место в клане</div>
-                        <div style="font-size:18px;font-weight:900;color:#a78bfa">${rankInClan}</div>
-                        <div style="font-size:11px;color:#64748b;margin-top:4px">по убийствам</div>
-                        <div style="font-size:11px;margin-top:4px">${trendHtml}</div>
-                    </div>
-                </div>
+            <!-- ОСНОВНАЯ СЕТКА -->
+            <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:16px">
 
-                <!-- График убийств по КМ -->
-                ${dayStats.length > 0 ? `
-                <div class="card" style="margin-bottom:20px">
-                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:14px">📈 Динамика убийств по КМ</div>
-                    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;overflow-x:auto;padding-bottom:4px">
-                        ${dayStats.map(d => {
-                            const h = Math.max(4, Math.round((d.kills / maxKills) * 72));
-                            const absent = d.kills === 0 && d.deaths === 0 && d.pvp_dmg === 0;
-                            const color = absent ? '#1e2530' : (d.kills === bestKm.kills && d.date === bestKm.date ? '#f59e0b' : '#6366f1');
-                            return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0" title="${fmtDate(d.date)}: ⚔️${d.kills} 💀${d.deaths}">
-                                <div style="height:${h}px;width:18px;border-radius:3px;background:${color};cursor:pointer" data-tip="${fmtDate(d.date)}: ⚔️${d.kills} 💀${d.deaths}" onmouseover="this.style.opacity=0.8;var t=document.getElementById('kmTip');t.textContent=this.dataset.tip;t.style.display='block'" onmouseout="this.style.opacity=1;document.getElementById('kmTip').style.display='none'"></div>
-                                <div style="font-size:8px;color:#475569;writing-mode:vertical-rl;transform:rotate(180deg)">${fmtDate(d.date)}</div>
+                <!-- ЛЕВАЯ КОЛОНКА -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Карточки: лучший/худший/место/тренд -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div class="prf-card">
+                            <div class="prf-section-title">🏆 Лучший КМ</div>
+                            ${bestKm ? `
+                            <div style="font-size:20px;font-weight:900;color:#f59e0b;margin-bottom:6px">${fmtDate(bestKm.date)}</div>
+                            <div style="display:flex;gap:16px">
+                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${bestKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">убийств</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${bestKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">смертей</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#818cf8">${fmtNum(bestKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">pvp урон</div></div>
+                            </div>` : '<div style="color:#475569;font-size:13px">Нет данных</div>'}
+                        </div>
+                        <div class="prf-card">
+                            <div class="prf-section-title">📉 Худший КМ</div>
+                            ${worstKm && worstKm.date !== bestKm?.date ? `
+                            <div style="font-size:20px;font-weight:900;color:#ef4444;margin-bottom:6px">${fmtDate(worstKm.date)}</div>
+                            <div style="display:flex;gap:16px">
+                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${worstKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">убийств</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${worstKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">смертей</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#818cf8">${fmtNum(worstKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">pvp урон</div></div>
+                            </div>` : '<div style="color:#475569;font-size:13px">Нет данных</div>'}
+                        </div>
+                        <div class="prf-card">
+                            <div class="prf-section-title">📊 Место в клане</div>
+                            ${rankNum ? `
+                            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+                                <span style="font-size:32px;font-weight:900;color:${rankColor}">#${rankNum}</span>
+                                <span style="font-size:13px;color:#475569">из ${rankTotal}</span>
+                            </div>
+                            <div style="font-size:11px;color:#64748b">по убийствам · среднее ${avgKills}/КМ</div>
+                            <div style="margin-top:8px;height:4px;background:#1e2530;border-radius:2px;overflow:hidden">
+                                <div style="height:100%;width:${Math.round((1-rankNum/rankTotal)*100)}%;background:${rankColor};border-radius:2px"></div>
+                            </div>` : '<div style="color:#475569;font-size:13px">—</div>'}
+                        </div>
+                        <div class="prf-card">
+                            <div class="prf-section-title">📈 Тренд формы</div>
+                            <div style="font-size:36px;font-weight:900;color:${trendColor};line-height:1;margin-bottom:6px">${trendIcon}</div>
+                            <div style="font-size:12px;color:${trendColor};font-weight:700">${trendText}</div>
+                            <div style="font-size:10px;color:#475569;margin-top:4px">сравнение последних 3 КМ</div>
+                        </div>
+                    </div>
+
+                    <!-- История КМ -->
+                    <div class="prf-card">
+                        <div class="prf-section-title">📋 История КМ (последние ${Math.min(10, dayStats.length)})</div>
+                        <!-- Заголовок таблицы -->
+                        <div class="km-row" style="font-size:9px;font-weight:800;text-transform:uppercase;color:#475569;padding-bottom:4px;border-bottom:1px solid #1e2530;margin-bottom:4px">
+                            <div>Дата</div><div>Активность</div><div style="text-align:center">⚔️</div><div style="text-align:center">💀</div><div style="text-align:center">🗡️ PvP</div><div style="text-align:center">🐉 PvE</div>
+                        </div>
+                        ${recentStats.map(d => {
+                            const isBest = bestKm && d.date === bestKm.date;
+                            const pct = Math.round((d.kills / maxKmKills) * 100);
+                            const barColor = isBest ? '#f59e0b' : d.present ? '#6366f1' : '#1e2530';
+                            const absent = !d.present;
+                            return `<div class="km-row" style="${isBest ? 'background:#f59e0b11;border:1px solid #f59e0b22;' : ''}${absent ? 'opacity:0.4;' : ''}">
+                                <div style="font-size:11px;font-weight:700;color:${isBest?'#f59e0b':absent?'#475569':'#94a3b8'}">${fmtDate(d.date)}</div>
+                                <div><div class="km-bar-wrap"><div class="km-bar-fill" style="width:${absent?0:pct}%;background:${barColor}"></div></div></div>
+                                <div style="text-align:center;font-weight:700;color:#f59e0b">${absent?'—':d.kills}</div>
+                                <div style="text-align:center;font-weight:700;color:#ef4444">${absent?'—':d.deaths}</div>
+                                <div style="text-align:center;color:#818cf8;font-size:11px">${absent?'—':fmtNum(d.pvp_dmg)}</div>
+                                <div style="text-align:center;color:#22c55e;font-size:11px">${absent?'<span style="color:#ef4444;font-size:9px">ОТСУТСТВОВАЛ</span>':fmtNum(d.pve_dmg)}</div>
                             </div>`;
                         }).join('')}
                     </div>
-                    <div id="kmTip" style="display:none;font-size:11px;color:#e2e8f0;background:#1a1f29;border:1px solid #2d3748;border-radius:6px;padding:4px 8px;margin-top:6px;width:fit-content"></div>
-                </div>` : ''}
 
-                <!-- Заметки офицера -->
-                <div class="card">
-                    <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:10px">📝 Заметки офицера</div>
-                    <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:13px;line-height:1.6" placeholder="Добавь заметку об игроке...">${note}</textarea>
-                    <button onclick="savePlayerNote('${normKey}')" style="background:#6366f1;color:white;border:none;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px">💾 Сохранить заметку</button>
-                    <span id="noteSaved" style="display:none;color:#22c55e;font-size:12px;margin-left:12px">✓ Сохранено</span>
                 </div>
+
+                <!-- ПРАВАЯ КОЛОНКА -->
+                <div style="display:flex;flex-direction:column;gap:16px">
+
+                    <!-- Кольцо посещаемости -->
+                    <div class="prf-card" style="text-align:center">
+                        <div class="prf-section-title">Посещаемость КМ</div>
+                        <div style="position:relative;display:inline-block;margin:4px 0">
+                            <svg width="84" height="84" viewBox="0 0 84 84">
+                                <circle cx="42" cy="42" r="${circR}" fill="none" stroke="#1e2530" stroke-width="8"/>
+                                <circle cx="42" cy="42" r="${circR}" fill="none" stroke="${attColor}" stroke-width="8"
+                                    stroke-dasharray="${circFill} ${circ}" stroke-dashoffset="${circ*0.25}"
+                                    stroke-linecap="round" transform="rotate(-90 42 42)"/>
+                            </svg>
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                                <div style="font-size:18px;font-weight:900;color:${attColor}">${attendance}%</div>
+                            </div>
+                        </div>
+                        <div style="font-size:11px;color:#64748b;margin-top:4px">${presentDates.length} из ${allDates.length} КМ</div>
+                    </div>
+
+                    <!-- Радар -->
+                    <div class="prf-card" style="text-align:center">
+                        <div class="prf-section-title">Стиль игры</div>
+                        ${radarHtml}
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;text-align:left">
+                            ${[['Атака',aggrScore,'#f59e0b'],['PvP урон',pvpScore,'#818cf8'],['PvE урон',pveScore,'#22c55e'],['Присутствие',presScore,'#6366f1'],['Живучесть',survScore,'#a78bfa']].map(([lb,sc,cl])=>`
+                            <div style="background:#0b0e14;border-radius:6px;padding:5px 8px">
+                                <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${lb}</div>
+                                <div style="font-size:14px;font-weight:900;color:${cl}">${sc}</div>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Заметки офицера -->
+                    <div class="prf-card">
+                        <div class="prf-section-title">📝 Заметки офицера</div>
+                        <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:12px;line-height:1.6" placeholder="Добавь заметку...">${note}</textarea>
+                        <button onclick="savePlayerNote('${normKey}')" style="background:#6366f1;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;width:100%">💾 Сохранить</button>
+                        <span id="noteSaved" style="display:none;color:#22c55e;font-size:11px;margin-top:6px;display:block;text-align:center">✓ Сохранено</span>
+                    </div>
+
+                </div>
+            </div>
             `;
         }
 
