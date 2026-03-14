@@ -757,14 +757,14 @@
         document.getElementById('confirmBtn').onclick = () => { if (confirmCallback) confirmCallback(); closeConfirm(); };
 
         let promptCallback = null;
-        function showPrompt(title, placeholder, callback) {
+        function showPrompt(title, placeholder, callback, prefill) {
             document.getElementById('promptTitle').innerText = title;
             const input = document.getElementById('promptInput');
             input.placeholder = placeholder;
-            input.value = "";
+            input.value = prefill !== undefined ? prefill : "";
             promptCallback = callback;
             document.getElementById('promptModal').style.display = 'flex';
-            setTimeout(() => input.focus(), 50);
+            setTimeout(() => { input.focus(); input.select(); }, 50);
         }
         function closePrompt() {
             document.getElementById('promptModal').style.display = 'none';
@@ -1185,7 +1185,11 @@
                     const key = normalizeNick(p.name);
                     const present = allDates.filter(d => {
                         const snap = appliedStatsByDate[d];
-                        return snap && snap.players && snap.players.some(sp => normalizeNick(sp.name) === key);
+                        return snap && snap.players && snap.players.some(sp => {
+                            // Резолвим алиас имени из снапшота перед сравнением
+                            const resolvedName = resolveAlias(sp.name);
+                            return normalizeNick(resolvedName) === key || normalizeNick(sp.name) === key;
+                        });
                     }).length;
                     attendance = Math.round(present / totalDates * 100);
                 }
@@ -2066,7 +2070,13 @@
                 // Точное совпадение после нормализации — это тот же игрок
                 if (normName === normRoster && name.toLowerCase() !== p.name.toLowerCase()) return p;
                 const dist = levenshtein(normName, normRoster);
-                if (dist > 0 && dist <= 4 && dist < bestDist) { bestDist = dist; best = p; }
+                // Длины не должны сильно отличаться (не более 30%)
+                const maxLen = Math.max(normName.length, normRoster.length);
+                const minLen = Math.min(normName.length, normRoster.length);
+                if (minLen < maxLen * 0.7) continue;
+                // Порог: dist=1 для коротких (≤5), dist=2 только для длинных (>6)
+                const threshold = minLen <= 5 ? 1 : 2;
+                if (dist > 0 && dist <= threshold && dist < bestDist) { bestDist = dist; best = p; }
             }
             return best;
         }
@@ -2214,7 +2224,10 @@
 - players = ВСЕ строки из таблицы "Член группы" включая лидера — берёшь их личную стату прямо из этой таблицы
 - Лидер ЕСТЬ в таблице "Член группы" — включи его как обычного участника с его личными цифрами
 - Имена точно как написано (регистр важен)
-- kills = колонка × , deaths = колонка 💀
+- Колонки таблицы "Член группы" слева направо: имя | иконка класса | × (kills) | 💀 (deaths) | PvP урон | PvE урон
+- kills = ТОЛЬКО маленькое число в колонке × (обычно 0-50), deaths = ТОЛЬКО маленькое число в колонке 💀 (обычно 0-100)
+- pvp_dmg = число в колонке "PvP урон" (может быть большим: сотни, тысячи), pve_dmg = число в колонке "PvE урон"
+- ВАЖНО: не путай урон со смертями — смерти это маленькое число (0-100), урон может быть тысячи
 - Если значение не видно — ставь 0`;
 
                     // Пауза между запросами чтобы не превышать rate limit
@@ -2323,12 +2336,19 @@
                         }
                         players.forEach(p => {
                             if (!p.name) return;
+                            // Защита: если deaths > 200 и pvp_dmg = 0 — AI перепутал колонки, меняем местами
+                            if ((p.deaths || 0) > 200 && (p.pvp_dmg || 0) === 0) {
+                                const tmp = p.deaths;
+                                p.deaths = p.kills || 0;
+                                p.pvp_dmg = tmp;
+                                p.kills = 0;
+                            }
                             const key = p.name.toLowerCase();
                             if (allPlayers[key]) {
-                                allPlayers[key].kills    += (p.kills    || 0);
-                                allPlayers[key].deaths   += (p.deaths   || 0);
-                                allPlayers[key].pvp_dmg  += (p.pvp_dmg  || 0);
-                                allPlayers[key].pve_dmg  += (p.pve_dmg  || 0);
+                                allPlayers[key].kills    = Math.max(allPlayers[key].kills    || 0, p.kills    || 0);
+                                allPlayers[key].deaths   = Math.max(allPlayers[key].deaths   || 0, p.deaths   || 0);
+                                allPlayers[key].pvp_dmg  = Math.max(allPlayers[key].pvp_dmg  || 0, p.pvp_dmg  || 0);
+                                allPlayers[key].pve_dmg  = Math.max(allPlayers[key].pve_dmg  || 0, p.pve_dmg  || 0);
                             } else {
                                 allPlayers[key] = { name: p.name, kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 };
                             }
@@ -2588,11 +2608,16 @@
                     const normB = normalizeNick(b.name);
                     const dist = levenshtein(normA, normB);
                     if (dist >= 1 && dist <= 2) {
+                        const maxLen = Math.max(normA.length, normB.length);
+                        const minLen = Math.min(normA.length, normB.length);
+                        // Длины не должны сильно отличаться
+                        if (minLen < maxLen * 0.7) continue;
+                        // Порог: dist=1 для коротких, dist=2 только для длинных
+                        const threshold = minLen <= 5 ? 1 : 2;
+                        if (dist > threshold) continue;
                         const aLow = a.name.toLowerCase();
                         const bLow = b.name.toLowerCase();
-                        // Пропускаем если уже есть алиас
                         if (nickAliases[aLow] || nickAliases[bLow]) continue;
-                        // Пропускаем если уже помечены как разные
                         const diffKey1 = '__diff__' + aLow + '__' + bLow;
                         const diffKey2 = '__diff__' + bLow + '__' + aLow;
                         if (nickAliases[diffKey1] || nickAliases[diffKey2]) continue;
@@ -2985,6 +3010,16 @@
                             }
                         }
                     }
+                    if (screenParty.length === 0) {
+                        // Нечёткий поиск — ищем пак где лидер похож по нормализации
+                        for (const [spKey, spPlayers] of Object.entries(screenPlayersMapDay)) {
+                            if (normalizeNick(spKey) === normLeader) {
+                                screenParty = spPlayers;
+                                packName = packName || spKey;
+                                break;
+                            }
+                        }
+                    }
                     if (screenParty.length === 0 && packName) {
                         // Нечёткий поиск по имени пака (игнорируем пробелы и регистр)
                         const packNorm = packName.toLowerCase().replace(/\s+/g,'');
@@ -3120,7 +3155,7 @@
 
         // Переименование игрока в Истории КМ — синхронизируется с ростером
         function kmRenamePlayer(dateStr, oldName, btnEl) {
-            showPrompt('Исправить ник', oldName, function(newName) {
+            showPrompt('Исправить ник', 'Введи новый ник', function(newName) {
                 if (!newName || newName === oldName) return;
                 // 1. Переименовываем во ВСЕХ снапшотах (screenPlayersMap + players)
                 Object.values(appliedStatsByDate).forEach(function(snap) {
@@ -3161,7 +3196,7 @@
                 saveToStorage();
                 renderKmHistory();
                 if (document.getElementById('page-roster').classList.contains('active')) renderRoster();
-            });
+            }, oldName);
         }
 
         function openCalendarDay(dateStr) {
