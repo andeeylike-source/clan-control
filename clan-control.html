@@ -3035,6 +3035,23 @@
                     const dispPvp     = partyPlayers.length > 0 ? sumPvp     : (cc.pvp_dmg||0);
                     const dispPve     = partyPlayers.length > 0 ? sumPve     : (cc.pve_dmg||0);
 
+                    // Расхождения с командным каналом
+                    const ccKills  = cc.kills  || 0;
+                    const ccDeaths = cc.deaths || 0;
+                    const ccPvp    = cc.pvp_dmg || 0;
+                    const diffKills  = partyPlayers.length > 0 ? ccKills  - sumKills  : 0;
+                    const diffDeaths = partyPlayers.length > 0 ? ccDeaths - sumDeaths : 0;
+                    const diffPvp    = partyPlayers.length > 0 ? ccPvp    - sumPvp    : 0;
+                    const hasDiscrepancy = partyPlayers.length > 0 && (diffKills !== 0 || diffDeaths !== 0 || diffPvp !== 0);
+                    const discrepancyHtml = hasDiscrepancy ? `
+                        <div style="background:#78350f22;border:1px solid #f59e0b44;border-radius:6px;padding:6px 10px;margin-top:6px;font-size:11px;color:#fbbf24">
+                            ⚠️ Расхождение с командным каналом:
+                            ${diffKills !== 0 ? `<span style="margin-left:8px">⚔️ ${diffKills > 0 ? '+' : ''}${diffKills}</span>` : ''}
+                            ${diffDeaths !== 0 ? `<span style="margin-left:8px">💀 ${diffDeaths > 0 ? '+' : ''}${diffDeaths}</span>` : ''}
+                            ${diffPvp !== 0 ? `<span style="margin-left:8px">🗡️ ${diffPvp > 0 ? '+' : ''}${diffPvp.toLocaleString()}</span>` : ''}
+                            <span style="color:#94a3b8;margin-left:8px">(КК: ⚔️${ccKills} 💀${ccDeaths})</span>
+                        </div>` : '';
+
                     return `<div style="border:1px solid #1e2530;border-radius:10px;margin-bottom:6px;overflow:hidden">
                         <div onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='block'?'none':'block';this.querySelector('.arr').textContent=b.style.display==='block'?'▲':'▼'"
                              style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#1a1f29;cursor:pointer">
@@ -3042,6 +3059,7 @@
                                 <span style="font-weight:800;font-size:13px">${cc.leader}</span>
                                 ${packName ? `<span style="font-size:9px;background:#1e2530;color:#94a3b8;padding:1px 6px;border-radius:3px;text-transform:uppercase">${packName}</span>` : ''}
                                 <span style="font-size:10px;color:#64748b">👥 ${partyPlayers.length > 0 ? partyPlayers.length : (cc.members||0)}</span>
+                                ${hasDiscrepancy ? `<span title="Расхождение с командным каналом" style="font-size:11px">⚠️</span>` : ''}
                             </div>
                             <div style="display:flex;gap:12px;font-size:12px;align-items:center">
                                 <span style="color:#f59e0b">⚔️ ${dispKills}</span>
@@ -3051,7 +3069,7 @@
                                 <span class="arr" style="color:#475569;font-size:10px;margin-left:4px">▼</span>
                             </div>
                         </div>
-                        <div style="display:none;padding:8px">${partyHtml}</div>
+                        <div style="display:none;padding:8px">${partyHtml}${discrepancyHtml}</div>
                     </div>`;
                 }).join('') : '';
 
