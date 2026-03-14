@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clan Control v2</title>
+    <title>Clan Control v4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -319,7 +319,7 @@
 
     <aside class="sidebar">
         <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v2</div>
+        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v4</div>
         
         <nav>
             <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
@@ -2228,8 +2228,8 @@
 {"pack_name":"ИМЯ ПАКА","pack_leader":"ИМЯ ЛИДЕРА","total_count":9,${isFirst ? '"raid_total":67,"command_channel":[{"leader":"ВИЗАРД","members":9,"kills":3,"deaths":60,"pvp_dmg":262,"pve_dmg":103}],' : ''}"players":[{"name":"ВИЗАРД","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0},{"name":"Ник","kills":0,"deaths":4,"pvp_dmg":3,"pve_dmg":0}]}
 
 Требования:
-- pack_name = заголовок окна ГРУППЫ точно как написано (кириллица так кириллица, без транслитерации)
-- pack_leader = имя из строки "Лидер: ИМЯ" окна ГРУППЫ
+- pack_name = заголовок окна ГРУППЫ — это текст В САМОЙ ВЕРХНЕЙ СТРОКЕ окна с таблицей "Член группы". НЕ берёт из фона, чата, статусов персонажей или любого текста вне окна
+- pack_leader = имя из строки "Лидер: ИМЯ" внутри окна ГРУППЫ
 - total_count = число из строки "Состав: N чел." окна ГРУППЫ${isFirst ? '\n- raid_total = число из строки "Состав: N груп. / N чел." окна Командного канала (второе число)\n- command_channel = все строки таблицы Командного канала (суммарная стата группы на каждого лидера)' : ''}
 - players = ВСЕ строки из таблицы "Член группы" включая лидера — берёшь их личную стату прямо из этой таблицы
 - Лидер ЕСТЬ в таблице "Член группы" — включи его как обычного участника с его личными цифрами
@@ -2346,10 +2346,19 @@
                         }
                         players.forEach(p => {
                             if (!p.name) return;
-                            // Защита: если deaths > 200 и pvp_dmg = 0 — AI перепутал колонки, меняем местами
+                            // Защита от перепутанных колонок AI:
+                            // Случай 1: deaths огромные (>200) а pvp_dmg = 0
                             if ((p.deaths || 0) > 200 && (p.pvp_dmg || 0) === 0) {
                                 const tmp = p.deaths;
                                 p.deaths = p.kills || 0;
+                                p.pvp_dmg = tmp;
+                                p.kills = 0;
+                            }
+                            // Случай 2: deaths >> pvp_dmg (урон попал в смерти, pvp_dmg мал)
+                            // deaths > 100 и pvp_dmg < deaths * 0.1 — явная аномалия
+                            else if ((p.deaths || 0) > 100 && (p.pvp_dmg || 0) < (p.deaths || 0) * 0.1 && (p.pvp_dmg || 0) < 50) {
+                                const tmp = p.deaths;
+                                p.deaths = Math.min(p.kills || 0, 50); // kills тоже могут быть неверными
                                 p.pvp_dmg = tmp;
                                 p.kills = 0;
                             }
@@ -3693,6 +3702,19 @@
 
         window.onload = () => {
             loadFromStorage();
+
+            // ===== ВСТРОЕННЫЕ АЛИАСЫ — известные проблемные ники =====
+            // Добавляем только если ещё нет пользовательского алиаса
+            const builtinAliases = {
+                'большая шишка': 'БольшаяШишка',
+                'Большая Шишка': 'БольшаяШишка',
+            };
+            Object.entries(builtinAliases).forEach(([from, to]) => {
+                if (!nickAliases[from.toLowerCase()]) {
+                    nickAliases[from.toLowerCase()] = to;
+                    nickAliases[from] = to;
+                }
+            });
 
             // ===== ОЧИСТКА РОСТЕРА ПРИ СТАРТЕ =====
             // Снимаем NEW у всех у кого есть хоть один снапшот
