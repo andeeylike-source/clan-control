@@ -1606,12 +1606,54 @@
                 }
             }
 
-            // Место в клане
+            // Место в клане по убийствам
             const statsMap = calcStatsForPeriod('', '');
             const allPlayersSorted = Object.values(statsMap).sort((a,b)=>(b.kills||0)-(a.kills||0));
             const rankIdx = allPlayersSorted.findIndex(p => normalizeNick(p.name) === normKey);
             const rankNum = rankIdx >= 0 ? rankIdx + 1 : null;
             const rankTotal = allPlayersSorted.length;
+
+            // Место в клане по KDA
+            const allPlayersByKda = Object.values(statsMap)
+                .map(p => ({ ...p, kda: parseFloat((p.kills / Math.max(p.deaths,1)).toFixed(2)) }))
+                .sort((a,b) => b.kda - a.kda);
+            const kdaRankIdx = allPlayersByKda.findIndex(p => normalizeNick(p.name) === normKey);
+            const kdaRankNum = kdaRankIdx >= 0 ? kdaRankIdx + 1 : null;
+
+            // Профа и роль
+            const profaName = player.profa && player.profa !== '—' ? player.profa : null;
+            const ROLE_MAP = {
+                'Танк': ['Phoenix Knight (Paladin)','Hell Knight (DA)','Eva\'s Templar (TK)','Shillien Templar (SK)'],
+                'Хилер/Баффер': ['Cardinal (BP)','Eva\'s Saint (EE)','Shillien Saint (SE)','Dominator (Over)','Doomcryer (WC)','Hierophant (PP)','Sword Muse (SwM)','Spectral Dancer (BD)'],
+                'Лучник': ['Sagittarius','Moonlight Sentinel','Ghost Sentinel'],
+                'Кинжал': ['Adventurer','Wind Rider','Ghost Hunter'],
+                'Маг': ['Archmage','Soultaker','Mystic Muse','Storm Screamer','Spectral Master (Shadow)'],
+                'Воин': ['Duelist (Glad)','Dreadnought (Warlord)','Grand Khavatari (Tyrant)','Titan (Destro)','Fortune Seeker (Bounty Hunter)','Maestro (Warsmith)'],
+                'Призыватель': ['Arcana Lord','Elemental Master','Spectral Master (Shadow)'],
+            };
+            const playerRole = profaName ? Object.entries(ROLE_MAP).find(([,profas]) => profas.some(p => profaName.includes(p.split(' ')[0])))?.[0] : null;
+
+            // Статистика по классу (игроки с той же профой)
+            const classmates = profaName ? roster.filter(r => r.profa === profaName && normalizeNick(r.name) !== normKey) : [];
+            const classmateStats = classmates.map(r => {
+                const s = statsMap[normalizeNick(r.name)];
+                return s ? { name: r.name, kills: s.kills||0, kda: parseFloat((s.kills/Math.max(s.deaths,1)).toFixed(2)) } : null;
+            }).filter(Boolean);
+            const classRankKills = classmateStats.filter(c => c.kills > totalKills).length + 1;
+            const classRankKda   = classmateStats.filter(c => c.kda > parseFloat(kda)).length + 1;
+            const classTotal     = classmateStats.length + 1;
+
+            // Статистика по роли
+            const rolemates = playerRole ? roster.filter(r => {
+                const rRole = Object.entries(ROLE_MAP).find(([,profas]) => profas.some(p => r.profa && r.profa.includes(p.split(' ')[0])))?.[0];
+                return rRole === playerRole && normalizeNick(r.name) !== normKey;
+            }) : [];
+            const rolemateStats = rolemates.map(r => {
+                const s = statsMap[normalizeNick(r.name)];
+                return s ? { name: r.name, kills: s.kills||0, kda: parseFloat((s.kills/Math.max(s.deaths,1)).toFixed(2)) } : null;
+            }).filter(Boolean);
+            const roleRankKills = rolemateStats.filter(c => c.kills > totalKills).length + 1;
+            const roleTotal     = rolemateStats.length + 1;
 
             // Заметки
             const note = playerNotes[normKey] || '';
@@ -1629,9 +1671,9 @@
             const fmtDate = ds => { const [y,m,d] = ds.split('-'); return `${d}.${m}.${y.slice(2)}`; };
             const fmtNum  = n => n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
 
-            // Радар SVG
+            // Радар SVG — увеличен viewBox чтобы метки не обрезались
             function radarSVG(scores, labels) {
-                const cx=110, cy=110, r=80, n=scores.length;
+                const cx=130, cy=130, r=80, n=scores.length;
                 const pts = scores.map((s,i) => {
                     const a = (Math.PI*2/n)*i - Math.PI/2;
                     const rr = r * (s/100);
@@ -1646,17 +1688,17 @@
                 }).join('');
                 const axes = Array.from({length:n},(_,i)=>{
                     const a=(Math.PI*2/n)*i-Math.PI/2;
-                    return `<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(a)}" y2="${cy+r*Math.sin(a)}" stroke="#1e2530" stroke-width="1"/>`;
+                    return `<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(a)}" y2="${cy+r*Math.sin(a)}" stroke="#2d3748" stroke-width="1"/>`;
                 }).join('');
                 const poly = `<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="#6366f133" stroke="#6366f1" stroke-width="2"/>`;
                 const dots = pts.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#6366f1"/>`).join('');
                 const lbls = labels.map((lb,i) => {
                     const a=(Math.PI*2/n)*i-Math.PI/2;
-                    const lx = cx+(r+22)*Math.cos(a), ly = cy+(r+22)*Math.sin(a);
-                    const anch = lx < cx-5 ? 'end' : lx > cx+5 ? 'start' : 'middle';
-                    return `<text x="${lx}" y="${ly+4}" text-anchor="${anch}" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="700">${lb}</text>`;
+                    const lx = cx+(r+28)*Math.cos(a), ly = cy+(r+28)*Math.sin(a);
+                    const anch = Math.cos(a) < -0.3 ? 'end' : Math.cos(a) > 0.3 ? 'start' : 'middle';
+                    return `<text x="${lx}" y="${ly+4}" text-anchor="${anch}" fill="#64748b" font-size="9" font-family="Inter,sans-serif" font-weight="800" letter-spacing="0.05em">${lb}</text>`;
                 }).join('');
-                return `<svg viewBox="0 0 220 220" width="220" height="220">${grid}${axes}${poly}${dots}${lbls}</svg>`;
+                return `<svg viewBox="0 0 260 260" width="100%" height="auto" style="max-width:240px">${grid}${axes}${poly}${dots}${lbls}</svg>`;
             }
 
             const radarHtml = radarSVG(
@@ -1756,12 +1798,25 @@
                         <div class="prf-card">
                             <div class="prf-section-title">📊 Место в клане</div>
                             ${rankNum ? `
-                            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-                                <span style="font-size:32px;font-weight:900;color:${rankColor}">#${rankNum}</span>
-                                <span style="font-size:13px;color:#475569">из ${rankTotal}</span>
+                            <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:8px">
+                                <div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">По убийствам</div>
+                                    <div style="display:flex;align-items:baseline;gap:4px">
+                                        <span style="font-size:26px;font-weight:900;color:${rankColor}">#${rankNum}</span>
+                                        <span style="font-size:11px;color:#475569">/ ${rankTotal}</span>
+                                    </div>
+                                    <div style="font-size:10px;color:#64748b;margin-top:2px">avg ${avgKills} убийств/КМ</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">По KDA</div>
+                                    <div style="display:flex;align-items:baseline;gap:4px">
+                                        <span style="font-size:26px;font-weight:900;color:${kdaRankNum && kdaRankNum <= 10 ? '#f59e0b' : kdaRankNum && kdaRankNum <= 30 ? '#a78bfa' : '#64748b'}">#${kdaRankNum || '—'}</span>
+                                        <span style="font-size:11px;color:#475569">/ ${rankTotal}</span>
+                                    </div>
+                                    <div style="font-size:10px;color:#64748b;margin-top:2px">KDA ${kda}</div>
+                                </div>
                             </div>
-                            <div style="font-size:11px;color:#64748b">по убийствам · среднее ${avgKills}/КМ</div>
-                            <div style="margin-top:8px;height:4px;background:#1e2530;border-radius:2px;overflow:hidden">
+                            <div style="height:4px;background:#1e2530;border-radius:2px;overflow:hidden">
                                 <div style="height:100%;width:${Math.round((1-rankNum/rankTotal)*100)}%;background:${rankColor};border-radius:2px"></div>
                             </div>` : '<div style="color:#475569;font-size:13px">—</div>'}
                         </div>
@@ -1794,6 +1849,59 @@
                                 <div style="text-align:center;color:#22c55e;font-size:11px">${absent?'<span style="color:#ef4444;font-size:9px">ОТСУТСТВОВАЛ</span>':fmtNum(d.pve_dmg)}</div>
                             </div>`;
                         }).join('')}
+                    </div>
+
+                    <!-- Статистика по классу и роли -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+                        <!-- По классу -->
+                        <div class="prf-card">
+                            <div class="prf-section-title">🎭 Среди своего класса</div>
+                            ${profaName ? `
+                            <div style="font-size:11px;color:#6366f1;font-weight:700;background:#6366f111;border:1px solid #6366f133;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${profaName}</div>
+                            ${classTotal > 1 ? `
+                            <div style="display:flex;gap:16px">
+                                <div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">Убийства</div>
+                                    <div style="font-size:22px;font-weight:900;color:#f59e0b">#${classRankKills}<span style="font-size:12px;color:#475569;margin-left:4px">/ ${classTotal}</span></div>
+                                </div>
+                                <div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">KDA</div>
+                                    <div style="font-size:22px;font-weight:900;color:#a78bfa">#${classRankKda}<span style="font-size:12px;color:#475569;margin-left:4px">/ ${classTotal}</span></div>
+                                </div>
+                            </div>
+                            <div style="font-size:10px;color:#475569;margin-top:8px">${classmates.slice(0,3).map(c=>c.name).join(', ')}${classmates.length > 3 ? ` +${classmates.length-3}` : ''}</div>
+                            ` : '<div style="color:#475569;font-size:12px;margin-top:4px">Только ты с этой профой</div>'}
+                            ` : `
+                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 0;gap:8px">
+                                <div style="font-size:24px;opacity:.3">🎭</div>
+                                <div style="font-size:12px;color:#475569;text-align:center">Профа не указана</div>
+                                <div style="font-size:10px;color:#2d3748;text-align:center">Укажи профу в ростере чтобы видеть сравнение с одноклассниками</div>
+                            </div>`}
+                        </div>
+
+                        <!-- По роли -->
+                        <div class="prf-card">
+                            <div class="prf-section-title">⚔️ Среди своей роли</div>
+                            ${playerRole ? `
+                            <div style="font-size:11px;color:#f59e0b;font-weight:700;background:#f59e0b11;border:1px solid #f59e0b33;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${playerRole}</div>
+                            ${roleTotal > 1 ? `
+                            <div style="display:flex;gap:16px">
+                                <div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">Убийства</div>
+                                    <div style="font-size:22px;font-weight:900;color:#f59e0b">#${roleRankKills}<span style="font-size:12px;color:#475569;margin-left:4px">/ ${roleTotal}</span></div>
+                                </div>
+                            </div>
+                            <div style="font-size:10px;color:#475569;margin-top:8px">${rolemates.slice(0,3).map(r=>r.name).join(', ')}${rolemates.length > 3 ? ` +${rolemates.length-3}` : ''}</div>
+                            ` : '<div style="color:#475569;font-size:12px;margin-top:4px">Только ты с этой ролью</div>'}
+                            ` : `
+                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 0;gap:8px">
+                                <div style="font-size:24px;opacity:.3">⚔️</div>
+                                <div style="font-size:12px;color:#475569;text-align:center">Роль не определена</div>
+                                <div style="font-size:10px;color:#2d3748;text-align:center">Укажи профу в ростере чтобы видеть сравнение по роли (танк, хилер, лучник…)</div>
+                            </div>`}
+                        </div>
+
                     </div>
 
                 </div>
