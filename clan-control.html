@@ -3354,6 +3354,47 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
 
+
+        // Алиасы для поиска проф (рус + сокращения + англ варианты)
+        const PROFA_SEARCH_ALIASES = {
+            'Ghost Sentinel': ['фр', 'призрачный рейнджер', 'де лучник', 'ghost', 'sentinel'],
+            'Storm Screamer (SH)': ['сх', 'sh', 'шторм', 'storm', 'screamer', 'воющий'],
+            'Archmage': ['сорк', 'сс', 'архмаг', 'arch', 'mage', 'маг'],
+            'Doomcryer (WC)': ['варк', 'вк', 'wc', 'doom', 'cryer', 'варкрайер'],
+            'Cardinal (BP)': ['биш', 'бп', 'bp', 'bishop', 'кардинал'],
+            'Sword Muse (SwM)': ['свс', 'swm', 'sword', 'muse', 'свордмьюз', 'певец'],
+            'Spectral Dancer (BD)': ['бд', 'bd', 'spectral', 'dancer', 'танцор'],
+            'Hierophant (PP)': ['пп', 'pp', 'hierophant', 'иерофант', 'профет'],
+            'Sagittarius': ['хавк', 'сага', 'sagi', 'hawk', 'лучник', 'стрелок'],
+            'Moonlight Sentinel': ['сырок', 'сыр', 'moon', 'moonlight', 'эльф лучник'],
+            'Soultaker (Necro)': ['некр', 'некро', 'necro', 'soultaker', 'некромант'],
+            'Arcana Lord (Cat)': ['кот', 'арка', 'arcana', 'cat', 'призыватель'],
+            'Elemental Master (Pony)': ['конь', 'пони', 'elemental', 'pony', 'элементаль'],
+            'Spectral Master (Shadow)': ['сум', 'шадов', 'shadow', 'spectral', 'призыватель де'],
+            'Mystic Muse (MM)': ['мм', 'mm', 'mystic', 'muse', 'мистик'],
+            'Adventurer': ['тх', 'th', 'adventurer', 'адв', 'кинжал человек'],
+            'Wind Rider': ['пв', 'pw', 'wind', 'rider', 'плейнсуокер', 'кинжал эльф'],
+            'Ghost Hunter': ['ав', 'aw', 'ghost', 'hunter', 'абисс', 'кинжал де'],
+            'АВ/ПВ': ['ав', 'пв', 'aw', 'pw', 'кинжал', 'dagger'],
+            'Phoenix Knight (Paladin)': ['пал', 'паладин', 'phoenix', 'paladin'],
+            'Hell Knight (DA)': ['да', 'da', 'hell', 'knight', 'дарк авенджер'],
+            "Eva's Templar (TK)": ['тк', 'tk', 'eva', 'templar', 'рыцарь евы'],
+            'Shillien Templar (SK)': ['шк', 'sk', 'shillien', 'templar', 'рыцарь шилен'],
+            'Duelist (Glad)': ['глад', 'glad', 'duelist', 'гладиатор'],
+            'Dreadnought (Warlord)': ['вл', 'wl', 'dread', 'warlord', 'копейщик'],
+            'Grand Khavatari (Tyrant)': ['тир', 'tyrant', 'khavatari', 'тиран'],
+            'Titan (Destro)': ['дестр', 'destro', 'titan', 'разрушитель'],
+            'Fortune Seeker (Bounty Hunter)': ['спойл', 'bh', 'bounty', 'fortune', 'охотник'],
+            'Maestro (Warsmith)': ['крафтер', 'ws', 'warsmith', 'maestro', 'кузнец'],
+            'Doombringer': ['берс', 'doom', 'bringer', 'берсерк'],
+            'Judicator': ['джуд', 'jud', 'инспектор', 'inspector'],
+            'Soulhound': ['сб', 'sb', 'soul', 'hound', 'душехват'],
+            'Trickster': ['арба', 'trick', 'арбалест', 'арбалестер'],
+            "Eva's Saint (EE)": ['ее', 'ee', 'eva', 'saint', 'мудрец евы'],
+            'Shillien Saint (SE)': ['се', 'se', 'shillien', 'saint', 'мудрец шилен', 'шилка'],
+            'Dominator (Over)': ['овер', 'ol', 'over', 'overlord', 'доминатор'],
+        };
+
         // ===== СОРТИРОВКА ПРОФ ПО РОЛИ ИГРОКА =====
         const PROFA_ROLES = {
             // Боевые (DPS)
@@ -3663,13 +3704,17 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 const lastNames = lastSnap && lastSnap.players
                     ? new Set(lastSnap.players.map(p => normalizeNick(p.name)))
                     : new Set();
-                const withoutProfa = roster
-                    .filter(p => (!p.profa || p.profa === '—') && lastNames.has(normalizeNick(p.name)))
+                // Сортируем по порядку из снапшота (пати за пати, как на скринах)
+                const snapOrder = lastSnap && lastSnap.players
+                    ? lastSnap.players.map(p => normalizeNick(p.name))
+                    : [];
+                const withoutProfa = snapOrder
+                    .map(normName => roster.find(p => normalizeNick(p.name) === normName))
+                    .filter(p => p && (!p.profa || p.profa === '—'))
                     .map(p => {
                         const s = statsMap[normalizeNick(p.name)];
                         return { player: p, kills: s ? (s.kills || 0) : 0 };
-                    })
-                    .sort((a, b) => b.kills - a.kills);
+                    });
                 if (withoutProfa.length > 0) openProfaAssign(withoutProfa);
             }, 400);
 
@@ -4816,14 +4861,11 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 const sortedProfas = getSortedProfas(kills);
                 const selected = profaAssignSelected[player.id];
 
-                // Роль по убийствам
-                let roleHint = '';
-                if (kills > 10) roleHint = '<span style="font-size:10px;color:#f59e0b;background:#f59e0b11;border:1px solid #f59e0b33;border-radius:4px;padding:1px 6px">⚔️ боевой</span>';
-                else if (kills <= 5) roleHint = '<span style="font-size:10px;color:#22c55e;background:#22c55e11;border:1px solid #22c55e33;border-radius:4px;padding:1px 6px">💚 саппорт</span>';
-                else roleHint = '<span style="font-size:10px;color:#6366f1;background:#6366f111;border:1px solid #6366f133;border-radius:4px;padding:1px 6px">🛡️ танк</span>';
+                const roleHint = '';
 
-                // Первые 6 проф + поиск
-                const topProfas = sortedProfas.slice(0, 6);
+                // Фиксированный топ-8 для всех
+                const TOP8_FIXED = ['Ghost Sentinel','Storm Screamer (SH)','Archmage','Doomcryer (WC)','Cardinal (BP)','Sword Muse (SwM)','Spectral Dancer (BD)','Hierophant (PP)'];
+                const topProfas = TOP8_FIXED;
                 const btnHtml = topProfas.map((pf, bi) => {
                     const src3 = getProfaIcon(pf);
                     const src2 = getClass2IconByClass3(pf);
@@ -4893,7 +4935,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             const allKeys = Object.keys(PROFA_NAMES);
             const filtered = q ? sorted.filter(p => {
                 const short = PROFA_NAMES[p] || '';
-                return p.toLowerCase().includes(q.toLowerCase()) || short.toLowerCase().includes(q.toLowerCase());
+                const lq = q.toLowerCase();
+                // Поиск по: англ названию, русскому сокращению, части любого слова
+                return p.toLowerCase().includes(lq) ||
+                       short.toLowerCase().includes(lq) ||
+                       // Дополнительные русские алиасы для поиска
+                       PROFA_SEARCH_ALIASES[p] && PROFA_SEARCH_ALIASES[p].some(a => a.toLowerCase().includes(lq));
             }) : sorted;
             if (!filtered.length) { dd.style.display = 'none'; return; }
             dd.innerHTML = filtered.slice(0, 12).map(pf => {
