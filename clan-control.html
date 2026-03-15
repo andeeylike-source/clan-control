@@ -3451,6 +3451,8 @@ function getClass2IconByClass3(class3) { return CLASS3_TO_CLASS2_ICON[class3] ||
 
             // ===== ДОБАВЛЯЕМ НОВЫХ ИГРОКОВ В РОСТЕР (только если нет) =====
             let newCount = 0;
+            const profaConflicts = [];
+
             dayLastParsed.forEach(p => {
                 // 1. Резолвим через алиас
                 const resolvedName = resolveAlias(p.name);
