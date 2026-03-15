@@ -4945,6 +4945,13 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
         const pendingProfas = {}; // idx -> profa (предварительный выбор)
 
+        function previewProfaByItemIdx(queueIdx, itemIdx) {
+            const items = window['_ddItems_' + queueIdx];
+            if (!items || itemIdx >= items.length) return;
+            const profa = items[itemIdx];
+            previewProfa(queueIdx, profa);
+        }
+
         function previewProfa(idx, profa) {
             // Предварительный выбор — подставляет в поле, список остаётся
             pendingProfas[idx] = profa;
@@ -5076,11 +5083,11 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 return ia - ib;
             });
             if (!filteredNoDups.length) { dd.style.display = 'none'; return; }
-            dd.innerHTML = filteredNoDups.map(pf => {
+            // Store filtered list for index-based selection
+            window['_ddItems_' + idx] = filteredNoDups;
+            dd.innerHTML = filteredNoDups.map((pf, itemI) => {
                 const src3 = getProfaIcon(pf);
                 const short = PROFA_NAMES[pf] || pf;
-                const pfI = allKeys.indexOf(pf);
-                // Иконки: АВ/ПВ = иконка 2й; кинжалы 3й = только 3я; остальные = 2я + 3я
                 let itemImg = '';
                 if (pf === 'АВ/ПВ') {
                     const av = getClass2Icon('Abyss Walker');
@@ -5093,7 +5100,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     const i3 = src3 ? '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
                     itemImg = i2 + i3;
                 }
-                return '<div onmousedown="_selectingItem=true;event.preventDefault();previewProfa(' + idx + ',\"' + pf.replace(/\"/g,'&quot;') + '\")" data-profa="' + pf.replace(/"/g,'&quot;') + '" style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
+                return '<div onmousedown="_selectingItem=true;event.preventDefault();previewProfaByItemIdx(' + idx + ',' + itemI + ')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
                     itemImg + '<span>' + pf + '</span><span style="color:#64748b;margin-left:auto">(' + short + ')</span></div>';
             }).join('');
             dd.style.display = filteredNoDups.length ? 'block' : 'none';
