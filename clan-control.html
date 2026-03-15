@@ -4876,19 +4876,25 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     const color = isSelected ? '#a5b4fc' : '#94a3b8';
                     const pfIdx = Object.keys(PROFA_NAMES).indexOf(pf);
                     // Иконки одинакового размера: 2я (меньше яркость) → стрелка → 3я
-                    // Ghost Hunter и Wind Rider — только иконка 3й, без 2й
-                    const hideClass2 = (pf === 'Ghost Hunter' || pf === 'Wind Rider');
-                    const img2 = (!hideClass2 && src2) ? '<img src="' + src2 + '" title="2я профа" style="width:22px;height:22px;border-radius:50%;flex-shrink:0;opacity:0.65">' : '';
-                    const img3 = src3 ? '<img src="' + src3 + '" title="' + pf + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
-                    // АВ/ПВ — только иконка 2й, без 3й
                     const isAvPv = pf === 'АВ/ПВ';
-                    const avpvIcon = isAvPv ? (getClass2Icon('Abyss Walker') ? '<img src="' + getClass2Icon('Abyss Walker') + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '') : '';
-                    const check = isSelected ? ' ✓' : '';
-                    const tooltip = ' title="' + pf + '"';
-                    const btnContent = isAvPv
-                        ? avpvIcon + '<span>' + short + check + '</span>'
-                        : img2 + '<span>' + short + check + '</span>' + img3;
-                    return '<button onclick="selectProfaByIdx(' + idx + ',' + pfIdx + ')"' + tooltip + ' style="display:inline-flex;align-items:center;gap:4px;background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;color:' + color + ';font-weight:600;transition:all .15s">' + btnContent + '</button>';
+                    const isKinjalThird = (pf === 'Ghost Hunter' || pf === 'Wind Rider');
+                    let btnContent = '';
+                    if (isAvPv) {
+                        // АВ/ПВ — иконка 2й профы (кинжал)
+                        const avIcon = getClass2Icon('Abyss Walker');
+                        const avImg = avIcon ? '<img src="' + avIcon + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        btnContent = avImg + '<span>' + short + (isSelected?' ✓':'') + '</span>';
+                    } else if (isKinjalThird) {
+                        // Ghost Hunter / Wind Rider — только иконка 3й
+                        const img3only = src3 ? '<img src="' + src3 + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        btnContent = img3only + '<span>' + short + (isSelected?' ✓':'') + '</span>';
+                    } else {
+                        // Остальные — иконка 2й (яркая) слева + текст + иконка 3й справа
+                        const img2b = src2 ? '<img src="' + src2 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                        const img3b = src3 ? '<img src="' + src3 + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        btnContent = img2b + '<span>' + short + (isSelected?' ✓':'') + '</span>' + img3b;
+                    }
+                    return '<button onclick="selectProfaByIdx(' + idx + ',' + pfIdx + ')" title="' + pf + '" style="display:inline-flex;align-items:center;gap:4px;background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;color:' + color + ';font-weight:600;transition:all .15s">' + btnContent + '</button>';
                 }).join('');
 
                 // Поиск по остальным
@@ -4905,7 +4911,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     '<div style="position:relative">' +
                         '<input id="' + searchId + '" type="text" placeholder="Поиск профы..." autocomplete="off" ' +
                         'oninput="filterProfaSearch(' + idx + ',this.value)" ' +
-                        'onfocus="filterProfaSearch(' + idx + ',this.value)" ' +
+                        'onfocus="toggleProfaDd(' + idx + ',this)" ' +
                         'style="width:100%;background:#12171f;border:1px solid #2d3748;border-radius:7px;padding:5px 10px;color:#e2e8f0;font-size:12px;outline:none;box-sizing:border-box">' +
                         '<div id="' + ddId + '" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;max-height:150px;overflow-y:auto;z-index:10;margin-bottom:2px"></div>' +
                     '</div>' +
@@ -4917,14 +4923,27 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         function selectProfa(idx, profa) {
             const player = profaAssignQueue[idx].player;
             profaAssignSelected[player.id] = profa;
-            const dd = document.getElementById('profaDd_' + idx);
-            if (dd) dd.style.display = 'none';
+            // Close dropdown
+            document.querySelectorAll('[id^="profaDd_"]').forEach(dd => dd.style.display = 'none');
+            // Clear search input
+            const inp = document.getElementById('profaSearch_' + idx);
+            if (inp) { inp.value = ''; inp.blur(); }
             renderProfaAssignList();
         }
 
         function selectProfaByIdx(queueIdx, profaIdx) {
             const profa = Object.keys(PROFA_NAMES)[profaIdx];
             if (profa) selectProfa(queueIdx, profa);
+        }
+
+        function toggleProfaDd(idx, inputEl) {
+            const dd = document.getElementById('profaDd_' + idx);
+            if (dd && dd.style.display !== 'none') {
+                dd.style.display = 'none';
+                inputEl.blur();
+            } else {
+                filterProfaSearch(idx, inputEl.value);
+            }
         }
 
         function filterProfaSearch(idx, q) {
@@ -4943,17 +4962,43 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                        PROFA_SEARCH_ALIASES[p] && PROFA_SEARCH_ALIASES[p].some(a => a.toLowerCase().includes(lq));
             }) : sorted;
             if (!filtered.length) { dd.style.display = 'none'; return; }
-            dd.innerHTML = filtered.slice(0, 12).map(pf => {
-                const src = getProfaIcon(pf);
+            // Исключаем из списка те 8 проф которые уже есть кнопками
+            const TOP8_EXCL = ['Ghost Sentinel','Storm Screamer (SH)','Archmage','Doomcryer (WC)','Cardinal (BP)','Sword Muse (SwM)','Spectral Dancer (BD)','Hierophant (PP)'];
+            const SEARCH_POPULARITY = ["Moonlight Sentinel", "Sagittarius", "Titan (Destro)", "АВ/ПВ", "Shillien Templar (SK)", "Judicator", "Trickster", "Eva's Saint (EE)", "Shillien Saint (SE)", "Duelist (Glad)", "Soultaker (Necro)", "Hell Knight (DA)", "Phoenix Knight (Paladin)", "Soulhound", "Eva's Templar (TK)", "Doombringer", "Adventurer", "Spectral Master (Shadow)", "Arcana Lord (Cat)", "Elemental Master (Pony)", "Mystic Muse (MM)", "Ghost Hunter", "Wind Rider", "Dreadnought (Warlord)", "Fortune Seeker (Bounty Hunter)", "Maestro (Warsmith)", "Grand Khavatari (Tyrant)"];
+            // Фильтруем и сортируем по популярности
+            const filteredNoDups = (q
+                ? filtered.filter(pf => !TOP8_EXCL.includes(pf))
+                : SEARCH_POPULARITY.filter(pf => !TOP8_EXCL.includes(pf))
+            ).sort((a, b) => {
+                const ia = SEARCH_POPULARITY.indexOf(a);
+                const ib = SEARCH_POPULARITY.indexOf(b);
+                if (ia === -1 && ib === -1) return (PROFA_NAMES[a]||a).localeCompare(PROFA_NAMES[b]||b);
+                if (ia === -1) return 1;
+                if (ib === -1) return -1;
+                return ia - ib;
+            });
+            if (!filteredNoDups.length) { dd.style.display = 'none'; return; }
+            dd.innerHTML = filteredNoDups.map(pf => {
+                const src3 = getProfaIcon(pf);
                 const short = PROFA_NAMES[pf] || pf;
                 const pfI = allKeys.indexOf(pf);
-                const src2s = getClass2IconByClass3(pf);
-                const img2s = src2s ? '<img src="' + src2s + '" style="width:14px;height:14px;border-radius:50%;flex-shrink:0;opacity:0.7">' : '';
-                const img3s = src ? '<img src="' + src + '" style="width:16px;height:16px;border-radius:50%;flex-shrink:0">' : '';
-                return '<div onclick="selectProfaByIdx(' + idx + ',' + pfI + ')" style="display:flex;align-items:center;gap:5px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
-                    img2s + img3s + pf + ' <span style="color:#64748b;margin-left:auto">(' + short + ')</span></div>';
+                // Иконки: АВ/ПВ = иконка 2й; кинжалы 3й = только 3я; остальные = 2я + 3я
+                let itemImg = '';
+                if (pf === 'АВ/ПВ') {
+                    const av = getClass2Icon('Abyss Walker');
+                    itemImg = av ? '<img src="' + av + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                } else if (pf === 'Ghost Hunter' || pf === 'Wind Rider') {
+                    itemImg = src3 ? '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                } else {
+                    const src2s = getClass2IconByClass3(pf);
+                    const i2 = src2s ? '<img src="' + src2s + '" style="width:20px;height:20px;border-radius:50%;flex-shrink:0">' : '';
+                    const i3 = src3 ? '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                    itemImg = i2 + i3;
+                }
+                return '<div onmousedown="event.preventDefault();selectProfaByIdx(' + idx + ',' + pfI + ')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
+                    itemImg + '<span>' + pf + '</span><span style="color:#64748b;margin-left:auto">(' + short + ')</span></div>';
             }).join('');
-            dd.style.display = 'block';
+            dd.style.display = filteredNoDups.length ? 'block' : 'none';
         }
 
         function saveProfaAssign() {
@@ -4982,13 +5027,9 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
         // Закрыть дропдаун при клике вне
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.ac-wrap') && !e.target.closest('[id^="profaDd_"]') && !e.target.closest('#profaAssignList')) {
+            // Закрыть все дропдауны если клик не на поле ввода и не на самом дропдауне
+            if (!e.target.closest('[id^="profaDd_"]') && !e.target.classList.contains('ac-input')) {
                 document.querySelectorAll('[id^="profaDd_"]').forEach(dd => dd.style.display = 'none');
-            } else if (!e.target.closest('#profaAssignList') && e.target.closest('.pfa-dd-item') === null) {
-                // clicked somewhere in the modal but not on an item or input - close all
-                if (!e.target.closest('.ac-input') && !e.target.closest('[id^="profaDd_"]')) {
-                    document.querySelectorAll('[id^="profaDd_"]').forEach(dd => dd.style.display = 'none');
-                }
             }
         });
 
