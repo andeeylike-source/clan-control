@@ -592,7 +592,7 @@
                         <option value="Soultaker (Necro)">Soultaker (Некр)</option>
                         <option value="Arcana Lord (Cat)">Arcana Lord (Кот)</option>
                         <option value="Elemental Master (Pony)">Elemental Master (Конь)</option>
-                        <option value="Spectral Master (Shadow)">Spectral Master (Сум)</option>
+                        <option value="Spectral Master (Shadow)">Spectral Master (Суммон)</option>
                     </optgroup>
                     <optgroup label="💚 Поддержка">
                         <option value="Cardinal (BP)">Cardinal (Биш)</option>
@@ -613,10 +613,10 @@
                         <option value="Adventurer">Adventurer (ТХ)</option>
                         <option value="Wind Rider">Wind Rider (ПВ)</option>
                         <option value="Ghost Hunter">Ghost Hunter (АВ)</option>
-                        <option value="АВ/ПВ">АВ/ПВ (до 3й профы)</option>
+                        <option value="АВ/ПВ">АВ/ПВ (2ая профа)</option>
                     </optgroup>
                     <optgroup label="🛡️ Танки">
-                        <option value="Phoenix Knight (Paladin)">Phoenix Knight (Пал)</option>
+                        <option value="Phoenix Knight (Paladin)">Phoenix Knight (Паладин)</option>
                         <option value="Hell Knight (DA)">Hell Knight (ДА)</option>
                         <option value="Eva's Templar (TK)">Eva's Templar (ТК)</option>
                         <option value="Shillien Templar (SK)">Shillien Templar (ШК)</option>
@@ -713,7 +713,7 @@
                     <h3 id="dayModalTitle" class="text-xl font-bold"></h3>
                     <p id="dayModalSubtitle" class="text-slate-500 text-xs mt-1"></p>
                 </div>
-                <button onclick="minimizeDayModal()" class="text-slate-500 hover:text-white text-xl leading-none" title="Свернуть">—</button>
+                <button onclick="minimizeDayModal()" style="background:#1e2530;border:none;color:#94a3b8;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='#2d3748';this.style.color='#e2e8f0'" onmouseout="this.style.background='#1e2530';this.style.color='#94a3b8'">Свернуть</button>
                 <button onclick="closeDayModal()" class="text-slate-500 hover:text-white text-xl leading-none">✕</button>
             </div>
 
@@ -1680,7 +1680,7 @@ function getProfaIcon(profa) {
     return key ? PROFA_ICONS[key] : null;
 }
 
-const PROFA_NAMES = {"Archmage": "Сорк", "Mystic Muse (MM)": "ММ", "Storm Screamer (SH)": "СХ", "Soultaker (Necro)": "Некр", "Arcana Lord (Cat)": "Кот", "Elemental Master (Pony)": "Конь", "Spectral Master (Shadow)": "Сум", "Cardinal (BP)": "Биш", "Eva's Saint (EE)": "ЕЕ", "Shillien Saint (SE)": "СЕ", "Dominator (Over)": "Овер", "Doomcryer (WC)": "Варк", "Hierophant (PP)": "ПП", "Sword Muse (SwM)": "СВС", "Spectral Dancer (BD)": "БД", "Sagittarius": "Хавк", "Moonlight Sentinel": "Сырок", "Ghost Sentinel": "ФР", "Adventurer": "ТХ", "Wind Rider": "ПВ", "Ghost Hunter": "АВ", "АВ/ПВ": "АВ/ПВ", "Phoenix Knight (Paladin)": "Пал", "Hell Knight (DA)": "ДА", "Eva's Templar (TK)": "ТК", "Shillien Templar (SK)": "ШК", "Duelist (Glad)": "Глад", "Dreadnought (Warlord)": "ВЛ", "Grand Khavatari (Tyrant)": "Тир", "Titan (Destro)": "Дестр", "Fortune Seeker (Bounty Hunter)": "Спойл", "Maestro (Warsmith)": "Крафтер", "Doombringer": "Берс", "Judicator": "Джуд", "Soulhound": "СБ", "Trickster": "Арба"};
+const PROFA_NAMES = {"Archmage": "Сорк", "Mystic Muse (MM)": "ММ", "Storm Screamer (SH)": "СХ", "Soultaker (Necro)": "Некр", "Arcana Lord (Cat)": "Кот", "Elemental Master (Pony)": "Конь", "Spectral Master (Shadow)": "Суммон", "Cardinal (BP)": "Биш", "Eva's Saint (EE)": "ЕЕ", "Shillien Saint (SE)": "СЕ", "Dominator (Over)": "Овер", "Doomcryer (WC)": "Варк", "Hierophant (PP)": "ПП", "Sword Muse (SwM)": "СВС", "Spectral Dancer (BD)": "БД", "Sagittarius": "Хавк", "Moonlight Sentinel": "Сырок", "Ghost Sentinel": "ФР", "Adventurer": "ТХ", "Wind Rider": "ПВ", "Ghost Hunter": "АВ", "Phoenix Knight (Paladin)": "Паладин", "Hell Knight (DA)": "ДА", "Eva's Templar (TK)": "ТК", "Shillien Templar (SK)": "ШК", "Duelist (Glad)": "Глад", "Dreadnought (Warlord)": "ВЛ", "Grand Khavatari (Tyrant)": "Тир", "Titan (Destro)": "Дестр", "Fortune Seeker (Bounty Hunter)": "Спойл", "Maestro (Warsmith)": "Крафтер", "Doombringer": "Берс", "Judicator": "Джуд", "Soulhound": "СБ", "Trickster": "Арба", "АВ/ПВ": "АВ/ПВ"};
 
 function profaDisplay(profa) {
     if (!profa || profa === '—') return '—';
@@ -3082,8 +3082,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             document.getElementById('dayAnalyzeResults').style.display = 'none';
             setDayStatus('loading', `⏳ Анализирую ${shots.length} скриншотов...`);
 
-            // Сворачиваем модалку в минибар на время анализа
-            minimizeDayModal();
+            // Обновляем минибар но НЕ сворачиваем автоматически
             document.getElementById('minibarText').innerText = `⏳ Анализирую 0 из ${shots.length}...`;
             document.getElementById('minibarSub').innerText = 'Нажми чтобы развернуть';
 
@@ -3389,13 +3388,13 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             'Soultaker (Necro)': ['некр', 'некро', 'necro', 'soultaker', 'некромант'],
             'Arcana Lord (Cat)': ['кот', 'арка', 'arcana', 'cat', 'призыватель'],
             'Elemental Master (Pony)': ['конь', 'пони', 'elemental', 'pony', 'элементаль'],
-            'Spectral Master (Shadow)': ['сум', 'шадов', 'shadow', 'spectral', 'призыватель де'],
+            'Spectral Master (Shadow)': ['суммон', 'сум', 'шадов', 'shadow', 'spectral', 'призыватель де'],
             'Mystic Muse (MM)': ['мм', 'mm', 'mystic', 'muse', 'мистик'],
             'Adventurer': ['тх', 'th', 'adventurer', 'адв', 'кинжал человек'],
             'Wind Rider': ['пв', 'pw', 'wind', 'rider', 'плейнсуокер', 'кинжал эльф'],
             'Ghost Hunter': ['ав', 'aw', 'ghost', 'hunter', 'абисс', 'кинжал де'],
             'АВ/ПВ': ['ав', 'пв', 'aw', 'pw', 'кинжал', 'dagger'],
-            'Phoenix Knight (Paladin)': ['пал', 'паладин', 'phoenix', 'paladin'],
+            'Phoenix Knight (Paladin)': ['паладин', 'пал', 'phoenix', 'paladin'],
             'Hell Knight (DA)': ['да', 'da', 'hell', 'knight', 'дарк авенджер'],
             "Eva's Templar (TK)": ['тк', 'tk', 'eva', 'templar', 'рыцарь евы'],
             'Shillien Templar (SK)': ['шк', 'sk', 'shillien', 'templar', 'рыцарь шилен'],
@@ -4938,7 +4937,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         'style="background:#22c55e;border:none;border-radius:7px;padding:5px 10px;color:#000;font-weight:700;font-size:13px;cursor:pointer;opacity:0.4;transition:opacity .2s;flex-shrink:0">✓</button>' +
                         '<div id="' + ddId + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;margin-top:2px"></div>' +
                     '</div>' +
-                    (selected ? '<div style="margin-top:6px;font-size:11px;color:#22c55e">✓ Выбрано: ' + selected + ' (' + (PROFA_NAMES[selected]||selected) + ')' + '</div>' : '') +
+                    (selected ? '<div style="margin-top:6px;font-size:11px;color:#22c55e">✓ Выбрано: ' + selected.replace(/\s*\([^)]+\)\s*$/, '') + ' (' + (PROFA_NAMES[selected]||selected) + ')' + '</div>' : '') +
                 '</div>';
             }).join('');
         }
