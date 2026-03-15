@@ -4938,7 +4938,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         'style="background:#22c55e;border:none;border-radius:7px;padding:5px 10px;color:#000;font-weight:700;font-size:13px;cursor:pointer;opacity:0.4;transition:opacity .2s;flex-shrink:0">✓</button>' +
                         '<div id="' + ddId + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;margin-top:2px"></div>' +
                     '</div>' +
-                    (selected ? '<div style="margin-top:6px;font-size:11px;color:#22c55e">✓ Выбрано: ' + (PROFA_NAMES[selected]||selected) + '</div>' : '') +
+                    (selected ? '<div style="margin-top:6px;font-size:11px;color:#22c55e">✓ Выбрано: ' + selected + ' (' + (PROFA_NAMES[selected]||selected) + ')' + '</div>' : '') +
                 '</div>';
             }).join('');
         }
