@@ -3376,26 +3376,70 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             'Judicator': 'support',
         };
 
+        // Приоритеты проф внутри DPS категории по частоте в клане
+        const PROFA_PRIORITY = {
+            // Топ DPS >15 киллов
+            'Sagittarius': 1, 'Moonlight Sentinel': 2, 'Ghost Sentinel': 3,
+            'Spellhowler': 4, 'Spellsinger': 5, 'Archmage': 6,
+            'Trickster': 7, 'Duelist (Glad)': 8,
+            // АВ/ПВ — особые, показываем первыми среди кинжалов
+            'АВ/ПВ': 9, 'Ghost Hunter': 10, 'Wind Rider': 11,
+            // Средние DPS <15
+            'Soulhound': 12, 'Doombringer': 13, 'Titan (Destro)': 14,
+            'Grand Khavatari (Tyrant)': 15, 'Adventurer': 16, 'Soultaker (Necro)': 17,
+            'Arcana Lord (Cat)': 18, 'Elemental Master (Pony)': 19, 'Spectral Master (Shadow)': 20,
+            'Mystic Muse (MM)': 21, 'Storm Screamer (SH)': 22,
+            // Танки + призыватели + СЕ <8
+            'Phoenix Knight (Paladin)': 30, 'Hell Knight (DA)': 31,
+            "Eva's Templar (TK)": 32, 'Shillien Templar (SK)': 33,
+            'Sword Muse (SwM)': 34, 'Dreadnought (Warlord)': 35, 'Spectral Dancer (BD)': 36,
+            'Elemental Master (Pony)': 37, 'Arcana Lord (Cat)': 38, 'Spectral Master (Shadow)': 39,
+            'Shillien Saint (SE)': 40, 'Fortune Seeker (Bounty Hunter)': 41, 'Maestro (Warsmith)': 42,
+            // Саппорты <5
+            'Cardinal (BP)': 50, "Eva's Saint (EE)": 51, 'Shillien Saint (SE)': 52,
+            'Dominator (Over)': 53, 'Doomcryer (WC)': 54, 'Hierophant (PP)': 55,
+        };
+
         function getSortedProfas(kills) {
             const allProfas = Object.keys(PROFA_NAMES);
-            // Определяем роль игрока по киллам
-            // много киллов (>10) = dps first, мало (<=5) = support first, средние = tank first
-            let roleOrder;
-            if (kills > 10) {
-                roleOrder = ['dps', 'tank', 'support'];
-            } else if (kills <= 5) {
-                roleOrder = ['support', 'tank', 'dps'];
+            if (kills >= 15) {
+                // Топ DPS первыми, потом танки, потом саппорты
+                return [...allProfas].sort((a, b) => {
+                    const pa = PROFA_PRIORITY[a] || 50;
+                    const pb = PROFA_PRIORITY[b] || 50;
+                    return pa - pb;
+                });
+            } else if (kills >= 8) {
+                // Средние DPS + танки первыми
+                return [...allProfas].sort((a, b) => {
+                    const ra = PROFA_ROLES[a] || 'dps';
+                    const rb = PROFA_ROLES[b] || 'dps';
+                    const roleOrder = ['tank', 'dps', 'support'];
+                    const ia = roleOrder.indexOf(ra), ib = roleOrder.indexOf(rb);
+                    if (ia !== ib) return ia - ib;
+                    return (PROFA_PRIORITY[a]||50) - (PROFA_PRIORITY[b]||50);
+                });
+            } else if (kills >= 5) {
+                // Танки и утилити
+                return [...allProfas].sort((a, b) => {
+                    const ra = PROFA_ROLES[a] || 'dps';
+                    const rb = PROFA_ROLES[b] || 'dps';
+                    const roleOrder = ['tank', 'support', 'dps'];
+                    const ia = roleOrder.indexOf(ra), ib = roleOrder.indexOf(rb);
+                    if (ia !== ib) return ia - ib;
+                    return (PROFA_PRIORITY[a]||50) - (PROFA_PRIORITY[b]||50);
+                });
             } else {
-                roleOrder = ['tank', 'dps', 'support'];
+                // Саппорты первыми
+                return [...allProfas].sort((a, b) => {
+                    const ra = PROFA_ROLES[a] || 'dps';
+                    const rb = PROFA_ROLES[b] || 'dps';
+                    const roleOrder = ['support', 'tank', 'dps'];
+                    const ia = roleOrder.indexOf(ra), ib = roleOrder.indexOf(rb);
+                    if (ia !== ib) return ia - ib;
+                    return (PROFA_PRIORITY[a]||50) - (PROFA_PRIORITY[b]||50);
+                });
             }
-            return [...allProfas].sort((a, b) => {
-                const ra = PROFA_ROLES[a] || 'dps';
-                const rb = PROFA_ROLES[b] || 'dps';
-                const ia = roleOrder.indexOf(ra);
-                const ib = roleOrder.indexOf(rb);
-                if (ia !== ib) return ia - ib;
-                return (PROFA_NAMES[a]||a).localeCompare(PROFA_NAMES[b]||b);
-            });
         }
 
         function renderDayAnalyzedPlayers(players) {
@@ -3611,11 +3655,16 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             if (document.getElementById('page-stats').classList.contains('active')) renderStats();
             if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
 
-            // Открываем попап назначения проф если есть игроки без профы
+            // Открываем попап назначения проф — только игроки из последнего анализа без профы
             setTimeout(() => {
                 const statsMap = calcStatsForPeriod('', '');
+                // Берём только тех кто был в последнем анализе (dayLastParsed уже очищен, используем снапшот)
+                const lastSnap = appliedStatsByDate[dateStr];
+                const lastNames = lastSnap && lastSnap.players
+                    ? new Set(lastSnap.players.map(p => normalizeNick(p.name)))
+                    : new Set();
                 const withoutProfa = roster
-                    .filter(p => !p.profa || p.profa === '—')
+                    .filter(p => (!p.profa || p.profa === '—') && lastNames.has(normalizeNick(p.name)))
                     .map(p => {
                         const s = statsMap[normalizeNick(p.name)];
                         return { player: p, kills: s ? (s.kills || 0) : 0 };
