@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clan Control v8</title>
+    <title>Clan Control v9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -332,7 +332,7 @@
 
     <aside class="sidebar">
         <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v8</div>
+        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v9</div>
         
         <nav>
             <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
@@ -570,53 +570,53 @@
                 <select id="pProfa" class="input-dark" onchange="addProfaFromSelect(this)">
                     <option value="">+ Добавить профу...</option>
                     <optgroup label="🔵 Маги">
-                        <option value="Archmage">🔵 Archmage (SS)</option>
-                        <option value="Mystic Muse (MM)">🔵 Mystic Muse (MM)</option>
-                        <option value="Storm Screamer (SH)">⚡ Storm Screamer (SH)</option>
-                        <option value="Soultaker (Necro)">💀 Soultaker (Necro)</option>
-                        <option value="Arcana Lord (Cat)">🐱 Arcana Lord (Cat)</option>
-                        <option value="Elemental Master (Pony)">🦄 Elemental Master (Pony)</option>
-                        <option value="Spectral Master (Shadow)">👤 Spectral Master (Shadow)</option>
+                        <option value="Archmage">Archmage (Сорк)</option>
+                        <option value="Mystic Muse (MM)">Mystic Muse (ММ)</option>
+                        <option value="Storm Screamer (SH)">Storm Screamer (СХ)</option>
+                        <option value="Soultaker (Necro)">Soultaker (Некр)</option>
+                        <option value="Arcana Lord (Cat)">Arcana Lord (Кот)</option>
+                        <option value="Elemental Master (Pony)">Elemental Master (Конь)</option>
+                        <option value="Spectral Master (Shadow)">Spectral Master (Сум)</option>
                     </optgroup>
-                    <optgroup label="💚 Поддержка (Healers/Buffers)">
-                        <option value="Cardinal (BP)">✝️ Cardinal (BP)</option>
-                        <option value="Eva's Saint (EE)">💚 Eva's Saint (EE)</option>
-                        <option value="Shillien Saint (SE)">🖤 Shillien Saint (SE)</option>
-                        <option value="Dominator (Over)">👑 Dominator (Over)</option>
-                        <option value="Doomcryer (WC)">📯 Doomcryer (WC)</option>
-                        <option value="Hierophant (PP)">🌟 Hierophant (PP)</option>
-                        <option value="Sword Muse (SwM)">🎵 Sword Muse (SwM)</option>
-                        <option value="Spectral Dancer (BD)">💃 Spectral Dancer (BD)</option>
+                    <optgroup label="💚 Поддержка">
+                        <option value="Cardinal (BP)">Cardinal (Биш)</option>
+                        <option value="Eva's Saint (EE)">Eva's Saint (ЕЕ)</option>
+                        <option value="Shillien Saint (SE)">Shillien Saint (СЕ)</option>
+                        <option value="Dominator (Over)">Dominator (Овер)</option>
+                        <option value="Doomcryer (WC)">Doomcryer (Варк)</option>
+                        <option value="Hierophant (PP)">Hierophant (ПП)</option>
+                        <option value="Sword Muse (SwM)">Sword Muse (СВС)</option>
+                        <option value="Spectral Dancer (BD)">Spectral Dancer (БД)</option>
                     </optgroup>
-                    <optgroup label="🏹 Лучники (Archers)">
-                        <option value="Sagittarius">🏹 Sagittarius (Human Archer)</option>
-                        <option value="Moonlight Sentinel">🌙 Moonlight Sentinel (Elf Archer)</option>
-                        <option value="Ghost Sentinel">👻 Ghost Sentinel (DE Archer)</option>
+                    <optgroup label="🏹 Лучники">
+                        <option value="Sagittarius">Sagittarius (Хавк)</option>
+                        <option value="Moonlight Sentinel">Moonlight Sentinel (Сырок)</option>
+                        <option value="Ghost Sentinel">Ghost Sentinel (ФР)</option>
                     </optgroup>
-                    <optgroup label="🗡️ Кинжальщики (Daggers)">
-                        <option value="Adventurer">🗡️ Adventurer (Human Dagger)</option>
-                        <option value="Wind Rider">💨 Wind Rider (Elf Dagger)</option>
-                        <option value="Ghost Hunter">🔪 Ghost Hunter (DE Dagger)</option>
+                    <optgroup label="🗡️ Кинжалы">
+                        <option value="Adventurer">Adventurer (ТХ)</option>
+                        <option value="Wind Rider">Wind Rider (ПВ)</option>
+                        <option value="Ghost Hunter">Ghost Hunter (АВ)</option>
                     </optgroup>
-                    <optgroup label="🛡️ Танки (Tanks)">
-                        <option value="Phoenix Knight (Paladin)">🛡️ Phoenix Knight (Paladin)</option>
-                        <option value="Hell Knight (DA)">😈 Hell Knight (DA)</option>
-                        <option value="Eva's Templar (TK)">🛡️ Eva's Templar (TK)</option>
-                        <option value="Shillien Templar (SK)">⚫ Shillien Templar (SK)</option>
+                    <optgroup label="🛡️ Танки">
+                        <option value="Phoenix Knight (Paladin)">Phoenix Knight (Пал)</option>
+                        <option value="Hell Knight (DA)">Hell Knight (ДА)</option>
+                        <option value="Eva's Templar (TK)">Eva's Templar (ТК)</option>
+                        <option value="Shillien Templar (SK)">Shillien Templar (ШК)</option>
                     </optgroup>
-                    <optgroup label="⚔️ Воины (Warriors)">
-                        <option value="Duelist (Glad)">⚔️ Duelist (Glad)</option>
-                        <option value="Dreadnought (Warlord)">🔨 Dreadnought (Warlord)</option>
-                        <option value="Grand Khavatari (Tyrant)">👊 Grand Khavatari (Tyrant)</option>
-                        <option value="Titan (Destro)">💪 Titan (Destro)</option>
-                        <option value="Fortune Seeker (Bounty Hunter)">💰 Fortune Seeker (Bounty Hunter)</option>
-                        <option value="Maestro (Warsmith)">🔧 Maestro (Warsmith)</option>
-                        <option value="Doombringer">🔥 Doombringer (Берс)</option>
-                        <option value="Judicator">⚡ Judicator (Инспектор)</option>
+                    <optgroup label="⚔️ Воины">
+                        <option value="Duelist (Glad)">Duelist (Глад)</option>
+                        <option value="Dreadnought (Warlord)">Dreadnought (ВЛ)</option>
+                        <option value="Grand Khavatari (Tyrant)">Grand Khavatari (Тир)</option>
+                        <option value="Titan (Destro)">Titan (Дестр)</option>
+                        <option value="Fortune Seeker (Bounty Hunter)">Fortune Seeker (Спойл)</option>
+                        <option value="Maestro (Warsmith)">Maestro (Крафтер)</option>
+                        <option value="Doombringer">Doombringer (Берс)</option>
+                        <option value="Judicator">Judicator (Джуд)</option>
                     </optgroup>
                     <optgroup label="🐾 Другие">
-                        <option value="Soulhound">🐕 Soulhound (СБ)</option>
-                        <option value="Trickster">🎭 Trickster (Арба)</option>
+                        <option value="Soulhound">Soulhound (СБ)</option>
+                        <option value="Trickster">Trickster (Арба)</option>
                     </optgroup>
                 </select>
                 <!-- Выбранные профы -->
@@ -1657,14 +1657,25 @@ function getProfaIcon(profa) {
     return key ? PROFA_ICONS[key] : null;
 }
 
+const PROFA_NAMES = {"Archmage": "Сорк", "Mystic Muse (MM)": "ММ", "Storm Screamer (SH)": "СХ", "Soultaker (Necro)": "Некр", "Arcana Lord (Cat)": "Кот", "Elemental Master (Pony)": "Конь", "Spectral Master (Shadow)": "Сум", "Cardinal (BP)": "Биш", "Eva's Saint (EE)": "ЕЕ", "Shillien Saint (SE)": "СЕ", "Dominator (Over)": "Овер", "Doomcryer (WC)": "Варк", "Hierophant (PP)": "ПП", "Sword Muse (SwM)": "СВС", "Spectral Dancer (BD)": "БД", "Sagittarius": "Хавк", "Moonlight Sentinel": "Сырок", "Ghost Sentinel": "ФР", "Adventurer": "ТХ", "Wind Rider": "ПВ", "Ghost Hunter": "АВ", "Phoenix Knight (Paladin)": "Пал", "Hell Knight (DA)": "ДА", "Eva's Templar (TK)": "ТК", "Shillien Templar (SK)": "ШК", "Duelist (Glad)": "Глад", "Dreadnought (Warlord)": "ВЛ", "Grand Khavatari (Tyrant)": "Тир", "Titan (Destro)": "Дестр", "Fortune Seeker (Bounty Hunter)": "Спойл", "Maestro (Warsmith)": "Крафтер", "Doombringer": "Берс", "Judicator": "Джуд", "Soulhound": "СБ", "Trickster": "Арба"};
+
+function profaDisplay(profa) {
+    if (!profa || profa === '—') return '—';
+    return PROFA_NAMES[profa] || profa;
+}
+
 function profaIconHtml(profa, size) {
     size = size || 20;
     if (!profa || profa === '—') return '<span style="font-size:11px;color:#475569">—</span>';
     const src = getProfaIcon(profa);
+    const shortName = PROFA_NAMES[profa];
+    // Берём первое слово английского названия
+    const engFirst = profa.split(' (')[0].split(' ').slice(0,2).join(' ');
+    const displayName = shortName ? engFirst + ' (' + shortName + ')' : profa;
     const imgHtml = src
         ? '<img src="' + src + '" title="' + profa + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;vertical-align:middle;border:1px solid #2d3748;flex-shrink:0">'
         : '';
-    return '<span style="display:inline-flex;align-items:center;gap:5px">' + imgHtml + '<span style="font-size:11px;color:#94a3b8">' + profa + '</span></span>';
+    return '<span style="display:inline-flex;align-items:center;gap:5px" title="' + profa + '">' + imgHtml + '<span style="font-size:11px;color:#94a3b8">' + displayName + '</span></span>';
 }
 
         // ===== ПРОФИЛЬ ИГРОКА =====
