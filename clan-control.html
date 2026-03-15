@@ -238,6 +238,7 @@
         }
 
         ::-webkit-scrollbar { width: 6px; }
+        .pfa-dd-item:hover { background: #6366f1 !important; }
         ::-webkit-scrollbar-track { background: #0b0e14; }
         ::-webkit-scrollbar-thumb { background: #1e2530; border-radius: 10px; }
 
@@ -3300,6 +3301,51 @@ function resolveClass2ToClass3(n) {
             });
         }
 
+
+        // ===== СОРТИРОВКА ПРОФ ПО РОЛИ ИГРОКА =====
+        const PROFA_ROLES = {
+            // Боевые (DPS)
+            'Archmage': 'dps', 'Mystic Muse (MM)': 'dps', 'Storm Screamer (SH)': 'dps',
+            'Soultaker (Necro)': 'dps', 'Duelist (Glad)': 'dps', 'Dreadnought (Warlord)': 'dps',
+            'Grand Khavatari (Tyrant)': 'dps', 'Titan (Destro)': 'dps', 'Doombringer': 'dps',
+            'Sagittarius': 'dps', 'Moonlight Sentinel': 'dps', 'Ghost Sentinel': 'dps',
+            'Adventurer': 'dps', 'Wind Rider': 'dps', 'Ghost Hunter': 'dps',
+            'Soulhound': 'dps', 'Trickster': 'dps',
+            // Призыватели
+            'Arcana Lord (Cat)': 'dps', 'Elemental Master (Pony)': 'dps', 'Spectral Master (Shadow)': 'dps',
+            // Танки
+            'Phoenix Knight (Paladin)': 'tank', 'Hell Knight (DA)': 'tank',
+            "Eva's Templar (TK)": 'tank', 'Shillien Templar (SK)': 'tank',
+            // Саппорты
+            'Cardinal (BP)': 'support', "Eva's Saint (EE)": 'support', 'Shillien Saint (SE)': 'support',
+            'Dominator (Over)': 'support', 'Doomcryer (WC)': 'support', 'Hierophant (PP)': 'support',
+            'Sword Muse (SwM)': 'support', 'Spectral Dancer (BD)': 'support',
+            'Fortune Seeker (Bounty Hunter)': 'support', 'Maestro (Warsmith)': 'support',
+            'Judicator': 'support',
+        };
+
+        function getSortedProfas(kills) {
+            const allProfas = Object.keys(PROFA_NAMES);
+            // Определяем роль игрока по киллам
+            // много киллов (>10) = dps first, мало (<=5) = support first, средние = tank first
+            let roleOrder;
+            if (kills > 10) {
+                roleOrder = ['dps', 'tank', 'support'];
+            } else if (kills <= 5) {
+                roleOrder = ['support', 'tank', 'dps'];
+            } else {
+                roleOrder = ['tank', 'dps', 'support'];
+            }
+            return [...allProfas].sort((a, b) => {
+                const ra = PROFA_ROLES[a] || 'dps';
+                const rb = PROFA_ROLES[b] || 'dps';
+                const ia = roleOrder.indexOf(ra);
+                const ib = roleOrder.indexOf(rb);
+                if (ia !== ib) return ia - ib;
+                return (PROFA_NAMES[a]||a).localeCompare(PROFA_NAMES[b]||b);
+            });
+        }
+
         function renderDayAnalyzedPlayers(players) {
             const list = document.getElementById('dayAnalyzedPlayersList');
             list.innerHTML = players.map((p, i) => {
@@ -3527,6 +3573,19 @@ function resolveClass2ToClass3(n) {
             if (document.getElementById('page-roster').classList.contains('active')) renderRoster();
             if (document.getElementById('page-stats').classList.contains('active')) renderStats();
             if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
+
+            // Открываем попап назначения проф если есть игроки без профы
+            setTimeout(() => {
+                const statsMap = calcStatsForPeriod('', '');
+                const withoutProfa = roster
+                    .filter(p => !p.profa || p.profa === '—')
+                    .map(p => {
+                        const s = statsMap[normalizeNick(p.name)];
+                        return { player: p, kills: s ? (s.kills || 0) : 0 };
+                    })
+                    .sort((a, b) => b.kills - a.kills);
+                if (withoutProfa.length > 0) openProfaAssign(withoutProfa);
+            }, 400);
 
             // Проверяем ростер на похожие ники — показываем если нашли
             setTimeout(() => checkRosterSimilarNicks(), 300);
@@ -4644,6 +4703,142 @@ function resolveClass2ToClass3(n) {
             closeDatePicker();
         });
 
+
+        // ===== ПОПАП НАЗНАЧЕНИЯ ПРОФ =====
+        let profaAssignQueue = []; // [{player, kills}]
+        let profaAssignSelected = {}; // playerId -> profa
+
+        function openProfaAssign(playersWithoutProfa) {
+            if (!playersWithoutProfa.length) return;
+            profaAssignQueue = playersWithoutProfa;
+            profaAssignSelected = {};
+            renderProfaAssignList();
+            document.getElementById('profaAssignModal').style.display = 'flex';
+        }
+
+        function closeProfaAssign() {
+            document.getElementById('profaAssignModal').style.display = 'none';
+        }
+
+        function renderProfaAssignList() {
+            const list = document.getElementById('profaAssignList');
+            const subtitle = document.getElementById('profaAssignSubtitle');
+            subtitle.textContent = profaAssignQueue.length + ' игроков без профы';
+
+            list.innerHTML = profaAssignQueue.map((item, idx) => {
+                const { player, kills } = item;
+                const sortedProfas = getSortedProfas(kills);
+                const selected = profaAssignSelected[player.id];
+
+                // Роль по убийствам
+                let roleHint = '';
+                if (kills > 10) roleHint = '<span style="font-size:10px;color:#f59e0b;background:#f59e0b11;border:1px solid #f59e0b33;border-radius:4px;padding:1px 6px">⚔️ боевой</span>';
+                else if (kills <= 5) roleHint = '<span style="font-size:10px;color:#22c55e;background:#22c55e11;border:1px solid #22c55e33;border-radius:4px;padding:1px 6px">💚 саппорт</span>';
+                else roleHint = '<span style="font-size:10px;color:#6366f1;background:#6366f111;border:1px solid #6366f133;border-radius:4px;padding:1px 6px">🛡️ танк</span>';
+
+                // Первые 6 проф + поиск
+                const topProfas = sortedProfas.slice(0, 6);
+                const btnHtml = topProfas.map((pf, bi) => {
+                    const src = getProfaIcon(pf);
+                    const short = PROFA_NAMES[pf] || pf;
+                    const isSelected = selected === pf;
+                    const bg = isSelected ? '#6366f1' : '#1a1f29';
+                    const border = isSelected ? '#6366f1' : '#2d3748';
+                    const color = isSelected ? '#fff' : '#94a3b8';
+                    const imgHtml = src ? '<img src="' + src + '" style="width:18px;height:18px;border-radius:50%;flex-shrink:0">' : '';
+                    const pfIdx = Object.keys(PROFA_NAMES).indexOf(pf);
+                    return '<button onclick="selectProfaByIdx(' + idx + ',' + pfIdx + ')" style="display:inline-flex;align-items:center;gap:5px;background:' + bg + ';border:1px solid ' + border + ';border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;color:' + color + ';font-weight:600;transition:all .15s">' + imgHtml + short + '</button>';
+                }).join('');
+
+                // Поиск по остальным
+                const searchId = 'profaSearch_' + idx;
+                const ddId = 'profaDd_' + idx;
+
+                return '<div style="background:#0b0e14;border:1px solid #1e2530;border-radius:10px;padding:12px 14px">' +
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+                        '<span style="font-size:14px;font-weight:700;color:#e2e8f0">' + player.name + '</span>' +
+                        roleHint +
+                        '<span style="font-size:11px;color:#475569;margin-left:auto">⚔️ ' + kills + ' киллов</span>' +
+                    '</div>' +
+                    '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">' + btnHtml + '</div>' +
+                    '<div style="position:relative">' +
+                        '<input id="' + searchId + '" type="text" placeholder="Поиск профы..." autocomplete="off" ' +
+                        'oninput="filterProfaSearch(' + idx + ',this.value)" ' +
+                        'onfocus="filterProfaSearch(' + idx + ',this.value)" ' +
+                        'style="width:100%;background:#12171f;border:1px solid #2d3748;border-radius:7px;padding:5px 10px;color:#e2e8f0;font-size:12px;outline:none;box-sizing:border-box">' +
+                        '<div id="' + ddId + '" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;max-height:150px;overflow-y:auto;z-index:10;margin-bottom:2px"></div>' +
+                    '</div>' +
+                    (selected ? '<div style="margin-top:6px;font-size:11px;color:#22c55e">✓ Выбрано: ' + (PROFA_NAMES[selected]||selected) + '</div>' : '') +
+                '</div>';
+            }).join('');
+        }
+
+        function selectProfa(idx, profa) {
+            const player = profaAssignQueue[idx].player;
+            profaAssignSelected[player.id] = profa;
+            const dd = document.getElementById('profaDd_' + idx);
+            if (dd) dd.style.display = 'none';
+            renderProfaAssignList();
+        }
+
+        function selectProfaByIdx(queueIdx, profaIdx) {
+            const profa = Object.keys(PROFA_NAMES)[profaIdx];
+            if (profa) selectProfa(queueIdx, profa);
+        }
+
+        function filterProfaSearch(idx, q) {
+            const dd = document.getElementById('profaDd_' + idx);
+            if (!dd) return;
+            const kills = profaAssignQueue[idx].kills;
+            const sorted = getSortedProfas(kills);
+            const allKeys = Object.keys(PROFA_NAMES);
+            const filtered = q ? sorted.filter(p => {
+                const short = PROFA_NAMES[p] || '';
+                return p.toLowerCase().includes(q.toLowerCase()) || short.toLowerCase().includes(q.toLowerCase());
+            }) : sorted;
+            if (!filtered.length) { dd.style.display = 'none'; return; }
+            dd.innerHTML = filtered.slice(0, 12).map(pf => {
+                const src = getProfaIcon(pf);
+                const short = PROFA_NAMES[pf] || pf;
+                const pfI = allKeys.indexOf(pf);
+                const imgHtml = src ? '<img src="' + src + '" style="width:16px;height:16px;border-radius:50%;flex-shrink:0">' : '';
+                return '<div onclick="selectProfaByIdx(' + idx + ',' + pfI + ')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
+                    imgHtml + pf + ' <span style="color:#64748b;margin-left:auto">(' + short + ')</span></div>';
+            }).join('');
+            dd.style.display = 'block';
+        }
+
+        function saveProfaAssign() {
+            Object.entries(profaAssignSelected).forEach(([id, profa]) => {
+                const player = roster.find(p => String(p.id) === String(id));
+                if (player && profa) {
+                    player.profa = profa;
+                    if (!player.profas) player.profas = [];
+                    if (!player.profas.includes(profa)) player.profas.push(profa);
+                }
+            });
+            saveToStorage();
+            renderRoster();
+            closeProfaAssign();
+            const count = Object.keys(profaAssignSelected).length;
+            if (count > 0) {
+                // Показываем уведомление
+                const status = document.getElementById('dayScreenshotStatus');
+                if (status) {
+                    status.style.display = 'block';
+                    status.style.cssText = 'display:block;background:#14532d22;border:1px solid #22c55e44;color:#4ade80;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:8px';
+                    document.getElementById('dayScreenshotStatusText').textContent = '🎭 Назначено проф: ' + count;
+                }
+            }
+        }
+
+        // Закрыть дропдаун при клике вне
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#profaAssignList')) {
+                document.querySelectorAll('[id^="profaDd_"]').forEach(dd => dd.style.display = 'none');
+            }
+        });
+
         window.onload = () => {
             loadFromStorage();
 
@@ -4718,6 +4913,25 @@ function resolveClass2ToClass3(n) {
                 <button class="dp-nav" onclick="dpNavDecade(1)">›</button>
             </div>
             <div class="dp-year-grid" id="dpYears"></div>
+        </div>
+    </div>
+
+
+    <!-- МОДАЛКА НАЗНАЧЕНИЯ ПРОФ -->
+    <div id="profaAssignModal" class="modal-overlay" style="z-index:160">
+        <div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;width:560px;max-width:96vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:20px 24px 16px;border-bottom:1px solid #1e2530;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+                <div>
+                    <div style="font-size:16px;font-weight:700;color:#e2e8f0">🎭 Назначить профы</div>
+                    <div id="profaAssignSubtitle" style="font-size:12px;color:#64748b;margin-top:2px"></div>
+                </div>
+                <button onclick="closeProfaAssign()" style="background:#1e2530;border:none;color:#94a3b8;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+            </div>
+            <div id="profaAssignList" style="overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:12px;flex:1"></div>
+            <div style="padding:16px 24px;border-top:1px solid #1e2530;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0">
+                <button onclick="closeProfaAssign()" style="background:#1e2530;border:none;color:#94a3b8;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-weight:600">Пропустить</button>
+                <button onclick="saveProfaAssign()" style="background:#6366f1;border:none;color:white;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-weight:700">💾 Сохранить</button>
+            </div>
         </div>
     </div>
 
