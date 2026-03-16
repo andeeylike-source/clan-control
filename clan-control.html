@@ -562,16 +562,6 @@
                     </label>
                 </div>
             </div>
-            <div class="card mb-6">
-                <h2 class="text-lg font-bold mb-2">📦 Экспорт / импорт</h2>
-                <p class="text-slate-500 text-sm mb-4">Сохрани все данные приложения в JSON-файл и загрузи его на другом компьютере. Экспортируются ростер, статистика, история, алиасы, заметки, API-ключи и настройки уведомлений.</p>
-                <div class="flex gap-3 flex-wrap">
-                    <button onclick="exportAppData()" class="btn-primary">⬇️ Экспорт данных</button>
-                    <button onclick="triggerImportData()" style="background:#1e2530;color:#cbd5e1;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600">⬆️ Импорт данных</button>
-                    <input type="file" id="importDataFile" accept="application/json,.json" onchange="importAppData(event)" style="display:none">
-                </div>
-                <div style="margin-top:10px;color:#64748b;font-size:12px">Совет: сначала экспортируй файл дома, потом на другом ПК открой сайт и импортируй этот JSON.</div>
-            </div>
             <div class="card">
                 <h2 class="text-lg font-bold mb-2">🗑️ Данные</h2>
                 <p class="text-slate-500 text-sm mb-4">Сбросить все данные приложения (ростер, статистика, события). Ключи сохранятся.</p>
@@ -3529,7 +3519,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 const currentProfa = inRoster ? (inRoster.profa || '—') : (p.profa || '—');
 
                 const class2Html = class2src
-                    ? `<img src="${class2src}" title="${class2}" style="width:18px;height:18px;border-radius:50%;border:1px solid #2d3748;flex-shrink:0">`
+                    ? `<img src="${class2src}" title="${class2}" style="width:28px;height:28px;border-radius:50%;border:1px solid #2d3748;flex-shrink:0">`
                     : '';
 
                 let profaHtml = '';
@@ -4393,7 +4383,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 const class2src = class2 ? getClass2Icon(class2) : null;
                 const class3options = class2 ? resolveClass2ToClass3(class2) : [];
                 const class2Html = class2src
-                    ? `<img src="${class2src}" title="${class2}" style="width:20px;height:20px;border-radius:50%;border:1px solid #2d3748;flex-shrink:0">`
+                    ? `<img src="${class2src}" title="${class2}" style="width:28px;height:28px;border-radius:50%;border:1px solid #2d3748;flex-shrink:0">`
                     : '';
 
                 // Кнопка выбора 3й профы (если есть варианты и профа ещё не назначена)
@@ -4532,79 +4522,6 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             } catch(e) {
                 console.warn('localStorage load failed:', e);
                 return false;
-            }
-        }
-
-        function triggerImportData() {
-            const input = document.getElementById('importDataFile');
-            if (!input) return;
-            input.value = '';
-            input.click();
-        }
-
-        function exportAppData() {
-            try {
-                saveToStorage();
-                const payload = {
-                    app: 'Clan Control',
-                    version: 1,
-                    exportedAt: new Date().toISOString(),
-                    storageKey: LS_KEY,
-                    data: JSON.parse(localStorage.getItem(LS_KEY) || '{}'),
-                    geminiKeys: JSON.parse(localStorage.getItem('clanControl_geminiKeys') || '[]'),
-                    notifySettings: JSON.parse(localStorage.getItem('cc_notify') || '{"popup":true,"sound":false}')
-                };
-                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                const date = new Date();
-                const pad = n => String(n).padStart(2, '0');
-                const filename = `clan-control-backup-${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}.json`;
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-                showStatus('success', '✅', 'Резервная копия данных скачана');
-            } catch (e) {
-                console.error('exportAppData failed:', e);
-                showStatus('error', '❌', 'Не удалось экспортировать данные');
-            }
-        }
-
-        async function importAppData(event) {
-            const file = event?.target?.files?.[0];
-            if (!file) return;
-            try {
-                const text = await file.text();
-                const payload = JSON.parse(text);
-                const importedData = payload?.data;
-                if (!importedData || typeof importedData !== 'object') {
-                    throw new Error('Некорректный файл резервной копии');
-                }
-                showConfirm(
-                    '⬆️ Импортировать данные?',
-                    'Текущие данные на этом компьютере будут заменены данными из файла. Продолжить?',
-                    () => {
-                        try {
-                            localStorage.setItem(LS_KEY, JSON.stringify(importedData));
-                            if (Array.isArray(payload.geminiKeys)) {
-                                localStorage.setItem('clanControl_geminiKeys', JSON.stringify(payload.geminiKeys));
-                            }
-                            if (payload.notifySettings && typeof payload.notifySettings === 'object') {
-                                localStorage.setItem('cc_notify', JSON.stringify(payload.notifySettings));
-                            }
-                            location.reload();
-                        } catch (err) {
-                            console.error('import apply failed:', err);
-                            showStatus('error', '❌', 'Не удалось применить импорт');
-                        }
-                    }
-                );
-            } catch (e) {
-                console.error('importAppData failed:', e);
-                showStatus('error', '❌', 'Файл не распознан. Нужен JSON, экспортированный из Clan Control.');
             }
         }
 
@@ -4984,16 +4901,16 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     if (isAvPv) {
                         // АВ/ПВ — иконка 2й профы (кинжал)
                         const avIcon = getClass2Icon('Abyss Walker');
-                        const avImg = avIcon ? '<img src="' + avIcon + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        const avImg = avIcon ? '<img src="' + avIcon + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                         btnContent = avImg + '<span>' + short + (isSelected?' ✓':'') + '</span>';
                     } else if (isKinjalThird) {
                         // Ghost Hunter / Wind Rider — только иконка 3й
-                        const img3only = src3 ? '<img src="' + src3 + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        const img3only = src3 ? '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                         btnContent = img3only + '<span>' + short + (isSelected?' ✓':'') + '</span>';
                     } else {
                         // Остальные — иконка 2й (яркая) слева + текст + иконка 3й справа
-                        const img2b = src2 ? '<img src="' + src2 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
-                        const img3b = src3 ? '<img src="' + src3 + '" style="width:24px;height:24px;border-radius:50%;flex-shrink:0">' : '';
+                        const img2b = src2 ? '<img src="' + src2 + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
+                        const img3b = src3 ? '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                         btnContent = img2b + '<span>' + short + (isSelected?' ✓':'') + '</span>' + img3b;
                     }
                     return '<button onclick="selectProfaByIdx(' + idx + ',' + pfIdx + ')" title="' + pf + '" style="display:inline-flex;align-items:center;gap:4px;background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:5px 8px;font-size:11px;cursor:pointer;color:' + color + ';font-weight:600;transition:all .15s">' + btnContent + '</button>';
@@ -5060,12 +4977,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     const noClass2 = (profa === 'Ghost Hunter' || profa === 'Wind Rider');
                     let iconHtml = '';
                     if (profa === 'АВ/ПВ' && src2) {
-                        iconHtml = '<img src="' + src2 + '" style="width:22px;height:22px;border-radius:50%">';
+                        iconHtml = '<img src="' + src2 + '" style="width:28px;height:28px;border-radius:50%">';
                     } else if (!noClass2 && src2 && src3) {
-                        iconHtml = '<img src="' + src2 + '" style="width:18px;height:18px;border-radius:50%;opacity:0.8">'
-                                 + '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;margin-left:2px">';
+                        iconHtml = '<img src="' + src2 + '" style="width:28px;height:28px;border-radius:50%;opacity:0.8">'
+                                 + '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%;margin-left:2px">';
                     } else if (src3) {
-                        iconHtml = '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%">';
+                        iconHtml = '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%">';
                     }
                     wrap.innerHTML = iconHtml;
                     wrap.style.display = iconHtml ? 'flex' : 'none';
@@ -5217,13 +5134,13 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 let itemImg = '';
                 if (pf === 'АВ/ПВ') {
                     const av = getClass2Icon('Abyss Walker');
-                    itemImg = av ? '<img src="' + av + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                    itemImg = av ? '<img src="' + av + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                 } else if (pf === 'Ghost Hunter' || pf === 'Wind Rider') {
-                    itemImg = src3 ? '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                    itemImg = src3 ? '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                 } else {
                     const src2s = getClass2IconByClass3(pf);
-                    const i2 = src2s ? '<img src="' + src2s + '" style="width:20px;height:20px;border-radius:50%;flex-shrink:0">' : '';
-                    const i3 = src3 ? '<img src="' + src3 + '" style="width:22px;height:22px;border-radius:50%;flex-shrink:0">' : '';
+                    const i2 = src2s ? '<img src="' + src2s + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
+                    const i3 = src3 ? '<img src="' + src3 + '" style="width:28px;height:28px;border-radius:50%;flex-shrink:0">' : '';
                     itemImg = i2 + i3;
                 }
                 return '<div onmousedown="_selectingItem=true;event.preventDefault();selectProfaByItemIdxDirect(' + idx + ',' + itemI + ')" style="display:flex;align-items:center;gap:6px;padding:7px 12px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e2530" class="pfa-dd-item">' +
