@@ -562,6 +562,16 @@
                     </label>
                 </div>
             </div>
+            <div class="card mb-6">
+                <h2 class="text-lg font-bold mb-2">📦 Экспорт / импорт</h2>
+                <p class="text-slate-500 text-sm mb-4">Сохрани все данные приложения в JSON-файл и загрузи его на другом компьютере. Экспортируются ростер, статистика, история, алиасы, заметки, API-ключи и настройки уведомлений.</p>
+                <div class="flex gap-3 flex-wrap">
+                    <button onclick="exportAppData()" class="btn-primary">⬇️ Экспорт данных</button>
+                    <button onclick="triggerImportData()" style="background:#1e2530;color:#cbd5e1;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600">⬆️ Импорт данных</button>
+                    <input type="file" id="importDataFile" accept="application/json,.json" onchange="importAppData(event)" style="display:none">
+                </div>
+                <div style="margin-top:10px;color:#64748b;font-size:12px">Совет: сначала экспортируй файл дома, потом на другом ПК открой сайт и импортируй этот JSON.</div>
+            </div>
             <div class="card">
                 <h2 class="text-lg font-bold mb-2">🗑️ Данные</h2>
                 <p class="text-slate-500 text-sm mb-4">Сбросить все данные приложения (ростер, статистика, события). Ключи сохранятся.</p>
@@ -4522,6 +4532,79 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             } catch(e) {
                 console.warn('localStorage load failed:', e);
                 return false;
+            }
+        }
+
+        function triggerImportData() {
+            const input = document.getElementById('importDataFile');
+            if (!input) return;
+            input.value = '';
+            input.click();
+        }
+
+        function exportAppData() {
+            try {
+                saveToStorage();
+                const payload = {
+                    app: 'Clan Control',
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    storageKey: LS_KEY,
+                    data: JSON.parse(localStorage.getItem(LS_KEY) || '{}'),
+                    geminiKeys: JSON.parse(localStorage.getItem('clanControl_geminiKeys') || '[]'),
+                    notifySettings: JSON.parse(localStorage.getItem('cc_notify') || '{"popup":true,"sound":false}')
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const date = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const filename = `clan-control-backup-${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}.json`;
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showStatus('success', '✅', 'Резервная копия данных скачана');
+            } catch (e) {
+                console.error('exportAppData failed:', e);
+                showStatus('error', '❌', 'Не удалось экспортировать данные');
+            }
+        }
+
+        async function importAppData(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const payload = JSON.parse(text);
+                const importedData = payload?.data;
+                if (!importedData || typeof importedData !== 'object') {
+                    throw new Error('Некорректный файл резервной копии');
+                }
+                showConfirm(
+                    '⬆️ Импортировать данные?',
+                    'Текущие данные на этом компьютере будут заменены данными из файла. Продолжить?',
+                    () => {
+                        try {
+                            localStorage.setItem(LS_KEY, JSON.stringify(importedData));
+                            if (Array.isArray(payload.geminiKeys)) {
+                                localStorage.setItem('clanControl_geminiKeys', JSON.stringify(payload.geminiKeys));
+                            }
+                            if (payload.notifySettings && typeof payload.notifySettings === 'object') {
+                                localStorage.setItem('cc_notify', JSON.stringify(payload.notifySettings));
+                            }
+                            location.reload();
+                        } catch (err) {
+                            console.error('import apply failed:', err);
+                            showStatus('error', '❌', 'Не удалось применить импорт');
+                        }
+                    }
+                );
+            } catch (e) {
+                console.error('importAppData failed:', e);
+                showStatus('error', '❌', 'Файл не распознан. Нужен JSON, экспортированный из Clan Control.');
             }
         }
 
