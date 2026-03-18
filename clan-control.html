@@ -2666,17 +2666,34 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             Object.entries(appliedStatsByDate).forEach(([dateStr, snap]) => {
                 if (dateFrom && dateStr < dateFrom) return;
                 if (dateTo   && dateStr > dateTo)   return;
-                (snap.players || []).forEach(p => {
+
+                // Берём игроков из screenPlayersMap с дедупликацией паков по лидеру
+                // (точно так же как в Истории КМ — чтобы цифры совпадали)
+                const spm = snap.screenPlayersMap || {};
+                let playersForDate = [];
+
+                if (Object.keys(spm).length > 0) {
+                    const seenLeaders = new Set();
+                    Object.entries(spm).forEach(([packKey, players]) => {
+                        if (!players || players.length === 0) return;
+                        const leaderKey = normalizeNick(players[0].name || packKey);
+                        if (seenLeaders.has(leaderKey)) return; // дубль пака
+                        seenLeaders.add(leaderKey);
+                        playersForDate.push(...players);
+                    });
+                } else {
+                    // Fallback — используем snap.players
+                    playersForDate = snap.players || [];
+                }
+
+                playersForDate.forEach(p => {
                     if (!p.name) return;
                     const key = normalizeNick(p.name);
-                    // Найдём каноничное имя из ростера
                     const rp = roster.find(r => normalizeNick(r.name) === key);
                     const canonName = rp ? rp.name : p.name;
                     if (!result[key]) {
                         result[key] = { name: canonName, kills: 0, deaths: 0, pvp_dmg: 0, pve_dmg: 0, datesPresent: new Set() };
                     }
-                    // Для одного дня берём MAX (защита от повторного анализа одного дня)
-                    // Снапшот уже содержит merged MAX — просто суммируем по датам
                     result[key].kills   += (p.kills   || 0);
                     result[key].deaths  += (p.deaths  || 0);
                     result[key].pvp_dmg += (p.pvp_dmg || 0);
@@ -4294,39 +4311,18 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     </div>`;
                 }).join('') : '';
 
-                // Считаем итоги — суммируем по уникальным пакам из screenPlayersMap
-                // Дедупликация по нормализованному имени первого игрока (лидера)
+                // Считаем итоги — прямая сумма dayPlayers (уникальные по имени)
                 let totalKills = 0, totalDeaths = 0, totalPvp = 0, totalPve = 0;
-                const spmEntries = Object.entries(screenPlayersMapDay);
-                if (spmEntries.length > 0) {
-                    const seenLeaders = new Set();
-                    spmEntries.forEach(([packKey, players]) => {
-                        if (!players || players.length === 0) return;
-                        const leaderKey = normalizeNick(players[0].name || packKey);
-                        if (seenLeaders.has(leaderKey)) return;
-                        seenLeaders.add(leaderKey);
-                        players.forEach(p => {
-                            totalKills  += (p.kills||0);
-                            totalDeaths += (p.deaths||0);
-                            totalPvp    += (p.pvp_dmg||0);
-                            totalPve    += (p.pve_dmg||0);
-                        });
-                    });
-                } else if (cmdChannel.length > 0) {
-                    cmdChannel.forEach(cc => {
-                        totalKills  += (cc.kills||0);
-                        totalDeaths += (cc.deaths||0);
-                        totalPvp    += (cc.pvp_dmg||0);
-                        totalPve    += (cc.pve_dmg||0);
-                    });
-                } else {
-                    dayPlayers.forEach(p => {
-                        totalKills  += (p.kills||0);
-                        totalDeaths += (p.deaths||0);
-                        totalPvp    += (p.pvp_dmg||0);
-                        totalPve    += (p.pve_dmg||0);
-                    });
-                }
+                const _seen = new Set();
+                dayPlayers.forEach(p => {
+                    const _k = normalizeNick(p.name||'');
+                    if (_seen.has(_k)) return;
+                    _seen.add(_k);
+                    totalKills  += (p.kills||0);
+                    totalDeaths += (p.deaths||0);
+                    totalPvp    += (p.pvp_dmg||0);
+                    totalPve    += (p.pve_dmg||0);
+                });
                 const hasTotals   = totalKills+totalDeaths+totalPvp+totalPve > 0;
 
                 return `<div class="card mb-6">
