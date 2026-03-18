@@ -680,6 +680,15 @@
         <div class="card w-[400px]">
             <h3 id="promptTitle" class="text-xl font-bold mb-4">Ввод данных</h3>
             <input id="promptInput" type="text" class="input-dark mb-6" placeholder="">
+            <!-- Доп. блок для смены профы (только в kmRenamePlayer) -->
+            <div id="promptProfaBlock" style="display:none;margin-bottom:16px">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:8px">Профа на этом КМ</div>
+                <div id="promptProfaSearch" style="margin-bottom:6px">
+                    <input type="text" id="promptProfaInput" class="input-dark" style="font-size:12px;padding:8px 10px" placeholder="🔍 Поиск профы...">
+                </div>
+                <div id="promptProfaList" style="max-height:160px;overflow-y:auto;border:1px solid #1e2530;border-radius:8px;background:#0b0e14"></div>
+                <div id="promptProfaSelected" style="margin-top:6px;font-size:11px;color:#a5b4fc;min-height:18px"></div>
+            </div>
             <div class="flex justify-end gap-3">
                 <button onclick="closePrompt()" class="px-6 py-2 bg-slate-800 rounded-lg text-sm font-medium hover:bg-slate-700">Отмена</button>
                 <button id="promptBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-bold">Сохранить</button>
@@ -851,6 +860,8 @@
         }
         function closePrompt() {
             document.getElementById('promptModal').style.display = 'none';
+            document.getElementById('promptProfaBlock').style.display = 'none';
+            document.getElementById('promptProfaInput').value = '';
             promptCallback = null;
             // Если dayModal был скрыт ради promptModal — вернуть его
             const dayModal = document.getElementById('dayModal');
@@ -1880,19 +1891,56 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             }
 
             const normKey = normalizeNick(player.name);
+
+            // Список всех проф игрока
+            const allProfasList = player.profas && player.profas.length > 0 ? player.profas
+                : (player.profa && player.profa !== '—' ? [player.profa] : []);
+
+            // Активная профа для фильтрации (хранится глобально)
+            if (!window._profileProfaMap) window._profileProfaMap = {};
+            if (!window._profileProfaMap[normKey] || !allProfasList.includes(window._profileProfaMap[normKey])) {
+                window._profileProfaMap[normKey] = allProfasList[0] || null;
+            }
+            const activeProfaForProfile = window._profileProfaMap[normKey];
+
             const allDates = Object.keys(appliedStatsByDate).sort();
             const presentDates = allDates.filter(d => {
                 const snap = appliedStatsByDate[d];
                 return snap && snap.players && snap.players.some(p => normalizeNick(p.name) === normKey);
             });
             const attendance = allDates.length > 0 ? Math.round(presentDates.length / allDates.length * 100) : 0;
+            // presentDates используется для явки (независимо от профы)
 
             const dayStats = allDates.map(d => {
                 const snap = appliedStatsByDate[d];
                 const p = snap && snap.players && snap.players.find(p => normalizeNick(p.name) === normKey);
-                return { date: d, present: !!p, kills: p ? (p.kills||0) : 0, deaths: p ? (p.deaths||0) : 0, pvp_dmg: p ? (p.pvp_dmg||0) : 0, pve_dmg: p ? (p.pve_dmg||0) : 0 };
+                // Профа вручную назначена на этот КМ?
+                const assignedProfa = (playerProfaByDate[normKey] && playerProfaByDate[normKey][d]) || null;
+                const kmProfa = assignedProfa
+                    || (p && p.profa && p.profa !== '—' ? p.profa : null)
+                    || (player.profa && player.profa !== '—' ? player.profa : null);
+                // Присутствовал ли игрок (независимо от профы — для явки)
+                const wasPresent = !!p;
+                // Входит ли этот КМ в стату активной профы?
+                // Если проф 1 — все КМ в стате. Если проф > 1:
+                //   - КМ с назначенной профой = активной → в стате
+                //   - КМ без назначенной профы → НЕ в стате (неизвестно на чём играл)
+                const inProfaStat = !activeProfaForProfile
+                    || allProfasList.length <= 1
+                    || (assignedProfa ? assignedProfa === activeProfaForProfile : false);
+                return {
+                    date: d,
+                    present: wasPresent,          // для явки — всегда
+                    inStat: wasPresent && inProfaStat, // для статы — только нужная профа
+                    kills:   (p && inProfaStat) ? (p.kills||0)   : 0,
+                    deaths:  (p && inProfaStat) ? (p.deaths||0)  : 0,
+                    pvp_dmg: (p && inProfaStat) ? (p.pvp_dmg||0) : 0,
+                    pve_dmg: (p && inProfaStat) ? (p.pve_dmg||0) : 0,
+                    profa: kmProfa,
+                    assigned: !!assignedProfa
+                };
             });
-            const presentStats = dayStats.filter(d => d.present);
+            const presentStats = dayStats.filter(d => d.inStat);
 
             const totalKills  = presentStats.reduce((s,d)=>s+d.kills,0);
             const totalDeaths = presentStats.reduce((s,d)=>s+d.deaths,0);
@@ -2025,7 +2073,8 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             const attColor = attendance >= 70 ? '#22c55e' : attendance >= 40 ? '#f59e0b' : '#ef4444';
 
             // История КМ (последние 8)
-            const recentStats = [...dayStats].slice(-10).reverse();
+            // Показываем последние 10 КМ где игрок присутствовал (все профы)
+            const recentStats = dayStats.filter(d => d.present).slice(-10).reverse();
             const maxKmKills = Math.max(...recentStats.map(d=>d.kills), 1);
 
             const rankColor = rankNum ? (rankNum <= 10 ? '#f59e0b' : rankNum <= 30 ? '#6366f1' : '#64748b') : '#475569';
@@ -2057,7 +2106,47 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                             <span class="badge badge-${player.rank.toLowerCase()}">${player.rank}</span>
                             ${player.pac && player.pac !== 'СОЛО' ? `<span class="pac-tag">${player.pac}</span>` : '<span style="font-size:10px;color:#475569;background:#1e2530;padding:2px 8px;border-radius:4px">СОЛО</span>'}
-                            <span style="font-size:11px;color:#94a3b8;background:#0b0e14;padding:3px 10px;border-radius:6px;border:1px solid #1e2530;display:inline-flex;align-items:center;gap:6px">${profaIconHtml(player.profa,18)}</span>
+                            ${allProfasList.map((pf,i) => {
+                                const kmCount = allDates.filter(d => playerProfaByDate[normKey] && playerProfaByDate[normKey][d] === pf).length;
+                                const countLabel = kmCount > 0 ? `<span style="font-size:9px;background:#6366f133;padding:1px 5px;border-radius:3px;margin-left:2px;color:#a5b4fc">${kmCount} КМ</span>` : `<span style="font-size:9px;color:#475569;margin-left:2px">0 КМ</span>`;
+                                return `
+                            <button onclick="switchProfileProfa('${player.name.replace(/'/g,"\'")}','${pf.replace(/'/g,"\'")}',this)"
+                                class="profa-tab-btn"
+                                style="display:inline-flex;align-items:center;gap:6px;background:${pf===activeProfaForProfile?'#1e2530':'#0b0e14'};border:1px solid ${pf===activeProfaForProfile?'#6366f1':'#1e2530'};color:${pf===activeProfaForProfile?'#a5b4fc':'#64748b'};border-radius:8px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:${pf===activeProfaForProfile?700:400};transition:all .15s">
+                                ${profaIconHtml(pf,18)}${countLabel}
+                            </button>`;}).join('')}
+                            <!-- Кнопка добавить/удалить профу -->
+                            <div style="position:relative;display:inline-block">
+                                <button onclick="toggleAddProfaMenu('${player.name.replace(/'/g,"\\'")}',this)"
+                                    style="display:inline-flex;align-items:center;gap:4px;background:#0b0e14;border:1px dashed #2d3748;color:#475569;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .15s"
+                                    onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'"
+                                    onmouseout="this.style.borderColor='#2d3748';this.style.color='#475569'">
+                                    + профа
+                                </button>
+                                <div id="addProfaMenu_${normKey}" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#1a1f29;border:1px solid #6366f1;border-radius:10px;z-index:200;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.7)">
+                                    <div style="padding:8px 10px;border-bottom:1px solid #1e2530">
+                                        <input type="text" placeholder="🔍 Поиск профы..."
+                                            style="background:#0b0e14;border:1px solid #2d3748;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:12px;width:100%;outline:none;box-sizing:border-box"
+                                            oninput="filterAddProfaMenu('${normKey}', this.value)">
+                                    </div>
+                                    <div id="addProfaMenuList_${normKey}" style="max-height:220px;overflow-y:auto">
+                                    <div style="padding:6px 12px;font-size:10px;font-weight:800;text-transform:uppercase;color:#475569">Добавить профу</div>
+                                    ${Object.keys(PROFA_ICONS || {}).filter(pf => !allProfasList.includes(pf)).map(pf => `
+                                    <div class="add-profa-item-${normKey}" data-profa="${pf}" onclick="addProfaToPlayer('${player.name.replace(/'/g,"\\'")}','${pf.replace(/'/g,"\\'")}');document.getElementById('addProfaMenu_${normKey}').style.display='none'"
+                                        style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-bottom:1px solid #1e253055"
+                                        onmouseover="this.style.background='#6366f1'" onmouseout="this.style.background=''">
+                                        ${profaIconHtml(pf,16)} ${PROFA_NAMES&&PROFA_NAMES[pf] ? pf.split(' (')[0]+' ('+PROFA_NAMES[pf]+')' : pf}
+                                    </div>`).join('')}
+                                    ${allProfasList.length > 1 ? `<div style="padding:6px 12px;font-size:10px;font-weight:800;text-transform:uppercase;color:#475569;border-top:1px solid #1e2530;margin-top:4px">Удалить профу</div>
+                                    ${allProfasList.map(pf => `
+                                    <div onclick="removeProfaFromPlayer('${player.name.replace(/'/g,"\\'")}','${pf.replace(/'/g,"\\'")}');document.getElementById('addProfaMenu_${normKey}').style.display='none'"
+                                        style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-bottom:1px solid #1e253055;color:#ef4444"
+                                        onmouseover="this.style.background='#ef444422'" onmouseout="this.style.background=''">
+                                        ${profaIconHtml(pf,16)} <span>удалить ${PROFA_NAMES&&PROFA_NAMES[pf]?PROFA_NAMES[pf]:pf.split(' (')[0]}</span>
+                                    </div>`).join('')}` : ''}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2145,23 +2234,34 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     <div class="prf-card">
                         <div class="prf-section-title">📋 История КМ (последние ${Math.min(10, dayStats.length)})</div>
                         <!-- Заголовок таблицы -->
-                        <div class="km-row" style="font-size:9px;font-weight:800;text-transform:uppercase;color:#475569;padding-bottom:4px;border-bottom:1px solid #1e2530;margin-bottom:4px">
-                            <div>Дата</div><div>Активность</div><div style="text-align:center">⚔️</div><div style="text-align:center">💀</div><div style="text-align:center">🗡️ PvP</div><div style="text-align:center">🐉 PvE</div>
+                        <div style="display:grid;grid-template-columns:60px 1fr 80px 52px 52px 80px 80px;align-items:center;gap:8px;padding:8px 12px;font-size:9px;font-weight:800;text-transform:uppercase;color:#475569;padding-bottom:4px;border-bottom:1px solid #1e2530;margin-bottom:4px">
+                            <div>Дата</div><div>Активность</div><div>Профа</div><div style="text-align:center">⚔️</div><div style="text-align:center">💀</div><div style="text-align:center">🗡️ PvP</div><div style="text-align:center">🐉 PvE</div>
                         </div>
                         ${recentStats.map(d => {
                             const isBest = bestKm && d.date === bestKm.date;
                             const pct = Math.round((d.kills / maxKmKills) * 100);
-                            const barColor = isBest ? '#f59e0b' : d.present ? '#6366f1' : '#1e2530';
                             const absent = !d.present;
-                            return `<div class="km-row" style="${isBest ? 'background:#f59e0b11;border:1px solid #f59e0b22;' : ''}${absent ? 'opacity:0.4;' : ''}">
-                                <div style="font-size:11px;font-weight:700;color:${isBest?'#f59e0b':absent?'#475569':'#94a3b8'}">${fmtDate(d.date)}</div>
+                            // notInStat = был на КМ, но профа другая (или не назначена при мультипрофе)
+                            const notInStat = d.present && !d.inStat;
+                            const barColor = isBest ? '#f59e0b' : (d.inStat ? '#6366f1' : '#2d3748');
+                            const kmProfaOpts = allProfasList.length > 1
+                                ? `<select onchange="setKmProfa('${d.date}','${player.name.replace(/'/g,"\\'")}',this.value);renderPlayerProfile('${player.name.replace(/'/g,"\\'")}',true)"
+                                    style="background:#0b0e14;border:1px solid ${d.assigned ? '#6366f1' : '#2d3748'};border-radius:5px;color:${d.assigned ? '#a5b4fc' : '#64748b'};font-size:10px;padding:2px 4px;cursor:pointer;max-width:90px;width:100%">
+                                    <option value="">— не назначена</option>
+                                    ${allProfasList.map(pf => `<option value="${pf.replace(/"/g,'&quot;')}" ${d.profa===pf&&d.assigned?'selected':''}>${PROFA_NAMES && PROFA_NAMES[pf] ? pf.split(' (')[0].split(' ').slice(0,2).join(' ')+'('+PROFA_NAMES[pf]+')' : pf.split(' (')[0]}</option>`).join('')}
+                                  </select>`
+                                : (d.profa && d.profa !== '—' ? `<span style="font-size:10px">${profaIconHtml(d.profa,16)}</span>` : '<span style="color:#475569;font-size:10px">—</span>');
+                            return `<div style="display:grid;grid-template-columns:60px 1fr 80px 52px 52px 80px 80px;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;transition:background .15s;cursor:default;${isBest&&d.inStat ? 'background:#f59e0b11;border:1px solid #f59e0b22;' : ''}${absent ? 'opacity:0.35;' : notInStat ? 'opacity:0.5;' : ''}" class="km-row">
+                                <div style="font-size:11px;font-weight:700;color:${isBest&&d.inStat?'#f59e0b':absent||notInStat?'#475569':'#94a3b8'}">${fmtDate(d.date)}</div>
                                 <div><div class="km-bar-wrap"><div class="km-bar-fill" style="width:${absent?0:pct}%;background:${barColor}"></div></div></div>
-                                <div style="text-align:center;font-weight:700;color:#f59e0b">${absent?'—':d.kills}</div>
-                                <div style="text-align:center;font-weight:700;color:#ef4444">${absent?'—':d.deaths}</div>
-                                <div style="text-align:center;color:#818cf8;font-size:11px">${absent?'—':fmtNum(d.pvp_dmg)}</div>
-                                <div style="text-align:center;color:#22c55e;font-size:11px">${absent?'<span style="color:#ef4444;font-size:9px">ОТСУТСТВОВАЛ</span>':fmtNum(d.pve_dmg)}</div>
+                                <div>${absent ? '' : kmProfaOpts}</div>
+                                <div style="text-align:center;font-weight:700;color:#f59e0b">${absent?'—':d.inStat?d.kills:'·'}</div>
+                                <div style="text-align:center;font-weight:700;color:#ef4444">${absent?'—':d.inStat?d.deaths:'·'}</div>
+                                <div style="text-align:center;color:#818cf8;font-size:11px">${absent?'—':d.inStat?fmtNum(d.pvp_dmg):'·'}</div>
+                                <div style="text-align:center;color:#22c55e;font-size:11px">${absent?'<span style="color:#ef4444;font-size:9px">ОТСУТСТВОВАЛ</span>':notInStat?'<span style="color:#475569;font-size:9px">другая профа</span>':fmtNum(d.pve_dmg)}</div>
                             </div>`;
                         }).join('')}
+                        ${allProfasList.length > 1 ? `<div style="font-size:10px;color:#475569;margin-top:8px;padding:6px 10px;background:#1e253088;border-radius:6px;border:1px solid #2d3748">💡 Выбери профу в колонке «Профа» для каждого КМ — тогда переключатели выше будут показывать стату раздельно. Строки с «другая профа» не входят в стату активного таба.</div>` : ''}
                     </div>
 
                     <!-- Статистика по классу и роли -->
@@ -3637,6 +3737,103 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         // Хранит уже применённую статистику по датам для сравнения и защиты от двойного счёта
         // { [dateStr]: { players: [{name, kills, deaths, pvp_dmg, pve_dmg}], raidTotal, appliedAt } }
         let appliedStatsByDate = {};
+        // { [normName]: { [dateStr]: 'profa' } } — профа игрока на конкретном КМ
+        let playerProfaByDate = {};
+        // kmProfaOverrides: { [dateStr]: { [normName]: profaName } }
+        // Хранит ручную профу игрока на конкретный КМ
+        let kmProfaOverrides = {};
+
+        function switchProfileProfa(playerName, profa, btn) {
+            const nk = normalizeNick(playerName);
+            if (!window._profileProfaMap) window._profileProfaMap = {};
+            window._profileProfaMap[nk] = profa;
+            renderPlayerProfile(playerName);
+        }
+
+        function filterAddProfaMenu(normKey, query, existingProfas) {
+            const items = document.querySelectorAll('.add-profa-item-' + normKey);
+            const q = query.toLowerCase();
+            items.forEach(el => {
+                const pf = el.dataset.profa || '';
+                const label = (PROFA_NAMES && PROFA_NAMES[pf] ? PROFA_NAMES[pf] : '') + ' ' + pf;
+                el.style.display = (!q || label.toLowerCase().includes(q)) ? '' : 'none';
+            });
+        }
+
+        function toggleAddProfaMenu(playerName, btn) {
+            const nk = normalizeNick(playerName);
+            const menu = document.getElementById('addProfaMenu_' + nk);
+            if (!menu) return;
+            const isOpen = menu.style.display !== 'none';
+            menu.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) {
+                // Фокус на поле поиска
+                setTimeout(() => {
+                    const inp = menu.querySelector('input[type="text"]');
+                    if (inp) { inp.value = ''; inp.focus(); filterAddProfaMenu(nk, ''); }
+                }, 20);
+                setTimeout(() => {
+                    const close = (e) => {
+                        if (!menu.contains(e.target) && e.target !== btn) {
+                            menu.style.display = 'none';
+                            document.removeEventListener('click', close);
+                        }
+                    };
+                    document.addEventListener('click', close);
+                }, 10);
+            }
+        }
+
+        function addProfaToPlayer(playerName, profa) {
+            const player = roster.find(r => normalizeNick(r.name) === normalizeNick(playerName));
+            if (!player) return;
+            if (!player.profas) player.profas = player.profa && player.profa !== '—' ? [player.profa] : [];
+            if (!player.profas.includes(profa)) {
+                player.profas.push(profa);
+                if (!player.profa || player.profa === '—') player.profa = profa;
+            }
+            saveToStorage();
+            renderPlayerProfile(playerName);
+        }
+
+        function removeProfaFromPlayer(playerName, profa) {
+            const player = roster.find(r => normalizeNick(r.name) === normalizeNick(playerName));
+            if (!player || !player.profas) return;
+            player.profas = player.profas.filter(p => p !== profa);
+            if (player.profa === profa) player.profa = player.profas[0] || '—';
+            const nk = normalizeNick(playerName);
+            if (window._profileProfaMap && window._profileProfaMap[nk] === profa) {
+                window._profileProfaMap[nk] = player.profas[0] || null;
+            }
+            saveToStorage();
+            renderPlayerProfile(playerName);
+        }
+
+        function setKmProfa(dateStr, playerName, profa) {
+            const key = normalizeNick(playerName);
+            if (!kmProfaOverrides[dateStr]) kmProfaOverrides[dateStr] = {};
+            if (!profa || profa === '—') {
+                delete kmProfaOverrides[dateStr][key];
+                if (playerProfaByDate[key]) delete playerProfaByDate[key][dateStr];
+            } else {
+                kmProfaOverrides[dateStr][key] = profa;
+                if (!playerProfaByDate[key]) playerProfaByDate[key] = {};
+                playerProfaByDate[key][dateStr] = profa;
+            }
+            saveToStorage();
+            // Если профиль этого игрока открыт — обновляем
+            if (document.getElementById('page-profile').classList.contains('active') && currentProfileName) {
+                const rp = roster.find(r => normalizeNick(r.name) === key);
+                if (rp) renderPlayerProfile(rp.name);
+            }
+            // Обновляем историю КМ если открыта
+            if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
+        }
+
+        function getKmProfa(dateStr, playerName) {
+            const key = normalizeNick(playerName);
+            return (kmProfaOverrides[dateStr] && kmProfaOverrides[dateStr][key]) || null;
+        }
 
         function applyDayParsedStats() {
             if (!dayLastParsed.length) return;
@@ -4273,10 +4470,24 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             ? `<span title="Не в ростере — нажми ✏️ чтобы исправить ник" style="color:#f87171;font-size:10px;margin-left:4px">⚠️ не в ростере</span>`
                             : (inRoster.pac === 'СОЛО' ? `<span style="font-size:9px;color:#64748b;background:#1e2530;padding:1px 5px;border-radius:3px;margin-left:5px">соло</span>` : '');
                         const editBtn = `<button onclick="kmRenamePlayer('${dateStr}','${p.name.replace(/'/g,"\\'")}',this)" title="Исправить ник" style="background:none;border:none;color:#475569;cursor:pointer;font-size:11px;padding:0 4px;line-height:1;margin-left:4px;opacity:0;transition:opacity .15s" class="km-edit-btn">✏️</button>`;
-                        const memberProfa = inRoster ? (inRoster.profa || '—') : '—';
+                        const normPKey = normalizeNick(p.name);
+                        const savedKmProfa = (playerProfaByDate[normPKey] && playerProfaByDate[normPKey][dateStr]) || null;
+                        const memberProfa = savedKmProfa || (inRoster ? (inRoster.profa || '—') : '—');
                         const memberProfaHtml = memberProfa && memberProfa !== '—' ? profaIconHtml(memberProfa, 20) : '';
+                        const mProfas = inRoster && inRoster.profas && inRoster.profas.length > 1 ? inRoster.profas : (inRoster && inRoster.profa && inRoster.profa !== '—' ? [inRoster.profa] : []);
+                        const profaSwitchHtml = mProfas.length > 1
+                            ? (function() {
+                                const items = mProfas.map(pf => {
+                                    const shortName = (PROFA_NAMES&&PROFA_NAMES[pf]) ? pf.split(' (')[0].split(' ').slice(0,2).join(' ')+'('+PROFA_NAMES[pf]+')' : pf.split(' (')[0];
+                                    const enc = encodeURIComponent(pf);
+                                    const check = pf === memberProfa ? ' ✓' : '';
+                                    return '<div onclick="setKmProfa(\'' + dateStr + '\',decodeURIComponent(\'' + encodeURIComponent(normPKey) + '\'),decodeURIComponent(\'' + enc + '\'));this.closest(\'.profa-menu\').style.display=\'none\'" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-bottom:1px solid #1e2530" onmouseover="this.style.background=\'#6366f1\'" onmouseout="this.style.background=\'\'">' + profaIconHtml(pf,16) + ' ' + shortName + check + '</div>';
+                                }).join('');
+                                return '<span style="position:relative;display:inline-flex" class="profa-switch-wrap"><button onclick="toggleProfaMenu(this)" title="Сменить профу" style="background:#1e2530;border:none;color:#64748b;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;margin-left:4px">🎭▾</button><div class="profa-menu" style="display:none;position:absolute;top:calc(100%+4px);left:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;z-index:50;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.6)">' + items + '</div></span>';
+                              })()
+                            : '';
                         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0b0e14;border-radius:6px;margin-bottom:4px;font-size:12px">
-                            <span style="font-weight:600;display:flex;align-items:center;gap:6px">${memberProfaHtml}<span class="player-nick-link" onclick="openPlayerProfile('${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer">${p.name}</span>${badgeHtml}${editBtn}</span>
+                            <span style="font-weight:600;display:flex;align-items:center;gap:6px">${memberProfaHtml}<span class="player-nick-link" onclick="openPlayerProfile('${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer">${p.name}</span>${badgeHtml}${profaSwitchHtml}${editBtn}</span>
                             <span style="display:flex;gap:12px">
                                 <span style="color:#f59e0b">⚔️ ${p.kills||0}</span>
                                 <span style="color:#ef4444">💀 ${p.deaths||0}</span>
@@ -4396,44 +4607,118 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
         // Переименование игрока в Истории КМ — синхронизируется с ростером
+        function toggleProfaMenu(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = menu.style.display === 'block';
+            // Закрываем все открытые меню
+            document.querySelectorAll('.profa-menu').forEach(m => m.style.display = 'none');
+            if (!isOpen) {
+                menu.style.display = 'block';
+                // Закрываем при клике снаружи
+                setTimeout(() => {
+                    const close = (e) => { if (!menu.contains(e.target) && e.target !== btn) { menu.style.display='none'; document.removeEventListener('click',close); } };
+                    document.addEventListener('click', close);
+                }, 10);
+            }
+        }
+
         function kmRenamePlayer(dateStr, oldName, btnEl) {
+            // Показываем блок профы
+            const profaBlock = document.getElementById('promptProfaBlock');
+            profaBlock.style.display = 'block';
+
+            // Текущая профа игрока на этот КМ
+            const rp = roster.find(r => r.name.toLowerCase() === oldName.toLowerCase());
+            const normOld = normalizeNick(oldName);
+            let selectedProfa = (playerProfaByDate[normOld] && playerProfaByDate[normOld][dateStr]) || (rp ? rp.profa : null) || null;
+            const allProfas = Object.keys(PROFA_ICONS || {});
+
+            function renderProfaList(filter) {
+                const list = document.getElementById('promptProfaList');
+                const filtered = allProfas.filter(pf => !filter || pf.toLowerCase().includes(filter.toLowerCase()) || (PROFA_NAMES[pf]||'').toLowerCase().includes(filter.toLowerCase()));
+                list.innerHTML = filtered.map(pf => {
+                    const isSelected = pf === selectedProfa;
+                    const label = PROFA_NAMES && PROFA_NAMES[pf] ? pf.split(' (')[0] + ' (' + PROFA_NAMES[pf] + ')' : pf;
+                    return `<div onclick="window._kmSelectProfa('${pf.replace(/'/g,"\\'")}',this)"
+                        style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-bottom:1px solid #1e253055;background:${isSelected?'#6366f122':''};color:${isSelected?'#a5b4fc':'#e2e8f0'}"
+                        onmouseover="this.style.background='${isSelected?'#6366f133':'#1a1f29'}'" onmouseout="this.style.background='${isSelected?'#6366f122':''}'"
+                        data-profa="${pf}">
+                        ${profaIconHtml(pf,16)} ${label} ${isSelected ? '✓' : ''}
+                    </div>`;
+                }).join('') || '<div style="padding:10px 12px;color:#475569;font-size:12px">Ничего не найдено</div>';
+            }
+
+            window._kmSelectProfa = (pf, el) => {
+                selectedProfa = pf;
+                renderProfaList(document.getElementById('promptProfaInput').value);
+                document.getElementById('promptProfaSelected').innerHTML = profaIconHtml(pf, 16) + ' <span style="margin-left:4px">' + (PROFA_NAMES&&PROFA_NAMES[pf] ? pf.split(' (')[0]+' ('+PROFA_NAMES[pf]+')' : pf) + '</span>';
+            };
+
+            renderProfaList('');
+            if (selectedProfa) {
+                document.getElementById('promptProfaSelected').innerHTML = profaIconHtml(selectedProfa, 16) + ' <span style="margin-left:4px">' + (PROFA_NAMES&&PROFA_NAMES[selectedProfa] ? selectedProfa.split(' (')[0]+' ('+PROFA_NAMES[selectedProfa]+')' : selectedProfa) + '</span>';
+            }
+
+            document.getElementById('promptProfaInput').oninput = function() { renderProfaList(this.value); };
+
             showPrompt('Исправить ник', 'Введи новый ник', function(newName) {
-                if (!newName || newName === oldName) return;
+                // Скрываем блок профы обратно
+                profaBlock.style.display = 'none';
+
+                // Сохраняем профу если выбрана
+                if (selectedProfa) {
+                    const key = normalizeNick(newName || oldName);
+                    if (!playerProfaByDate[key]) playerProfaByDate[key] = {};
+                    playerProfaByDate[key][dateStr] = selectedProfa;
+                    // Также обновляем в ростере если у игрока нет профы
+                    const rosterP = roster.find(r => normalizeNick(r.name) === key || r.name.toLowerCase() === (newName||oldName).toLowerCase());
+                    if (rosterP && (!rosterP.profa || rosterP.profa === '—')) {
+                        rosterP.profa = selectedProfa;
+                        if (!rosterP.profas) rosterP.profas = [selectedProfa];
+                        else if (!rosterP.profas.includes(selectedProfa)) rosterP.profas.push(selectedProfa);
+                    }
+                }
+
+                if (!newName || newName === oldName) {
+                    saveToStorage();
+                    renderKmHistory();
+                    return;
+                }
                 // 1. Переименовываем во ВСЕХ снапшотах (screenPlayersMap + players)
                 Object.values(appliedStatsByDate).forEach(function(snap) {
-                    // players
                     (snap.players || []).forEach(function(p) {
                         if (p.name && p.name.toLowerCase() === oldName.toLowerCase()) p.name = newName;
                         if (p._rawName && p._rawName.toLowerCase() === oldName.toLowerCase()) p._rawName = newName;
                     });
-                    // screenPlayersMap
                     Object.values(snap.screenPlayersMap || {}).forEach(function(arr) {
                         arr.forEach(function(p) {
                             if (p.name && p.name.toLowerCase() === oldName.toLowerCase()) p.name = newName;
                         });
                     });
-                    // packLeaders
                     Object.keys(snap.packLeaders || {}).forEach(function(k) {
                         if (snap.packLeaders[k].toLowerCase() === oldName.toLowerCase()) snap.packLeaders[k] = newName;
                     });
-                    // commandChannel
                     (snap.commandChannel || []).forEach(function(cc) {
                         if (cc.leader && cc.leader.toLowerCase() === oldName.toLowerCase()) cc.leader = newName;
                     });
                 });
                 // 2. Переименовываем в ростере
-                var rp = roster.find(function(r){ return r.name.toLowerCase() === oldName.toLowerCase(); });
-                if (rp) {
-                    rp.name = newName;
+                var rosterP = roster.find(function(r){ return r.name.toLowerCase() === oldName.toLowerCase(); });
+                if (rosterP) {
+                    rosterP.name = newName;
                 } else {
-                    // Игрока нет — создаём с данными из снапшота
                     var snap = appliedStatsByDate[dateStr];
                     var sp = snap && snap.players && snap.players.find(function(p){ return p.name === newName; });
-                    roster.push({ id: Date.now()+Math.random(), name: newName, rank: 'ИГРОК', profa: '—', pac: 'СОЛО', attendance: 0,
+                    roster.push({ id: Date.now()+Math.random(), name: newName, rank: 'ИГРОК', profa: selectedProfa||'—', profas: selectedProfa?[selectedProfa]:[], pac: 'СОЛО', attendance: 0,
                         kills: sp ? (sp.kills||0) : 0, deaths: sp ? (sp.deaths||0) : 0,
                         pvp_dmg: sp ? (sp.pvp_dmg||0) : 0, pve_dmg: sp ? (sp.pve_dmg||0) : 0 });
                 }
-                // 3. Сохраняем алиас чтобы при следующем анализе автоматически применялся
+                // 3. Переносим playerProfaByDate на новый ник
+                if (selectedProfa) {
+                    const newKey = normalizeNick(newName);
+                    if (!playerProfaByDate[newKey]) playerProfaByDate[newKey] = {};
+                    playerProfaByDate[newKey][dateStr] = selectedProfa;
+                }
                 saveAlias(oldName, newName);
                 saveToStorage();
                 renderKmHistory();
@@ -4591,7 +4876,8 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     nickAliases,
                     exhaustedKeys,
                     appliedStatsByDate,
-                    playerNotes
+                    playerNotes,
+                    playerProfaByDate
                 };
                 localStorage.setItem(LS_KEY, JSON.stringify(data));
             } catch(e) {
@@ -4615,6 +4901,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 if (data.exhaustedKeys) exhaustedKeys = data.exhaustedKeys;
                 if (data.appliedStatsByDate) appliedStatsByDate = data.appliedStatsByDate;
                 if (data.playerNotes)  playerNotes   = data.playerNotes;
+                if (data.playerProfaByDate) playerProfaByDate = data.playerProfaByDate;
                 return true;
             } catch(e) {
                 console.warn('localStorage load failed:', e);
