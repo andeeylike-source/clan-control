@@ -2582,6 +2582,120 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
                     </div>
 
+                    <!-- ПЕРСОНАЛЬНЫЙ АНАЛИЗ -->
+                    ${(function() {
+                        if (allDates.length === 0) return '';
+
+                        const issues = [];
+                        const strengths = [];
+
+                        // Медианы клана по роли
+                        const roleStatsList = rolemateStats.concat([{ name: player.name, kills: totalKills, kda: parseFloat(kda) }]);
+                        const medKills = roleStatsList.length > 1
+                            ? roleStatsList.map(r=>r.kills).sort((a,b)=>a-b)[Math.floor(roleStatsList.length/2)]
+                            : totalKills;
+                        const medKda = roleStatsList.length > 1
+                            ? roleStatsList.map(r=>r.kda).sort((a,b)=>a-b)[Math.floor(roleStatsList.length/2)]
+                            : parseFloat(kda);
+
+                        const isTank    = playerRole === 'Танк';
+                        const isHealer  = playerRole === 'Хилер/Баффер';
+                        const isDps     = !isTank && !isHealer;
+
+                        // === ЯВКА ===
+                        if (attendance < 50) {
+                            issues.push({ icon:'📅', severity:'high', title:'Низкая явка', text: `Присутствовал только на ${presentDates.length} из ${allDates.length} КМ (${attendance}%). Клан теряет боеспособность когда ключевые игроки отсутствуют. Цель: 70%+` });
+                        } else if (attendance >= 90) {
+                            strengths.push({ icon:'📅', title:'Отличная явка', text:`${attendance}% — один из самых надёжных игроков клана по посещаемости.` });
+                        }
+
+                        // === KDA (зависит от роли) ===
+                        if (isDps) {
+                            if (parseFloat(kda) < 0.8 && totalKills > 0) {
+                                issues.push({ icon:'⚡', severity:'high', title:'KDA ниже нормы', text:`KDA ${kda} — умираешь в ${(totalDeaths/Math.max(totalKills,1)).toFixed(1)}x чаще чем убиваешь. Медиана роли: ${medKda.toFixed(2)}. Попробуй держаться ближе к группе и атаковать цели которые уже под контролем.` });
+                            } else if (parseFloat(kda) < 0.8 && totalKills === 0) {
+                                issues.push({ icon:'⚡', severity:'high', title:'Нет убийств', text:`0 убийств при ${totalDeaths} смертях. Нужно активнее участвовать в бою — атакуй цели на которых стоит пак, не соло.` });
+                            } else if (parseFloat(kda) > 2.5) {
+                                strengths.push({ icon:'⚡', title:`KDA ${kda}`, text:`Отличный показатель для ${playerRole || 'ДД'}. Входишь в топ клана по эффективности.` });
+                            }
+                        } else if (isTank) {
+                            if (totalDeaths > 0 && totalKills / Math.max(totalDeaths,1) < 0.3) {
+                                // Для танка много смертей это норма, но совсем без убийств — проблема
+                            }
+                            if (attendance < 60) {
+                                issues.push({ icon:'🛡️', severity:'high', title:'Танк часто отсутствует', text:`Явка ${attendance}% — танки критически важны для построения. Без тебя пак теряет защиту.` });
+                            }
+                        } else if (isHealer) {
+                            if (attendance < 60) {
+                                issues.push({ icon:'💊', severity:'high', title:'Хилер часто отсутствует', text:`Явка ${attendance}% — хилеры/бафферы нужны на каждом КМ. Без поддержки пак теряет боеспособность.` });
+                            } else if (attendance >= 80) {
+                                strengths.push({ icon:'💊', title:'Надёжная поддержка', text:`Явка ${attendance}% — пак может рассчитывать на твоё присутствие.` });
+                            }
+                        }
+
+                        // === РЕЙТИНГ КЛАССА ===
+                        if (classTotal > 2) {
+                            if (classRankKills > Math.ceil(classTotal * 0.7)) {
+                                const behindCount = classTotal - classRankKills;
+                                issues.push({ icon:'🎭', severity:'medium', title:'Ниже среднего среди класса', text:`#${classRankKills} из ${classTotal} игроков с профой ${profaName ? profaName.split(' (')[0] : 'этого класса'}. Обгоняет только ${behindCount} одноклассников. Смотри на топ-игроков своего класса.` });
+                            } else if (classRankKills <= Math.ceil(classTotal * 0.3)) {
+                                strengths.push({ icon:'🎭', title:`Топ класса #${classRankKills}/${classTotal}`, text:`Один из лучших ${profaName ? profaName.split(' (')[0] : ''} в клане.` });
+                            }
+                        }
+
+                        // === PvP УРОН для ДД ===
+                        if (isDps && totalKills > 0) {
+                            const allPvpStats = Object.values(statsMap).map(s=>s.pvp_dmg||0).filter(v=>v>0);
+                            if (allPvpStats.length > 0) {
+                                const medPvp = allPvpStats.sort((a,b)=>a-b)[Math.floor(allPvpStats.length/2)];
+                                if (totalPvp < medPvp * 0.4 && totalKills > 3) {
+                                    issues.push({ icon:'🗡️', severity:'medium', title:'Низкий PvP урон', text:`${totalPvp.toLocaleString()} PvP урона — значительно ниже медианы клана (${medPvp.toLocaleString()}). Урон влияет на результат боя даже без финального удара.` });
+                                }
+                            }
+                        }
+
+                        // === НЕТ ДАННЫХ ===
+                        if (presentDates.length === 0) {
+                            return `<div class="prf-card" style="border-color:#2d3748">
+                                <div class="prf-section-title">🔍 Анализ игрока</div>
+                                <div style="color:#475569;font-size:13px;text-align:center;padding:12px 0">Нет данных КМ для анализа</div>
+                            </div>`;
+                        }
+
+                        if (issues.length === 0 && strengths.length === 0) {
+                            return `<div class="prf-card" style="border-color:#22c55e44">
+                                <div class="prf-section-title">🔍 Анализ игрока</div>
+                                <div style="color:#22c55e;font-size:13px;padding:8px 0">✅ Показатели в норме для роли ${playerRole || ''}. Продолжай в том же духе.</div>
+                            </div>`;
+                        }
+
+                        const issueHtml = issues.map(item => `
+                            <div style="display:flex;gap:12px;padding:10px 14px;background:#0b0e14;border-radius:10px;border-left:3px solid ${item.severity==='high'?'#ef4444':'#f59e0b'}">
+                                <span style="font-size:18px;flex-shrink:0;margin-top:1px">${item.icon}</span>
+                                <div>
+                                    <div style="font-size:12px;font-weight:800;color:#e2e8f0;margin-bottom:3px">${item.title}</div>
+                                    <div style="font-size:11px;color:#64748b;line-height:1.5">${item.text}</div>
+                                </div>
+                            </div>`).join('');
+
+                        const strengthHtml = strengths.map(item => `
+                            <div style="display:flex;gap:12px;padding:10px 14px;background:#0b0e14;border-radius:10px;border-left:3px solid #22c55e">
+                                <span style="font-size:18px;flex-shrink:0;margin-top:1px">${item.icon}</span>
+                                <div>
+                                    <div style="font-size:12px;font-weight:800;color:#e2e8f0;margin-bottom:3px">${item.title}</div>
+                                    <div style="font-size:11px;color:#64748b;line-height:1.5">${item.text}</div>
+                                </div>
+                            </div>`).join('');
+
+                        return `<div class="prf-card">
+                            <div class="prf-section-title">🔍 Персональный анализ</div>
+                            <div style="display:flex;flex-direction:column;gap:8px">
+                                ${issueHtml}
+                                ${strengthHtml}
+                            </div>
+                        </div>`;
+                    })()}
+
                 </div>
 
                 <!-- ПРАВАЯ КОЛОНКА -->
