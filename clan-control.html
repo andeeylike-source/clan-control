@@ -332,6 +332,33 @@
 
         .km-timeline-bar { height:24px; border-radius:4px; background:#6366f1; min-width:2px; transition:width 0.3s; position:relative; }
         .km-timeline-bar:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100%+4px); left:50%; transform:translateX(-50%); background:#1a1f29; color:#e2e8f0; padding:4px 8px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:99; border:1px solid #2d3748; pointer-events:none; }
+
+        /* Инфо-тултип модалка */
+        .info-modal-overlay { display:none; position:fixed; inset:0; z-index:600; align-items:center; justify-content:center; }
+        .info-modal-overlay.open { display:flex; }
+        .info-modal-bg { position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(3px); }
+        .info-modal-box {
+            position:relative; z-index:1;
+            background:linear-gradient(135deg,#12171f 0%,#0f1520 100%);
+            border:1px solid #1e2530;
+            border-radius:18px;
+            padding:28px 32px;
+            width:400px; max-width:92vw;
+            box-shadow: 0 0 0 1px #6366f133, 0 20px 60px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.05);
+            animation: infoModalIn .18s ease-out;
+        }
+        @keyframes infoModalIn { from { opacity:0; transform:scale(.94) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .info-modal-icon { font-size:32px; margin-bottom:12px; }
+        .info-modal-title { font-size:17px; font-weight:900; color:#e2e8f0; margin-bottom:6px; letter-spacing:-.3px; }
+        .info-modal-sub { font-size:12px; color:#475569; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px; }
+        .info-modal-body { font-size:13px; color:#94a3b8; line-height:1.7; }
+        .info-modal-body b { color:#e2e8f0; }
+        .info-modal-formula { background:#0b0e14; border:1px solid #1e2530; border-radius:10px; padding:12px 14px; margin-top:14px; font-size:12px; color:#64748b; }
+        .info-modal-formula span { color:#a5b4fc; font-weight:700; }
+        .info-modal-close { position:absolute; top:16px; right:16px; background:#1e2530; border:none; color:#64748b; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+        .info-modal-close:hover { background:#2d3748; color:#e2e8f0; }
+        .info-q-btn { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:#1e2530; border:1px solid #2d3748; color:#475569; font-size:10px; font-weight:900; cursor:pointer; transition:all .15s; flex-shrink:0; margin-left:5px; vertical-align:middle; font-family:monospace; line-height:1; }
+        .info-q-btn:hover { background:#6366f133; border-color:#6366f1; color:#a5b4fc; }
     </style>
 </head>
 <body>
@@ -2121,29 +2148,40 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             // Рейтинг среди класса (чем меньше место — тем больше)
             const classScore  = classTotal > 1 ? Math.round((1 - (classRankKills-1)/(classTotal)) * 100) : 50;
 
-            // Ценность — зависит от роли
+            // Рейтинг в клане (нормализованный)
+            const clanScore = rankNum ? Math.round((1 - (rankNum-1)/Math.max(rankTotal-1,1)) * 100) : 50;
+            // Смерти — меньше лучше (инвертированный)
+            const deathScore = Math.round(Math.max(0, 100 - (totalDeaths / Math.max(maxDeathsAll,1)) * 100));
+
+            // Ценность — зависит от роли (по твоей логике)
             let valueScore = 0;
             let radarLabels, radarScores;
+            let valueFormula = '';
+            const isSupportRole = playerRole === 'Хилер/Баффер' || playerRole === 'Танк';
             if (playerRole === 'Хилер/Баффер') {
-                // Хилер: явка, KDA, живучесть, рейтинг класса, PvP
-                valueScore = Math.round(presScore*0.35 + kdaScore*0.25 + survScore*0.2 + classScore*0.15 + pvpScore*0.05);
-                radarLabels = ['ЯВКА','KDA','ЖИВУЧЕСТЬ','КЛ.РЕЙ','PVP'];
-                radarScores = [presScore, kdaScore, survScore, classScore, pvpScore];
+                // Саппорт: явка×35, кл.рейтинг×25, KDA×20, мало смертей×20
+                valueScore = Math.round(presScore*0.35 + classScore*0.25 + kdaScore*0.20 + deathScore*0.20);
+                radarLabels = ['ЯВКА','КЛ.РЕЙ','KDA','ЖИВУЧ.','PVP'];
+                radarScores = [presScore, classScore, kdaScore, deathScore, pvpScore];
+                valueFormula = 'Явка×35% · Рейтинг класса×25% · KDA×20% · Живучесть×20%';
             } else if (playerRole === 'Танк') {
-                // Танк: живучесть, явка, KDA, PvP, рейтинг
-                valueScore = Math.round(survScore*0.3 + presScore*0.25 + kdaScore*0.2 + pvpScore*0.15 + classScore*0.1);
-                radarLabels = ['ЖИВУЧЕСТЬ','ЯВКА','KDA','PVP','КЛ.РЕЙ'];
-                radarScores = [survScore, presScore, kdaScore, pvpScore, classScore];
+                // Танк: явка×30, кл.рейтинг×25, KDA×20, мало смертей×25
+                valueScore = Math.round(presScore*0.30 + classScore*0.25 + kdaScore*0.20 + deathScore*0.25);
+                radarLabels = ['ЖИВУЧ.','ЯВКА','КЛ.РЕЙ','KDA','PVP'];
+                radarScores = [deathScore, presScore, classScore, kdaScore, pvpScore];
+                valueFormula = 'Явка×30% · Живучесть×25% · Рейтинг класса×25% · KDA×20%';
             } else if (playerRole === 'Призыватель') {
-                // Призыватель: PvE, явка, KDA, PvP, рейтинг
-                valueScore = Math.round(pveScore*0.35 + presScore*0.25 + kdaScore*0.2 + pvpScore*0.1 + classScore*0.1);
-                radarLabels = ['PVE','ЯВКА','KDA','PVP','КЛ.РЕЙ'];
-                radarScores = [pveScore, presScore, kdaScore, pvpScore, classScore];
+                // Призыватель боевой саппорт: PvE, явка, класс, KDA, PvP
+                valueScore = Math.round(pveScore*0.30 + presScore*0.25 + classScore*0.20 + kdaScore*0.15 + pvpScore*0.10);
+                radarLabels = ['PVE','ЯВКА','КЛ.РЕЙ','KDA','PVP'];
+                radarScores = [pveScore, presScore, classScore, kdaScore, pvpScore];
+                valueFormula = 'PvE×30% · Явка×25% · Рейтинг класса×20% · KDA×15% · PvP×10%';
             } else {
-                // Воин/Лучник/Кинжал/Маг: убийства, KDA, PvP, явка, рейтинг
-                valueScore = Math.round(aggrScore*0.3 + kdaScore*0.25 + pvpScore*0.2 + presScore*0.15 + classScore*0.1);
-                radarLabels = ['УБИЙСТВА','KDA','PVP','ЯВКА','КЛ.РЕЙ'];
-                radarScores = [aggrScore, kdaScore, pvpScore, presScore, classScore];
+                // Боевые (Воин/Лучник/Кинжал/Маг): явка, класс.рейт, клан.рейт?, KDA, PvE, PvP
+                valueScore = Math.round(presScore*0.20 + classScore*0.20 + clanScore*0.15 + kdaScore*0.20 + pvpScore*0.15 + pveScore*0.10);
+                radarLabels = ['ЯВКА','КЛ.РЕЙ','KDA','PVP','PVE'];
+                radarScores = [presScore, classScore, kdaScore, pvpScore, pveScore];
+                valueFormula = 'Явка×20% · Рейтинг класса×20% · KDA×20% · Рейтинг клана×15% · PvP×15% · PvE×10%';
             }
             // Цвет ценности
             const valueColor = valueScore >= 70 ? '#22c55e' : valueScore >= 40 ? '#f59e0b' : '#ef4444';
@@ -2287,21 +2325,21 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             <!-- ГЛАВНАЯ СТРОКА СТАТ -->
             <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
                 ${[
-                    ['⚔️', totalKills, 'Убийства', '#f59e0b'],
-                    ['💀', totalDeaths, 'Смерти', '#ef4444'],
-                    ['⚡', kda, 'KDA', '#a78bfa'],
-                    ['🗡️', fmtNum(totalPvp), 'PvP урон', '#818cf8'],
-                    ['🐉', fmtNum(totalPve), 'PvE урон', '#22c55e'],
-                ].map(([icon,val,label,color]) => `
+                    ['⚔️', totalKills, 'Убийства', '#f59e0b', null],
+                    ['💀', totalDeaths, 'Смерти', '#ef4444', null],
+                    ['⚡', kda, 'KDA', '#a78bfa', 'kda'],
+                    ['🗡️', fmtNum(totalPvp), 'PvP урон', '#818cf8', null],
+                    ['🐉', fmtNum(totalPve), 'PvE урон', '#22c55e', null],
+                ].map(([icon,val,label,color,tipKey]) => `
                 <div class="prf-card" style="text-align:center;position:relative;overflow:hidden">
                     <div style="position:absolute;top:10px;right:12px;font-size:18px;opacity:.15">${icon}</div>
                     <div class="prf-val-big" style="color:${color}">${val}</div>
-                    <div class="prf-val-label">${label}</div>
+                    <div class="prf-val-label" style="display:flex;align-items:center;justify-content:center;gap:4px">${label}${tipKey ? '<span class=\"info-q-btn\" onclick=\"showInfoModal(''+tipKey+'')\" >?</span>' : ''}</div>
                 </div>`).join('')}
                 <div class="prf-card" style="text-align:center;position:relative;overflow:hidden;border-color:${valueColor}55;cursor:help" title="Ценность игрока для клана: учитываются явка, KDA, урон и место среди одноклассников. 0-40 — низкая, 40-70 — средняя, 70-100 — высокая">
                     <div style="position:absolute;top:10px;right:12px;font-size:18px;opacity:.15">⭐</div>
                     <div class="prf-val-big" style="color:${valueColor}">${valueScore}<span style="font-size:12px;color:#475569">/100</span></div>
-                    <div class="prf-val-label">Ценность для клана</div>
+                    <div class="prf-val-label" style="display:flex;align-items:center;justify-content:center;gap:4px">Ценность для клана<span class="info-q-btn" onclick="showInfoModal('value')">?</span></div>
                     <div style="font-size:9px;color:${valueColor};margin-top:4px;font-weight:700">${valueScore>=70?'Высокая':valueScore>=40?'Средняя':'Низкая'}</div>
                     ${playerRole ? `<div style="font-size:8px;color:#475569;margin-top:2px;text-transform:uppercase">${playerRole}</div>` : ''}
                 </div>
@@ -2336,7 +2374,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             </div>` : '<div style="color:#475569;font-size:13px">Нет данных</div>'}
                         </div>
                         <div class="prf-card">
-                            <div class="prf-section-title">📊 Место в клане</div>
+                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">📊 Место в клане<span class="info-q-btn" onclick="showInfoModal('rank')">?</span></div>
                             ${rankNum ? `
                             <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:8px">
                                 <div>
@@ -2404,7 +2442,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
                         <!-- По классу -->
                         <div class="prf-card">
-                            <div class="prf-section-title">🎭 Среди своего класса</div>
+                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">🎭 Среди своего класса<span class="info-q-btn" onclick="showInfoModal('classrank')">?</span></div>
                             ${profaName ? `
                             <div style="font-size:11px;color:#6366f1;font-weight:700;background:#6366f111;border:1px solid #6366f133;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${profaName}</div>
                             ${classTotal > 1 ? `
@@ -2459,7 +2497,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
                     <!-- Кольцо посещаемости -->
                     <div class="prf-card" style="text-align:center">
-                        <div class="prf-section-title">Посещаемость КМ</div>
+                        <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">Посещаемость КМ<span class="info-q-btn" onclick="showInfoModal('attendance')">?</span></div>
                         <div style="position:relative;display:inline-block;margin:4px 0">
                             <svg width="84" height="84" viewBox="0 0 84 84">
                                 <circle cx="42" cy="42" r="${circR}" fill="none" stroke="#1e2530" stroke-width="8"/>
@@ -2477,14 +2515,14 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     <!-- Радар -->
                     <div class="prf-card" style="text-align:center">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                            <div class="prf-section-title" style="margin-bottom:0">Стиль игры</div>
+                            <div class="prf-section-title" style="margin-bottom:0;display:flex;align-items:center;gap:5px">Стиль игры<span class="info-q-btn" onclick="showInfoModal('style')">?</span></div>
                             ${playerRole ? `<div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;background:#1e2530;padding:2px 8px;border-radius:4px">${playerRole}</div>` : ''}
                         </div>
                         ${radarHtml}
                         <!-- Ценность игрока -->
                         <div style="background:#0b0e14;border-radius:8px;padding:10px 12px;margin-top:8px;border:1px solid ${valueColor}44">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                                <div style="font-size:9px;color:#475569;font-weight:800;text-transform:uppercase;letter-spacing:.08em">Ценность для клана</div>
+                                <div style="font-size:9px;color:#475569;font-weight:800;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:4px">Ценность для клана<span class="info-q-btn" onclick="showInfoModal('value')" style="font-size:9px;width:14px;height:14px">?</span></div>
                                 <div style="display:flex;align-items:baseline;gap:3px">
                                     <span style="font-size:22px;font-weight:900;color:${valueColor}">${valueScore}</span>
                                     <span style="font-size:11px;color:#475569">/100</span>
@@ -2493,7 +2531,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             <div style="height:4px;background:#1e2530;border-radius:2px;overflow:hidden;margin-bottom:6px">
                                 <div style="height:100%;width:${valueScore}%;background:${valueColor};border-radius:2px;transition:width .5s"></div>
                             </div>
-                            <div style="font-size:9px;color:#475569;line-height:1.5">${playerRole === 'Хилер/Баффер' ? 'Явка×35% · KDA×25% · Живучесть×20% · Рейтинг класса×15% · PvP×5%' : playerRole === 'Танк' ? 'Живучесть×30% · Явка×25% · KDA×20% · PvP×15% · Рейтинг×10%' : playerRole === 'Призыватель' ? 'PvE×35% · Явка×25% · KDA×20% · PvP×10% · Рейтинг×10%' : 'Убийства×30% · KDA×25% · PvP×20% · Явка×15% · Рейтинг×10%'}</div>
+                            <div style="font-size:9px;color:#475569;line-height:1.5">${valueFormula}</div>
                         </div>
                         <!-- Мини-карточки показателей -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;text-align:left">
@@ -5929,6 +5967,86 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             }
         })();
         // ===== ОНБОРДИНГ =====
+        // ===== ИНФО-ТУЛТИПЫ =====
+        const INFO_TIPS = {
+            kda: {
+                icon: '⚡',
+                title: 'KDA — Kill/Death Ratio',
+                sub: 'Коэффициент убийств',
+                body: '<b>KDA = Убийства ÷ Смерти</b><br><br>Показывает насколько эффективно игрок убивает по сравнению с тем как часто умирает.<br><br>• <b>KDA 1.0</b> — убийств столько же сколько смертей<br>• <b>KDA 2.0+</b> — хороший результат для ДД<br>• <b>KDA 0.5-</b> — умирает чаще чем убивает',
+                formula: 'KDA = <span>Убийства</span> ÷ max(<span>Смерти</span>, 1)'
+            },
+            rank: {
+                icon: '📊',
+                title: 'Место в клане',
+                sub: 'Клановый рейтинг',
+                body: 'Позиция игрока среди всех участников клана за выбранный период.<br><br>• <b>По убийствам</b> — сколько человек убил больше тебя<br>• <b>По KDA</b> — эффективность относительно всего клана<br><br>Рейтинг считается по всей истории КМ.',
+                formula: 'Рейтинг = место среди <span>' + '" + rankTotal + "' + '</span> игроков'
+            },
+            style: {
+                icon: '🎯',
+                title: 'Стиль игры',
+                sub: 'Радар-диаграмма',
+                body: 'Пятиугольник показывает твои сильные и слабые стороны относительно максимума в клане.<br><br>Каждая ось — отдельный показатель, нормированный от 0 до 100. <b>Чем больше площадь</b> — тем лучше общий профиль игрока.<br><br>Набор осей зависит от роли персонажа (Воин, Хилер, Танк...).',
+                formula: 'Все показатели нормированы: <span>0</span> = минимум в клане, <span>100</span> = максимум'
+            },
+            value: {
+                icon: '⭐',
+                title: 'Ценность для клана',
+                sub: 'Интегральный показатель',
+                body: 'Общая оценка полезности игрока для клана от 0 до 100. Формула зависит от роли:<br><br><b>Воин / Маг / Лучник / Кинжал:</b><br>Учитываются убийства, KDA, PvP урон, PvE урон, явка и место в рейтинге класса.<br><br><b>Танк / Хилер / Баффер:</b><br>Упор на явку, KDA, живучесть (мало смертей) и место среди одноклассников.',
+                formula: '0–40 = <span style="color:#ef4444">Низкая</span> · 40–70 = <span style="color:#f59e0b">Средняя</span> · 70–100 = <span style="color:#22c55e">Высокая</span>'
+            },
+            attendance: {
+                icon: '📅',
+                title: 'Посещаемость КМ',
+                sub: 'Явка на рейды',
+                body: 'Процент КМ в истории на которых присутствовал игрок.<br><br>• <b>100%</b> — не пропустил ни одного<br>• <b>70%+</b> — хорошая явка (зелёный)<br>• <b>40–70%</b> — средняя (жёлтый)<br>• <b>Ниже 40%</b> — низкая (красный)',
+                formula: 'Явка = <span>КМ с игроком</span> ÷ <span>Всего КМ</span> × 100%'
+            },
+            classrank: {
+                icon: '🎭',
+                title: 'Рейтинг среди класса',
+                sub: 'Место среди одноклассников',
+                body: 'Позиция среди всех игроков клана с <b>той же профой</b>.<br><br>Например если ты Titan и вас 4 в клане — здесь будет #1-4 по убийствам.<br><br>Помогает понять насколько ты хорош относительно других игроков того же класса.',
+                formula: 'Сравнение по <span>убийствам</span> и <span>KDA</span> среди одноклассников'
+            }
+        };
+
+        function showInfoModal(key) {
+            const tip = INFO_TIPS[key];
+            if (!tip) return;
+            let overlay = document.getElementById('infoModalOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'infoModalOverlay';
+                overlay.className = 'info-modal-overlay';
+                overlay.innerHTML = `<div class="info-modal-bg" onclick="closeInfoModal()"></div>
+                    <div class="info-modal-box">
+                        <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
+                        <div class="info-modal-icon" id="infoModalIcon"></div>
+                        <div class="info-modal-title" id="infoModalTitle"></div>
+                        <div class="info-modal-sub" id="infoModalSub"></div>
+                        <div class="info-modal-body" id="infoModalBody"></div>
+                        <div class="info-modal-formula" id="infoModalFormula"></div>
+                    </div>`;
+                document.body.appendChild(overlay);
+            }
+            document.getElementById('infoModalIcon').textContent = tip.icon;
+            document.getElementById('infoModalTitle').textContent = tip.title;
+            document.getElementById('infoModalSub').textContent = tip.sub;
+            document.getElementById('infoModalBody').innerHTML = tip.body;
+            document.getElementById('infoModalFormula').innerHTML = tip.formula;
+            overlay.classList.add('open');
+            document.addEventListener('keydown', _infoEscHandler);
+        }
+        function closeInfoModal() {
+            const overlay = document.getElementById('infoModalOverlay');
+            if (overlay) overlay.classList.remove('open');
+            document.removeEventListener('keydown', _infoEscHandler);
+        }
+        function _infoEscHandler(e) { if (e.key === 'Escape') closeInfoModal(); }
+
         function closeOnboarding() {
             const el = document.getElementById('onboardingOverlay');
             if (el) el.style.display = 'none';
