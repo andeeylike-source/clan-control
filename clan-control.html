@@ -341,20 +341,22 @@
         <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v10</div>
         
         <nav>
+            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px 4px;margin-top:4px">Аналитика</div>
+            <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
+            <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
+            <div onclick="showPage('screenshots')" id="nav-screenshots" class="nav-item">📋 История КМ</div>
+            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px 4px;margin-top:8px">Управление</div>
             <div onclick="showPage('roster')" id="nav-roster" class="nav-item">👥 Клан</div>
             <div onclick="showPage('profile')" id="nav-profile" class="nav-item" style="display:none">👤 Профиль</div>
             <div onclick="showPage('packs')" id="nav-packs" class="nav-item">⚔️ Рейд Паки</div>
-            <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
-            <div onclick="showPage('screenshots')" id="nav-screenshots" class="nav-item">📋 История КМ</div>
-            <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
             <div onclick="showPage('archive')" id="nav-archive" class="nav-item">🗄️ Архив</div>
         </nav>
-        <div style="margin-top:auto;padding-top:16px;border-top:1px solid #1e2530;display:flex;flex-direction:column;gap:4px">
-            <!-- Кнопка бэкапа -->
-            <button onclick="exportData()" title="Скачать резервную копию" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid #1e2530;color:#475569;border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer;transition:all .2s;width:100%;text-align:left" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#1e2530';this.style.color='#475569'">💾 Бэкап данных</button>
+        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #1e2530;display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:4px 16px 4px">Система</div>
             <div onclick="showPage('settings')" id="nav-settings" class="nav-item">⚙️ Настройки</div>
+            <button onclick="exportData()" title="Скачать резервную копию всех данных" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:#475569;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;transition:all .2s;width:100%;text-align:left;font-family:inherit" onmouseover="this.style.background='#1a1f29';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='#475569'">💾 Бэкап данных</button>
             <!-- Индикатор автосохранения -->
-            <div id="autoSaveIndicator" style="font-size:10px;color:#475569;padding:4px 10px;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .4s">
+            <div id="autoSaveIndicator" style="font-size:10px;color:#475569;padding:4px 16px;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .4s">
                 <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>
                 <span id="autoSaveText">Сохранено</span>
             </div>
@@ -545,8 +547,9 @@
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                     <!-- Поиск по игроку -->
                     <div style="position:relative">
-                        <input type="text" id="kmHistorySearch" placeholder="🔍 Поиск по нику..."
-                            style="background:#12171f;border:1px solid #1e2530;border-radius:10px;padding:8px 14px;color:#e2e8f0;font-size:13px;outline:none;width:220px;transition:border-color .2s"
+                        <input type="text" id="kmHistorySearch" placeholder="🔍 Поиск игрока по КМам..."
+                            title="Введи ник чтобы найти все КМ где участвовал этот игрок"
+                            style="background:#12171f;border:1px solid #1e2530;border-radius:10px;padding:8px 14px;color:#e2e8f0;font-size:13px;outline:none;width:240px;transition:border-color .2s"
                             oninput="renderKmHistory()"
                             onfocus="this.style.borderColor='#6366f1'"
                             onblur="this.style.borderColor='#1e2530'">
@@ -608,7 +611,10 @@
             <div class="card">
                 <h2 class="text-lg font-bold mb-2">🗑️ Данные</h2>
                 <p class="text-slate-500 text-sm mb-4">Сбросить все данные приложения (ростер, статистика, события). Ключи сохранятся.</p>
-                <button onclick="clearStorage()" style="background:#7f1d1d;color:#fca5a5;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600">🗑️ Сбросить все данные</button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button onclick="clearStorage()" style="background:#7f1d1d;color:#fca5a5;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600">🗑️ Сбросить все данные</button>
+                    <button onclick="showOnboarding()" style="background:#1e2530;color:#94a3b8;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600">📖 Показать онбординг</button>
+                </div>
             </div>
         </section>
 
@@ -1361,7 +1367,7 @@
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}</span>`).join('') || '<span style="color:#475569">—</span>'}</td>
-                    <td><span class="pac-tag">${p.pac}</span></td>
+                    <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="Нажми чтобы изменить пак" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
                     <td class="text-right">
                         <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1377,6 +1383,31 @@
             if (currentSort.field === field) currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             else { currentSort.field = field; currentSort.direction = 'asc'; }
             renderRoster();
+        }
+
+        function openPackFromRoster(playerId) {
+            const p = roster.find(x => x.id == playerId);
+            if (!p) return;
+            const packOptions = ['СОЛО', ...packs.map(pk => pk.name)];
+            const opts = packOptions.map(pk => `<option value="${pk}" ${pk===p.pac?'selected':''}>${pk}</option>`).join('');
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+            modal.innerHTML = `<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:28px;width:340px;max-width:94vw">
+                <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#e2e8f0">🎯 Изменить пак — <span style="color:#6366f1">${p.name}</span></div>
+                <select id="packRosterSelect" style="width:100%;background:#0b0e14;border:1px solid #2d3748;border-radius:8px;padding:10px;color:#e2e8f0;font-size:14px;margin-bottom:16px;outline:none">${opts}</select>
+                <div style="display:flex;gap:10px;justify-content:flex-end">
+                    <button onclick="this.closest('[style*=fixed]').remove()" style="background:#1e2530;border:none;color:#64748b;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:600">Отмена</button>
+                    <button onclick="(function(){
+                        const sel = document.getElementById('packRosterSelect');
+                        const pp = window._packRosterPlayer;
+                        if (pp) { pp.pac = sel.value; saveToStorage(); renderRoster(); if(document.getElementById('page-packs').classList.contains('active')) renderPacks(); }
+                        document.querySelector('[style*=position:fixed][style*=inset:0]').remove();
+                    })()" style="background:#6366f1;border:none;color:white;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">💾 Сохранить</button>
+                </div>
+            </div>`;
+            window._packRosterPlayer = p;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
         }
 
         function editPlayer(id) {
@@ -2267,11 +2298,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     <div class="prf-val-big" style="color:${color}">${val}</div>
                     <div class="prf-val-label">${label}</div>
                 </div>`).join('')}
-                <div class="prf-card" style="text-align:center;position:relative;overflow:hidden;border-color:${valueColor}55">
+                <div class="prf-card" style="text-align:center;position:relative;overflow:hidden;border-color:${valueColor}55;cursor:help" title="Ценность игрока для клана: учитываются явка, KDA, урон и место среди одноклассников. 0-40 — низкая, 40-70 — средняя, 70-100 — высокая">
                     <div style="position:absolute;top:10px;right:12px;font-size:18px;opacity:.15">⭐</div>
-                    <div class="prf-val-big" style="color:${valueColor}">${valueScore}</div>
-                    <div class="prf-val-label">Ценность</div>
-                    ${playerRole ? `<div style="font-size:8px;color:#475569;margin-top:3px;text-transform:uppercase">${playerRole}</div>` : ''}
+                    <div class="prf-val-big" style="color:${valueColor}">${valueScore}<span style="font-size:12px;color:#475569">/100</span></div>
+                    <div class="prf-val-label">Ценность для клана</div>
+                    <div style="font-size:9px;color:${valueColor};margin-top:4px;font-weight:700">${valueScore>=70?'Высокая':valueScore>=40?'Средняя':'Низкая'}</div>
+                    ${playerRole ? `<div style="font-size:8px;color:#475569;margin-top:2px;text-transform:uppercase">${playerRole}</div>` : ''}
                 </div>
             </div>
 
@@ -2450,12 +2482,18 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         </div>
                         ${radarHtml}
                         <!-- Ценность игрока -->
-                        <div style="background:#0b0e14;border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;border:1px solid ${valueColor}44">
-                            <div>
-                                <div style="font-size:9px;color:#475569;font-weight:800;text-transform:uppercase;letter-spacing:.08em">Ценность</div>
-                                <div style="font-size:9px;color:#475569;margin-top:2px">${playerRole === 'Хилер/Баффер' ? 'явка · KDA · живучесть' : playerRole === 'Танк' ? 'живучесть · явка · KDA' : 'убийства · KDA · PvP'}</div>
+                        <div style="background:#0b0e14;border-radius:8px;padding:10px 12px;margin-top:8px;border:1px solid ${valueColor}44">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                                <div style="font-size:9px;color:#475569;font-weight:800;text-transform:uppercase;letter-spacing:.08em">Ценность для клана</div>
+                                <div style="display:flex;align-items:baseline;gap:3px">
+                                    <span style="font-size:22px;font-weight:900;color:${valueColor}">${valueScore}</span>
+                                    <span style="font-size:11px;color:#475569">/100</span>
+                                </div>
                             </div>
-                            <div style="font-size:26px;font-weight:900;color:${valueColor}">${valueScore}</div>
+                            <div style="height:4px;background:#1e2530;border-radius:2px;overflow:hidden;margin-bottom:6px">
+                                <div style="height:100%;width:${valueScore}%;background:${valueColor};border-radius:2px;transition:width .5s"></div>
+                            </div>
+                            <div style="font-size:9px;color:#475569;line-height:1.5">${playerRole === 'Хилер/Баффер' ? 'Явка×35% · KDA×25% · Живучесть×20% · Рейтинг класса×15% · PvP×5%' : playerRole === 'Танк' ? 'Живучесть×30% · Явка×25% · KDA×20% · PvP×15% · Рейтинг×10%' : playerRole === 'Призыватель' ? 'PvE×35% · Явка×25% · KDA×20% · PvP×10% · Рейтинг×10%' : 'Убийства×30% · KDA×25% · PvP×20% · Явка×15% · Рейтинг×10%'}</div>
                         </div>
                         <!-- Мини-карточки показателей -->
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;text-align:left">
@@ -4762,7 +4800,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                                 <span style="font-size:13px;font-weight:700;color:#22c55e">🐉 ${totalPve.toLocaleString()}</span>
                             </div>` : ''}
                         </div>
-                        <button onclick="openCalendarDay('${dateStr}')" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Открыть в календаре</button>
+                        <button onclick="openCalendarDay('${dateStr}')" title="Открыть день в календаре — загрузить скриншоты или переанализировать" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Загрузить скриншоты</button>
                     </div>
                     ${hasCommandChannel ? `
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -5898,11 +5936,16 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
         function showOnboardingIfNeeded() {
-            // Показываем только если нет данных И ни разу не видел онбординг
+            // Показываем только если localStorage совсем пустой (первый запуск)
             const seen = localStorage.getItem('cc_onboarded');
             if (seen) return;
-            const hasData = roster.length > 0 || Object.keys(appliedStatsByDate).length > 0;
-            if (hasData) { localStorage.setItem('cc_onboarded', '1'); return; }
+            // Если данные только из preload (не из реального localStorage) — показываем
+            const hasRealData = localStorage.getItem('clanControl_v1') !== null;
+            if (hasRealData) { localStorage.setItem('cc_onboarded', '1'); return; }
+            const el = document.getElementById('onboardingOverlay');
+            if (el) el.style.display = 'flex';
+        }
+        function showOnboarding() {
             const el = document.getElementById('onboardingOverlay');
             if (el) el.style.display = 'flex';
         }
