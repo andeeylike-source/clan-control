@@ -2073,22 +2073,22 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             if (playerRole === 'Хилер/Баффер') {
                 // Хилер: явка, KDA, живучесть, рейтинг класса, PvP
                 valueScore = Math.round(presScore*0.35 + kdaScore*0.25 + survScore*0.2 + classScore*0.15 + pvpScore*0.05);
-                radarLabels = ['ЯВКА','KDA','ЖИВУЧЕСТЬ','РЕЙТИНГ','PVP'];
+                radarLabels = ['ЯВКА','KDA','ЖИВУЧЕСТЬ','КЛ.РЕЙ','PVP'];
                 radarScores = [presScore, kdaScore, survScore, classScore, pvpScore];
             } else if (playerRole === 'Танк') {
                 // Танк: живучесть, явка, KDA, PvP, рейтинг
                 valueScore = Math.round(survScore*0.3 + presScore*0.25 + kdaScore*0.2 + pvpScore*0.15 + classScore*0.1);
-                radarLabels = ['ЖИВУЧЕСТЬ','ЯВКА','KDA','PVP','РЕЙТИНГ'];
+                radarLabels = ['ЖИВУЧЕСТЬ','ЯВКА','KDA','PVP','КЛ.РЕЙ'];
                 radarScores = [survScore, presScore, kdaScore, pvpScore, classScore];
             } else if (playerRole === 'Призыватель') {
                 // Призыватель: PvE, явка, KDA, PvP, рейтинг
                 valueScore = Math.round(pveScore*0.35 + presScore*0.25 + kdaScore*0.2 + pvpScore*0.1 + classScore*0.1);
-                radarLabels = ['PVE','ЯВКА','KDA','PVP','РЕЙТИНГ'];
+                radarLabels = ['PVE','ЯВКА','KDA','PVP','КЛ.РЕЙ'];
                 radarScores = [pveScore, presScore, kdaScore, pvpScore, classScore];
             } else {
                 // Воин/Лучник/Кинжал/Маг: убийства, KDA, PvP, явка, рейтинг
                 valueScore = Math.round(aggrScore*0.3 + kdaScore*0.25 + pvpScore*0.2 + presScore*0.15 + classScore*0.1);
-                radarLabels = ['УБИЙСТВА','KDA','PVP','ЯВКА','РЕЙТИНГ'];
+                radarLabels = ['УБИЙСТВА','KDA','PVP','ЯВКА','КЛ.РЕЙ'];
                 radarScores = [aggrScore, kdaScore, pvpScore, presScore, classScore];
             }
             // Цвет ценности
@@ -2122,7 +2122,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     const a=(Math.PI*2/n)*i-Math.PI/2;
                     const lx = cx+(r+28)*Math.cos(a), ly = cy+(r+28)*Math.sin(a);
                     const anch = Math.cos(a) < -0.3 ? 'end' : Math.cos(a) > 0.3 ? 'start' : 'middle';
-                    return `<text x="${lx}" y="${ly+4}" text-anchor="${anch}" fill="#64748b" font-size="9" font-family="Inter,sans-serif" font-weight="800" letter-spacing="0.05em">${lb}</text>`;
+                    return `<text x="${lx}" y="${ly+4}" text-anchor="${anch}" fill="#64748b" font-size="8" font-family="Inter,sans-serif" font-weight="700">${lb}</text>`;
                 }).join('');
                 return `<svg viewBox="0 0 260 260" width="100%" height="auto" style="max-width:240px">${grid}${axes}${poly}${dots}${lbls}</svg>`;
             }
@@ -2221,7 +2221,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             </div>
 
             <!-- ГЛАВНАЯ СТРОКА СТАТ -->
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px">
                 ${[
                     ['⚔️', totalKills, 'Убийства', '#f59e0b'],
                     ['💀', totalDeaths, 'Смерти', '#ef4444'],
@@ -2234,6 +2234,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     <div class="prf-val-big" style="color:${color}">${val}</div>
                     <div class="prf-val-label">${label}</div>
                 </div>`).join('')}
+                <div class="prf-card" style="text-align:center;position:relative;overflow:hidden;border-color:${valueColor}55">
+                    <div style="position:absolute;top:10px;right:12px;font-size:18px;opacity:.15">⭐</div>
+                    <div class="prf-val-big" style="color:${valueColor}">${valueScore}</div>
+                    <div class="prf-val-label">Ценность</div>
+                    ${playerRole ? `<div style="font-size:8px;color:#475569;margin-top:3px;text-transform:uppercase">${playerRole}</div>` : ''}
+                </div>
             </div>
 
             <!-- ОСНОВНАЯ СЕТКА -->
@@ -2311,13 +2317,10 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             // notInStat = был на КМ, но профа другая (или не назначена при мультипрофе)
                             const notInStat = d.present && !d.inStat;
                             const barColor = isBest ? '#f59e0b' : (d.inStat ? '#6366f1' : '#2d3748');
-                            const kmProfaOpts = allProfasList.length > 1
-                                ? `<select onchange="setKmProfa('${d.date}','${player.name.replace(/'/g,"\\'")}',this.value);renderPlayerProfile('${player.name.replace(/'/g,"\\'")}',true)"
-                                    style="background:#0b0e14;border:1px solid ${d.assigned ? '#6366f1' : '#2d3748'};border-radius:5px;color:${d.assigned ? '#a5b4fc' : '#64748b'};font-size:10px;padding:2px 4px;cursor:pointer;max-width:90px;width:100%">
-                                    <option value="">— не назначена</option>
-                                    ${allProfasList.map(pf => `<option value="${pf.replace(/"/g,'&quot;')}" ${d.profa===pf&&d.assigned?'selected':''}>${PROFA_NAMES && PROFA_NAMES[pf] ? pf.split(' (')[0].split(' ').slice(0,2).join(' ')+'('+PROFA_NAMES[pf]+')' : pf.split(' (')[0]}</option>`).join('')}
-                                  </select>`
-                                : (d.profa && d.profa !== '—' ? `<span style="font-size:10px">${profaIconHtml(d.profa,16)}</span>` : '<span style="color:#475569;font-size:10px">—</span>');
+                            // Показываем иконку профы — автоматически из назначенной или текущей
+                            const kmProfaOpts = d.profa && d.profa !== '—'
+                                ? `<span style="display:inline-flex;align-items:center;gap:4px">${profaIconHtml(d.profa,16)}</span>`
+                                : '<span style="color:#475569;font-size:10px">—</span>';
                             return `<div style="display:grid;grid-template-columns:60px 1fr 80px 52px 52px 80px 80px;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;transition:background .15s;cursor:default;${isBest&&d.inStat ? 'background:#f59e0b11;border:1px solid #f59e0b22;' : ''}${absent ? 'opacity:0.35;' : notInStat ? 'opacity:0.5;' : ''}" class="km-row">
                                 <div style="font-size:11px;font-weight:700;color:${isBest&&d.inStat?'#f59e0b':absent||notInStat?'#475569':'#94a3b8'}">${fmtDate(d.date)}</div>
                                 <div><div class="km-bar-wrap"><div class="km-bar-fill" style="width:${absent?0:pct}%;background:${barColor}"></div></div></div>
@@ -2328,7 +2331,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                                 <div style="text-align:center;color:#22c55e;font-size:11px">${absent?'<span style="color:#ef4444;font-size:9px">ОТСУТСТВОВАЛ</span>':notInStat?'<span style="color:#475569;font-size:9px">другая профа</span>':fmtNum(d.pve_dmg)}</div>
                             </div>`;
                         }).join('')}
-                        ${allProfasList.length > 1 ? `<div style="font-size:10px;color:#475569;margin-top:8px;padding:6px 10px;background:#1e253088;border-radius:6px;border:1px solid #2d3748">💡 Выбери профу в колонке «Профа» для каждого КМ — тогда переключатели выше будут показывать стату раздельно. Строки с «другая профа» не входят в стату активного таба.</div>` : ''}
+
                     </div>
 
                     <!-- Статистика по классу и роли -->
