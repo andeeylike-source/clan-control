@@ -1656,8 +1656,10 @@
             if(pageId === 'stats') renderStats();
             if(pageId === 'screenshots') renderScreenshotArchive();
             if(pageId === 'settings') { renderApiKeys(); renderAliases(); }
-            // Сохраняем текущую страницу (кроме профиля — он зависит от игрока)
-            if (pageId !== 'profile') localStorage.setItem('cc_lastPage', pageId);
+            // Обновляем hash в URL (кроме профиля — у него свой hash)
+            if (pageId !== 'profile') {
+                history.replaceState(null, '', '#' + pageId);
+            }
         }
 
         // ===== ЗАМЕТКИ ОФИЦЕРА =====
@@ -1880,10 +1882,11 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
         function openPlayerProfile(playerName) {
             currentProfileName = playerName;
-            // Показываем пункт профиля в навигации
             const navProfile = document.getElementById('nav-profile');
             if (navProfile) navProfile.style.display = '';
             showPage('profile');
+            // Сохраняем профиль в hash: #profile/НикИгрока
+            history.replaceState(null, '', '#profile/' + encodeURIComponent(playerName));
             renderPlayerProfile(playerName);
         }
 
@@ -2395,8 +2398,8 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
         function goBackFromProfile() {
-            // Скрываем пункт профиля из навигации
             document.getElementById('nav-profile').style.display = 'none';
+            currentProfileName = null;
             showPage('roster');
         }
 
@@ -5778,11 +5781,22 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             renderRoster();
             // Синхронизируем статистику ростера из снапшотов при старте
             syncRosterStatsFromSnapshots();
-            // Восстанавливаем последнюю открытую страницу (или показываем паки по умолчанию)
-            const lastPage = localStorage.getItem('cc_lastPage') || 'packs';
-            const pageEl = document.getElementById('page-' + lastPage);
-            if (pageEl) showPage(lastPage); else showPage('packs');
-            // Показываем контент только после того как нужная страница активна
+
+            // Восстанавливаем страницу из URL hash
+            const hash = location.hash.slice(1); // убираем #
+            if (hash.startsWith('profile/')) {
+                const playerName = decodeURIComponent(hash.slice(8));
+                const player = roster.find(r => r.name === playerName || normalizeNick(r.name) === normalizeNick(playerName));
+                if (player) {
+                    openPlayerProfile(player.name);
+                } else {
+                    showPage('roster');
+                }
+            } else if (hash && document.getElementById('page-' + hash)) {
+                showPage(hash);
+            } else {
+                showPage('packs');
+            }
             document.querySelector('.main-content').classList.add('ready');
         };
     </script>
