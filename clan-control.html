@@ -2749,13 +2749,14 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                                 }
                             });
                         });
-                        const packEntries = Object.entries(packPerformance).filter(([,v]) => v.count > 0);
+                        const _garbagePacks = ['имя пака','лорин','имя','name','pack','unknown'];
+                        const packEntries = Object.entries(packPerformance).filter(([k,v]) => v.count > 0 && !_garbagePacks.some(g => k.toLowerCase().includes(g)));
                         if (packEntries.length > 1) {
                             packEntries.sort((a,b) => (b[1].kills/b[1].count) - (a[1].kills/a[1].count));
                             const best = packEntries[0], worst = packEntries[packEntries.length-1];
                             const bestAvg = (best[1].kills/best[1].count).toFixed(1), worstAvg = (worst[1].kills/worst[1].count).toFixed(1);
                             if (parseFloat(bestAvg) > parseFloat(worstAvg) * 1.5) {
-                                strengths.push({ icon:'👥', title:'Лучший пак: ' + best[0], text:'Средние убийства ' + bestAvg + '/КМ vs ' + worstAvg + '/КМ в ' + worst[0] });
+                                strengths.push({ icon:'👥', title:'Лучше играет в паке «' + best[0] + '»', text:'В этом паке средние убийства ' + bestAvg + ' за КМ. В паке «' + worst[0] + '» — только ' + worstAvg + '. Результат зависит от состава группы.' });
                             }
                         }
 
@@ -2766,14 +2767,14 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             const best = synergy[0];
                             const worst = synergy[synergy.length-1];
                             if (best.avgKills > worst.avgKills * 1.3 && best.count > 0 && worst.count > 0) {
-                                strengths.push({ icon:'🤝', title:'Лучшая синергия: пак ' + best.pack, text:'Ср. убийства: ' + best.avgKills + '/КМ (' + best.count + ' КМ). В паке ' + worst.pack + ': ' + worst.avgKills + '/КМ. Рекомендуется играть с ' + best.pack + '.' });
+                                strengths.push({ icon:'🤝', title:'Лучшие результаты в паке «' + best.pack + '»', text:'Средние убийства ' + best.avgKills + ' за КМ (' + best.count + ' раз). В паке «' + worst.pack + '»: ' + worst.avgKills + '. Рекомендуется ставить в пак «' + best.pack + '».' });
                             }
                         }
                         if (synergy.length >= 2 && !isDps) {
                             const best = synergy.reduce((a,b) => a.avgDeaths < b.avgDeaths ? a : b);
                             const worst = synergy.reduce((a,b) => a.avgDeaths > b.avgDeaths ? a : b);
                             if (worst.avgDeaths > best.avgDeaths * 1.5 && best.count > 0 && worst.count > 0) {
-                                strengths.push({ icon:'🤝', title:'Лучшая синергия: пак ' + best.pack, text:'Ср. смертей: ' + best.avgDeaths + '/КМ (' + best.count + ' КМ). В паке ' + worst.pack + ': ' + worst.avgDeaths + '/КМ. Меньше смертей = лучшая поддержка.' });
+                                strengths.push({ icon:'🤝', title:'Лучше выживает в паке «' + best.pack + '»', text:'Средние смерти ' + best.avgDeaths + ' за КМ (' + best.count + ' раз). В паке «' + worst.pack + '»: ' + worst.avgDeaths + '. Меньше смертей — значит лучше защищают.' });
                             }
                         }
 
@@ -2837,33 +2838,33 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                             if (isDps) {
                                 // ДД: убийства выше/ниже медианы роли
                                 if (kmAboveMedianKills > totalKmAnalyzed * 0.6) {
-                                    strengths.push({ icon:'⚔️', title:'Выше медианы роли', text:'На ' + kmAboveMedianKills + ' из ' + totalKmAnalyzed + ' КМ убивал больше медианы своей роли. Стабильно сильнее среднего.' });
+                                    strengths.push({ icon:'⚔️', title:'Убийства выше среднего', text:'На ' + kmAboveMedianKills + ' из ' + totalKmAnalyzed + ' КМ показал результат лучше чем половина ДД клана на тех же КМ. Это хороший показатель.' });
                                 } else if (kmBelowMedianKills > totalKmAnalyzed * 0.6) {
-                                    issues.push({ icon:'⚔️', severity:'medium', title:'Ниже медианы роли', text:'На ' + kmBelowMedianKills + ' из ' + totalKmAnalyzed + ' КМ убивал меньше медианы роли. Проанализируй позиционирование и выбор целей.' });
+                                    issues.push({ icon:'⚔️', severity:'medium', title:'Убийства ниже среднего', text:'На ' + kmBelowMedianKills + ' из ' + totalKmAnalyzed + ' КМ убивал меньше чем половина других ДД клана. Стоит пересмотреть позицию в бою и выбор целей.' });
                                 }
                                 // Смерти относительно медианы
                                 if (kmAboveMedianDeaths > totalKmAnalyzed * 0.6) {
-                                    issues.push({ icon:'💀', severity:'medium', title:'Умираешь чаще роли', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ смертей больше медианы ДД. Старайся входить в бой с группой, не соло.' });
+                                    issues.push({ icon:'💀', severity:'medium', title:'Смертей больше чем у других ДД', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал чаще чем половина других ДД на тех же КМ. Возможно заходишь в бой раньше группы или стоишь на опасной позиции.' });
                                 }
                             }
 
                             if (isTank) {
                                 // Танк: смерти ниже медианы танков = плохо (не танкует)
                                 if (kmBelowMedianDeaths > totalKmAnalyzed * 0.6 && totalKmAnalyzed >= 2) {
-                                    issues.push({ icon:'🛡️', severity:'low', title:'Смерти ниже медианы танков', text:'На ' + kmBelowMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал реже других танков. Возможно недостаточно агрессивен на фронте.' });
+                                    issues.push({ icon:'🛡️', severity:'low', title:'Меньше смертей чем другие танки', text:'На ' + kmBelowMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал реже других танков клана. Танк должен быть на передовой — возможно стоит играть агрессивнее.' });
                                 } else if (kmAboveMedianDeaths > totalKmAnalyzed * 0.6) {
-                                    issues.push({ icon:'💀', severity:'medium', title:'Смерти выше медианы танков', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал чаще других танков. Нужна координация с хилерами или смена тактики.' });
+                                    issues.push({ icon:'💀', severity:'medium', title:'Больше смертей чем у других танков', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал чаще других танков клана. Нужна лучшая связка с хилерами или другая тактика входа.' });
                                 } else if (totalKmAnalyzed >= 2) {
-                                    strengths.push({ icon:'🛡️', title:'Стабильный танк', text:'Смерти в рамках медианы танков — на уровне с другими танками клана.' });
+                                    strengths.push({ icon:'🛡️', title:'Стабильный танк', text:'Количество смертей на уровне других танков клана — работает как надо.' });
                                 }
                             }
 
                             if (isHealer) {
                                 // Хилер: смерти выше медианы хилеров = плохо
                                 if (kmAboveMedianDeaths > totalKmAnalyzed * 0.5) {
-                                    issues.push({ icon:'💀', severity:'medium', title:'Умирает чаще других саппортов', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ смертей больше медианы хилеров/бафферов. Позиционирование критично для саппорта.' });
+                                    issues.push({ icon:'💀', severity:'medium', title:'Больше смертей чем у других саппортов', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал чаще чем другие хилеры/бафферы клана. Саппорт должен выживать — попробуй стоять дальше от линии боя.' });
                                 } else if (kmBelowMedianDeaths > totalKmAnalyzed * 0.5 && totalKmAnalyzed >= 2) {
-                                    strengths.push({ icon:'🛡️', title:'Живучий саппорт', text:'На ' + kmBelowMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал реже медианы саппортов. Отличное позиционирование.' });
+                                    strengths.push({ icon:'🛡️', title:'Живучий саппорт', text:'На ' + kmBelowMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал реже других хилеров/бафферов. Отлично держит позицию.' });
                                 }
                                 if (totalPvp > 50) {
                                     strengths.push({ icon:'🗡️', title:'Активный саппорт', text: totalPvp.toLocaleString() + ' PvP урона — помогаешь не только хилом.' });
@@ -2882,7 +2883,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                                 }, { _diff: 999 });
 
                                 if (bestKmRel._diff > 3 && worstKmRel._diff < -3) {
-                                    issues.push({ icon:'🔍', severity:'low', title:'Зависимость от КМ', text:'Лучший КМ (' + fmtD(bestKmRel.date) + '): +' + bestKmRel._diff + ' от медианы (сложность: ' + bestKmRel.difficulty + ' ср.смертей). Худший (' + fmtD(worstKmRel.date) + '): ' + worstKmRel._diff + ' (сложность: ' + worstKmRel.difficulty + '). Результат сильно зависит от обстановки.' });
+                                    issues.push({ icon:'🔍', severity:'low', title:'Результаты скачут от КМ к КМ', text:'На КМ ' + fmtD(bestKmRel.date) + ' был на +' + bestKmRel._diff + ' убийств лучше среднего ДД. На КМ ' + fmtD(worstKmRel.date) + ' — на ' + Math.abs(worstKmRel._diff) + ' хуже. Результат сильно зависит от пака и обстановки.' });
                                 }
                             }
                         }
@@ -3690,6 +3691,9 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     // Не считаем пак где ты сам лидер
                     if (normLeader === nk) return;
                     const displayName = roster.find(r => normalizeNick(r.name) === normLeader)?.name || leader;
+                    // Фильтр мусорных имён паков от OCR
+                    const garbageNames = ['имя пака','лорин','имя','name','pack','unknown'];
+                    if (garbageNames.some(g => normLeader.toLowerCase().includes(g) || packName.toLowerCase().includes(g))) return;
                     if (!packResults[normLeader]) packResults[normLeader] = { kills:[], deaths:[], dates:[], displayName };
                     packResults[normLeader].kills.push(me.kills||0);
                     packResults[normLeader].deaths.push(me.deaths||0);
