@@ -509,6 +509,7 @@
                     </div>
                     <button onclick="removeDuplicates()" class="px-4 py-2 border border-red-900 text-red-400 rounded-lg text-sm font-medium hover:bg-red-900/20">Дубли</button>
                     <button onclick="clearAllNew()" class="px-4 py-2 border border-slate-600 text-slate-400 rounded-lg text-sm font-medium hover:bg-slate-800">Снять NEW</button>
+                    <button onclick="unverifyAll()" class="px-4 py-2 border border-slate-600 text-slate-400 rounded-lg text-sm font-medium hover:bg-slate-800" title="Снять все отметки проверки">Снять ✓</button>
                     <button onclick="resetAllStats()" class="px-4 py-2 border border-red-900 text-red-500 rounded-lg text-sm font-medium hover:bg-red-900/20">Сброс статы</button>
                     <button onclick="openPlayerModal()" class="btn-primary">+ Игрок</button>
                 </div>
@@ -537,6 +538,7 @@
                         <tr>
                             <th onclick="handleSort('name')">Ник <span id="sort-name"></span></th>
                             <th onclick="handleSort('isNew')" style="cursor:pointer">NEW <span id="sort-isNew"></span></th>
+                            <th onclick="handleSort('verified')" style="cursor:pointer;width:30px" title="Проверен — ник и профа верны">✓ <span id="sort-verified"></span></th>
                             <th onclick="handleSort('profa')">Профа <span id="sort-profa"></span></th>
                             <th onclick="handleSort('pac')">Пак <span id="sort-pac"></span></th>
                             <th onclick="handleSort('attendance')">КМ % <span id="sort-attendance"></span></th>
@@ -1476,7 +1478,12 @@
                 if (currentSort.field === 'isNew') {
                     const nA = a.isNew ? 1 : 0;
                     const nB = b.isNew ? 1 : 0;
-                    return currentSort.direction === 'asc' ? nB - nA : nA - nB; // по умолч. NEW сверху
+                    return currentSort.direction === 'asc' ? nB - nA : nA - nB;
+                }
+                if (currentSort.field === 'verified') {
+                    const vA = a.verified ? 1 : 0;
+                    const vB = b.verified ? 1 : 0;
+                    return currentSort.direction === 'asc' ? vA - vB : vB - vA; // непроверенные сверху
                 }
                 let vA = a[currentSort.field];
                 let vB = b[currentSort.field];
@@ -1501,6 +1508,7 @@
                         <span class="font-bold text-slate-200">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
+                    <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:#2d3748;font-size:14px">○</span>'}</td>
                     <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="Нажми чтобы изменить профу" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}</span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
                     <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="Нажми чтобы изменить пак" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
@@ -1707,6 +1715,28 @@
                 saveToStorage();
                 renderRoster();
             }, false);
+        }
+
+
+        // ===== ВЕРИФИКАЦИЯ ИГРОКОВ =====
+        function toggleVerified(playerId) {
+            const p = roster.find(x => x.id === playerId);
+            if (!p) return;
+            p.verified = !p.verified;
+            saveToStorage();
+            renderRoster();
+        }
+
+        function verifyAll() {
+            roster.forEach(p => { p.verified = true; });
+            saveToStorage();
+            renderRoster();
+        }
+
+        function unverifyAll() {
+            roster.forEach(p => { p.verified = false; });
+            saveToStorage();
+            renderRoster();
         }
 
         function removeDuplicates() {
@@ -3923,6 +3953,29 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             return null;
         }
 
+        // ===== КЕШ СКРИНШОТОВ — не анализируем повторно =====
+        function getScreenshotHash(base64) {
+            const len = base64.length;
+            const head = base64.substring(0, 200);
+            const tail = base64.substring(len - 200);
+            let hash = len;
+            for (let i = 0; i < head.length; i++) hash = ((hash << 5) - hash + head.charCodeAt(i)) | 0;
+            for (let i = 0; i < tail.length; i++) hash = ((hash << 5) - hash + tail.charCodeAt(i)) | 0;
+            return 'sh2_' + Math.abs(hash).toString(36) + '_' + len;
+        }
+        function getScreenshotCache() {
+            try { return JSON.parse(localStorage.getItem('cc_screenshot_cache') || '{}'); } catch(e) { return {}; }
+        }
+        function setScreenshotCache(hash, data) {
+            try {
+                const cache = getScreenshotCache();
+                cache[hash] = { data, ts: Date.now() };
+                const week = 7*24*60*60*1000;
+                Object.keys(cache).forEach(k => { if (Date.now()-(cache[k].ts||0) > week) delete cache[k]; });
+                localStorage.setItem('cc_screenshot_cache', JSON.stringify(cache));
+            } catch(e) {}
+        }
+
         async function handleClanScreenshots(event) {
             const files = Array.from(event.target.files);
             if (files.length === 0) return;
@@ -3954,17 +4007,23 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     });
                     const mediaType = files[i].type || 'image/png';
 
-                    const prompt = `Это скриншот окна "Информация о Клане" из игры Lineage 2. На экране список игроков клана с колонками: Name (ник), Prof (профессия на русском), Lvl (уровень), Group (группа), Last Online Time (время последнего входа).
+                    // Кеш — не отправляем повторно
+                    const scrHash = getScreenshotHash(base64);
+                    const scrCache = getScreenshotCache();
+                    if (scrCache[scrHash]) {
+                        statusEl.textContent = '⚡ Скриншот ' + (i+1) + '/' + files.length + ' (из кеша)';
+                        const cached = scrCache[scrHash].data;
+                        if (cached.players && Array.isArray(cached.players)) allParsed.push(...cached.players);
+                        continue;
+                    }
 
-Извлеки ВСЕХ игроков из ОБЕИХ колонок (левой Online и правой Offline).
+                    const prompt = `Это скриншот окна "Информация о Клане" из игры Lineage 2. На экране список игроков клана.
 
-Отвечай ТОЛЬКО в формате JSON без markdown:
-{
-  "players": [
-    {"name": "НикИгрока", "prof_ru": "Профессия на русском как написано", "level": 70, "online": true},
-    {"name": "НикИгрока2", "prof_ru": "Профессия на русском", "level": 68, "online": false}
-  ]
-}
+Извлеки ТОЛЬКО колонки Name, Prof и Lvl. ИГНОРИРУЙ колонку Group полностью.
+Левая половина экрана = онлайн игроки, правая = оффлайн.
+
+Отвечай ТОЛЬКО JSON без markdown:
+{"players":[{"name":"Ник","prof_ru":"Профессия на русском","level":70,"online":true}]}
 
 ВАЖНО:
 - Ники копируй ПОСИМВОЛЬНО, буква за буквой. Не угадывай — читай каждый символ. Ники часто содержат хитрые сочетания: строчная b (не D), цифра 1 (не l), цифра 0 (не O), заглавная I (не l). Пример: TANb4A (маленькая b, не D). Если не уверен — бери символ как есть.
@@ -4005,6 +4064,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     const parsed = JSON.parse(jsonStr);
                     if (parsed.players && Array.isArray(parsed.players)) {
                         allParsed.push(...parsed.players);
+                        setScreenshotCache(scrHash, parsed);
                     }
                 } catch(e) {
                     console.warn('Clan screenshot ' + (i+1) + ' error:', e.message);
