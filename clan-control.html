@@ -2307,24 +2307,6 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 radarLabels = ['ЯВКА','КЛ.РЕЙ','KDA','PVP','PVE'];
                 radarScores = [presScore, classScore, kdaScore, pvpScore, pveScore];
                 valueFormula = 'КМ-скор×65% + Явка×35% (vs медиана ДД на каждом КМ)';
-            } else if (playerRole === 'Танк') {
-                // Танк: явка×30, кл.рейтинг×25, KDA×20, мало смертей×25
-                valueScore = Math.round(presScore*0.30 + classScore*0.25 + kdaScore*0.20 + deathScore*0.25);
-                radarLabels = ['ЖИВУЧ.','ЯВКА','КЛ.РЕЙ','KDA','PVP'];
-                radarScores = [deathScore, presScore, classScore, kdaScore, pvpScore];
-                valueFormula = 'Явка×30% · Живучесть×25% · Рейтинг класса×25% · KDA×20%';
-            } else if (playerRole === 'Призыватель') {
-                // Призыватель боевой саппорт: PvE, явка, класс, KDA, PvP
-                valueScore = Math.round(pveScore*0.30 + presScore*0.25 + classScore*0.20 + kdaScore*0.15 + pvpScore*0.10);
-                radarLabels = ['PVE','ЯВКА','КЛ.РЕЙ','KDA','PVP'];
-                radarScores = [pveScore, presScore, classScore, kdaScore, pvpScore];
-                valueFormula = 'PvE×30% · Явка×25% · Рейтинг класса×20% · KDA×15% · PvP×10%';
-            } else {
-                // Боевые (Воин/Лучник/Кинжал/Маг): явка, класс.рейт, клан.рейт?, KDA, PvE, PvP
-                valueScore = Math.round(presScore*0.20 + classScore*0.20 + clanScore*0.15 + kdaScore*0.20 + pvpScore*0.15 + pveScore*0.10);
-                radarLabels = ['ЯВКА','КЛ.РЕЙ','KDA','PVP','PVE'];
-                radarScores = [presScore, classScore, kdaScore, pvpScore, pveScore];
-                valueFormula = 'Явка×20% · Рейтинг класса×20% · KDA×20% · Рейтинг клана×15% · PvP×15% · PvE×10%';
             }
             // Цвет ценности
             const valueColor = valueScore >= 70 ? '#22c55e' : valueScore >= 40 ? '#f59e0b' : '#ef4444';
