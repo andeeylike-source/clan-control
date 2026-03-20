@@ -2181,19 +2181,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
             // Санитизация: для хилеров/танков если kills == deaths и оба > 10
             // или kills > 20 для хилера — это ошибка парсинга AI (deaths скопированы в kills)
-            const _sanitRole = playerRole;
-            if (_sanitRole === 'Хилер/Баффер' || _sanitRole === 'Танк') {
+            const _isHealProfa = player.profa && _VAL_HEAL_P.some(x => player.profa.includes(x.split(' ')[0]));
+            if (_isHealProfa) {
                 dayStats.forEach(d => {
                     if (!d.inStat) return;
-                    const isHealer = _sanitRole === 'Хилер/Баффер';
-                    // Хилер с > 15 убийств и kills == deaths → точно ошибка
-                    if (isHealer && d.kills > 15 && d.kills === d.deaths) {
-                        d.kills = 0; // kills были скопированы из deaths
-                    }
-                    // Хилер с > 20 убийств вообще → подозрительно, обнуляем если pvp_dmg == 0
-                    else if (isHealer && d.kills > 20 && d.pvp_dmg === 0) {
-                        d.kills = 0;
-                    }
+                    if (d.kills > 15 && d.kills === d.deaths) d.kills = 0;
+                    else if (d.kills > 20 && d.pvp_dmg === 0) d.kills = 0;
                 });
             }
             const presentStats = dayStats.filter(d => d.inStat);
