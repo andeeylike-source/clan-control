@@ -468,7 +468,7 @@
                 <div class="dash-card"><div class="dash-card-title">🏆 Топ-5 ценных</div><div id="dashTopValue"></div></div>
                 <div class="dash-card"><div class="dash-card-title">📈 Растут</div><div id="dashTopGrowing"></div></div>
                 <div class="dash-card"><div class="dash-card-title">📉 Падают</div><div id="dashTopFalling"></div></div>
-                <div class="dash-card"><div class="dash-card-title">💎 Редкие таланты</div><div style="font-size:10px;color:#475569;margin-bottom:6px">Играют редко, но показывают отличные результаты</div><div id="dashRareGems"></div></div>
+                <div class="dash-card"><div class="dash-card-title">💎 Редкие таланты</div><div style="font-size:10px;color:#475569;margin-bottom:6px">Ходят редко, но когда приходят — играют лучше многих</div><div id="dashRareGems"></div></div>
             </div>
         </section>
 
@@ -509,6 +509,7 @@
                         <button onclick="clearPeriod('roster')" style="background:none;border:none;color:#475569;cursor:pointer;font-size:10px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#475569'">✕</button>
                     </div>
                     <button onclick="removeDuplicates()" class="px-4 py-2 border border-red-900 text-red-400 rounded-lg text-sm font-medium hover:bg-red-900/20">Дубли</button>
+                    <button onclick="debugDuplicates()" class="px-4 py-2 border border-purple-900 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-900/20">🔬 Похожие ники</button>
                     <button onclick="clearAllNew()" class="px-4 py-2 border border-slate-600 text-slate-400 rounded-lg text-sm font-medium hover:bg-slate-800">Снять NEW</button>
                     <button onclick="unverifyAll()" class="px-4 py-2 border border-slate-600 text-slate-400 rounded-lg text-sm font-medium hover:bg-slate-800" title="Снять все отметки проверки">Снять ✓</button>
                     <button onclick="resetAllStats()" class="px-4 py-2 border border-red-900 text-red-500 rounded-lg text-sm font-medium hover:bg-red-900/20">Сброс статы</button>
@@ -678,7 +679,6 @@
                             onblur="this.style.borderColor='#1e2530'">
                     </div>
                     <button onclick="debugSnapshotData()" style="background:#1e2530;border:1px solid #2d3748;color:#f59e0b;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer" title="Диагностика">🔍 Диагностика</button>
-                    <button onclick="debugDuplicates()" style="background:#1e2530;border:1px solid #2d3748;color:#a78bfa;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">🔬 Найти скрытые дубли</button>
                 </div>
             </div>
             <div id="kmHistoryContent"></div>
@@ -7794,25 +7794,48 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             const gemsEl = document.getElementById('dashRareGems');
             if (gemsEl && allDates.length >= 2) {
                 const allValues = calcAllPlayerValues();
+                const statsMap = calcStatsForPeriod('', '');
                 const gems = roster.map(p => {
                     const nk = normalizeNick(p.name);
                     const vd = allValues[nk];
                     if (!vd || vd.kmCount === 0) return null;
                     const att = vd.attendance;
                     const avgScore = vd.avgKmScore;
-                    // Редкий талант: явка < 50%, но КМ-скор > 60 (выше среднего когда играет)
                     if (att < 50 && att > 0 && avgScore > 60 && vd.kmCount >= 1) {
-                        return { name: p.name, att, avgScore, kmCount: vd.kmCount, value: vd.value };
+                        const ps = statsMap[nk];
+                        const kills = ps ? ps.kills||0 : 0;
+                        const deaths = ps ? ps.deaths||0 : 0;
+                        const pvp = ps ? ps.pvp_dmg||0 : 0;
+                        const kda = (kills / Math.max(deaths, 1)).toFixed(2);
+                        const avgK = vd.kmCount > 0 ? (kills / vd.kmCount).toFixed(0) : 0;
+                        const role = p.profa ? _valRole(p.profa) : 'dps';
+                        // Формируем описание
+                        let desc = '';
+                        if (role === 'dps') {
+                            desc = avgK + ' убийств/КМ, KDA ' + kda;
+                            if (pvp > 200) desc += ', ' + pvp.toLocaleString() + ' PvP';
+                        } else if (role === 'healer') {
+                            const avgD = vd.kmCount > 0 ? (deaths / vd.kmCount).toFixed(0) : 0;
+                            desc = 'Живучий саппорт, ' + avgD + ' смертей/КМ';
+                        } else {
+                            const avgD = vd.kmCount > 0 ? (deaths / vd.kmCount).toFixed(0) : 0;
+                            desc = 'Танк, ' + avgD + ' смертей/КМ';
+                            if (kills > 0) desc += ', ' + avgK + ' убийств';
+                        }
+                        return { name: p.name, att, avgScore, kmCount: vd.kmCount, desc, profa: p.profa };
                     }
                     return null;
                 }).filter(Boolean).sort((a, b) => b.avgScore - a.avgScore);
 
                 if (gems.length > 0) {
                     gemsEl.innerHTML = gems.slice(0, 5).map((g, i) => {
-                        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e2530;cursor:pointer;font-size:13px" onclick="openPlayerProfile(\'' + g.name.replace(/'/g, "\\'") + '\')">' +
-                            '<span style="font-weight:700;color:#e2e8f0;flex:1">' + g.name + '</span>' +
-                            '<span style="font-size:10px;color:#f59e0b" title="Явка">' + g.att + '%</span>' +
-                            '<span style="font-size:10px;color:#a5b4fc" title="Средний КМ-скор">' + g.avgScore + ' скор</span>' +
+                        const profaHtml = g.profa && g.profa !== '—' ? profaIconHtml(g.profa, 18) : '';
+                        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1e2530;cursor:pointer" onclick="openPlayerProfile(\'' + g.name.replace(/'/g, "\\'") + '\')">' +
+                            profaHtml +
+                            '<div style="flex:1;min-width:0">' +
+                                '<div style="font-weight:700;color:#e2e8f0;font-size:13px">' + g.name + ' <span style="color:#f59e0b;font-size:10px">' + g.att + '% явка · ' + g.kmCount + ' КМ</span></div>' +
+                                '<div style="font-size:11px;color:#94a3b8">' + g.desc + '</div>' +
+                            '</div>' +
                             '</div>';
                     }).join('');
                 } else {
