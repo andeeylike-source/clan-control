@@ -7352,47 +7352,59 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             const cid = 'lc_' + dateStr.replace(/-/g, '');
             const c = document.getElementById(cid);
             if (!c) return;
-            // Open packs
+            // Open main packs container
             c.style.display = 'block';
             const tp = document.getElementById('tp_' + dateStr.replace(/-/g, ''));
             if (tp) tp.style.display = 'none';
             const btn = document.getElementById('lb_' + dateStr.replace(/-/g, ''));
             if (btn) btn.textContent = '▲ Скрыть паки';
             kmOpenPacksState[cid] = true;
+
+            // Expand ALL individual pack sections (they have display:none;padding:8px)
+            const packSections = c.querySelectorAll('div[style*="display:none"][style*="padding:8px"]');
+            packSections.forEach(function(sec) {
+                sec.style.display = 'block';
+                // Update arrow
+                const header = sec.previousElementSibling;
+                if (header) { const arr = header.querySelector('.arr'); if (arr) arr.textContent = '▲'; }
+            });
+
             // Find and highlight the player
             setTimeout(function() {
-                const normTarget = playerName.toLowerCase();
+                const normTarget = normalizeNick(playerName);
                 const links = c.querySelectorAll('.player-nick-link');
                 let found = null;
                 links.forEach(function(el) {
-                    if (el.textContent.toLowerCase().trim() === normTarget) found = el;
+                    if (normalizeNick(el.textContent.trim()) === normTarget) found = el;
                 });
                 if (found) {
-                    const row = found.closest('div[style*="display:flex"]');
+                    const row = found.closest('div[style*="background:#0b0e14"]') || found.closest('div[style*="display:flex"]');
                     if (row) {
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Flash highlight
-                        row.style.transition = 'background .2s';
-                        row.style.background = '#6366f133';
+                        // Highlight
+                        const origBg = row.style.background;
+                        row.style.transition = 'all .3s';
+                        row.style.background = '#6366f140';
+                        row.style.boxShadow = '0 0 0 2px #6366f1, 0 0 20px #6366f133';
                         row.style.borderRadius = '8px';
-                        row.style.boxShadow = '0 0 0 2px #6366f1';
-                        setTimeout(function() {
-                            row.style.background = '';
-                            row.style.boxShadow = '';
-                            setTimeout(function() {
-                                row.style.background = '#6366f133';
-                                row.style.boxShadow = '0 0 0 2px #6366f1';
-                                setTimeout(function() {
-                                    row.style.background = '';
-                                    row.style.boxShadow = '';
-                                }, 500);
-                            }, 300);
-                        }, 500);
+                        // Blink
+                        let blinks = 0;
+                        const blinkInterval = setInterval(function() {
+                            blinks++;
+                            row.style.background = blinks % 2 === 0 ? '#6366f140' : origBg;
+                            row.style.boxShadow = blinks % 2 === 0 ? '0 0 0 2px #6366f1, 0 0 20px #6366f133' : 'none';
+                            if (blinks >= 6) {
+                                clearInterval(blinkInterval);
+                                row.style.background = '#6366f118';
+                                row.style.boxShadow = '0 0 0 1px #6366f155';
+                            }
+                        }, 400);
                     }
                 } else {
+                    // If not found by nick, try scrolling to pack container
                     c.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            }, 150);
+            }, 200);
         }
 
         function debounce(fn, ms) {
