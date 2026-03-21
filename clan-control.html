@@ -1509,7 +1509,7 @@
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:#2d3748;font-size:14px">○</span>'}</td>
-                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="Нажми чтобы изменить профу" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}</span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
+                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="Нажми чтобы изменить профу" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:3px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
                     <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="Нажми чтобы изменить пак" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
                     <td onclick="event.stopPropagation()">
@@ -3961,7 +3961,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             let hash = len;
             for (let i = 0; i < head.length; i++) hash = ((hash << 5) - hash + head.charCodeAt(i)) | 0;
             for (let i = 0; i < tail.length; i++) hash = ((hash << 5) - hash + tail.charCodeAt(i)) | 0;
-            return 'sh3_' + Math.abs(hash).toString(36) + '_' + len;
+            return 'sh4_' + Math.abs(hash).toString(36) + '_' + len;
         }
         function getScreenshotCache() {
             try { return JSON.parse(localStorage.getItem('cc_screenshot_cache') || '{}'); } catch(e) { return {}; }
@@ -4017,21 +4017,30 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         continue;
                     }
 
-                    const prompt = `Это скриншот окна "Информация о Клане" из игры Lineage 2. На экране список игроков клана.
+                    const prompt = `Это скриншот окна "Информация о Клане" из игры Lineage 2.
 
-Извлеки ТОЛЬКО колонки Name, Prof и Lvl. ИГНОРИРУЙ колонку Group полностью.
-Левая половина экрана = онлайн игроки, правая = оффлайн.
+СТРУКТУРА ТАБЛИЦЫ (слева направо):
+Левая половина (зелёный заголовок "Online Players"):
+  Name | Prof | Lvl | Group
+Правая половина (красный заголовок "Offline Players"):  
+  Name | Prof | Lvl | Last Online Time
+
+ЗАДАЧА: извлеки ТОЛЬКО Name, Prof, Lvl из ОБЕИХ половин.
+
+КРИТИЧЕСКИ ВАЖНО — НЕ ПУТАЙ КОЛОНКИ:
+- Name = первая колонка в каждой половине. Это НИКИ ИГРОКОВ — состоят из латиницы, кириллицы, цифр. Примеры ников: MopeVnutri, БольшаяШишка, F0rt1sFatum, 1xBett, IIacKaJI6
+- Prof = вторая колонка. Это ПРОФЕССИИ НА РУССКОМ. Примеры: Епископ, Мудрец Евы, Заклинатель Ветра, Некромант, Паладин, Танцор Смерти
+- ПРОФЕССИЯ это НЕ ник! Если ты видишь "Призрачный Рейнджер", "Рыцарь Шилен", "Епископ" — это ПРОФЕССИЯ, а не ник игрока
+- Group (3я колонка левой части) = название группы. ПОЛНОСТЬЮ ИГНОРИРУЙ. Не путай с ником
+
+НИКИ — ОСОБЕННОСТИ:
+- Ники часто используют подмену букв: I (заглавная i) вместо l, 0 вместо O, 1 вместо l
+- Пример: IIacKaJI6 (две заглавных I, потом ac, потом Ka, потом JI, потом 6)
+- Длинные ники переносятся на следующую строку — склеивай их
+- Ник НИКОГДА не содержит пробелов (если видишь пробел — это перенос или ошибка)
 
 Отвечай ТОЛЬКО JSON без markdown:
-{"players":[{"name":"Ник","prof_ru":"Профессия на русском","level":70,"online":true}]}
-
-ВАЖНО:
-- Ники копируй ПОСИМВОЛЬНО, буква за буквой. Не угадывай — читай каждый символ. Ники часто содержат хитрые сочетания: строчная b (не D), цифра 1 (не l), цифра 0 (не O), заглавная I (не l). Пример: TANb4A (маленькая b, не D). Если не уверен — бери символ как есть.
-- ДЛИННЫЕ НИКИ могут переноситься на следующую строку! Например "МамаЕщеПятьМи" на одной строке и "нуТ" на следующей — это ОДИН ник "МамаЕщеПятьМинуТ", а НЕ два разных игрока. Признаки переноса: вторая строка не имеет своей профессии и уровня, или текст явно является продолжением предыдущего ника. Склеивай такие строки в один ник.
-- Профессию копируй на русском как написано
-- online=true для левой колонки (Online Players), false для правой (Offline)
-- Уровень — число из колонки Lvl
-- Не пропускай никого`;
+{"players":[{"name":"Ник","prof_ru":"Профессия","level":70,"online":true}]}`;
 
                     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
@@ -4079,9 +4088,52 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                 return;
             }
 
+            // Пост-обработка: фильтр мусора
+            const knownProfessions = ['призрачный рейнджер','рыцарь шилен','рыцарь евы','епископ','мудрец евы','мудрец шилен','некромант','паладин','заклинатель ветра','заклинатель бури','танцор смерти','гладиатор','менестрель','проповедник','разрушитель','верховный шаман','стрелок','следопыт','тёмный рыцарь','темный рыцарь','арбалетчик','кардинал','иерофант','доминатор','титан','дуэлянт','кузнец','берсерк','копейщик','властитель огня','последователь стихий','отшельник','воитель','рыцарь храма','страж шилен','певец войны','певица войны','танцовщица','оракул евы','оракул шилен','старший шаман','шаман мести','чародей','колдун','жрец','охотник за сокровищами','странник ветра','охотник из бездны','серебряный рейнджер','призрачный следопыт','лесной следопыт','серебряный следопыт','ястреб','охотник на сокровища','монах','ассасин','боец','маг','клерик','воин','рыцарь','волшебник','шаман','налётчик','инспектор','вестник войны'];
+            const cleaned = allParsed.filter(p => {
+                if (!p.name) return false;
+                const nameLower = p.name.toLowerCase().trim();
+                // Отсекаем профессии попавшие в ники
+                if (knownProfessions.includes(nameLower)) return false;
+                // Отсекаем слишком короткие (1-2 символа)
+                if (p.name.trim().length < 3) return false;
+                // Отсекаем ники с пробелами в середине (это скорее всего профессия или группа)
+                if (p.name.trim().includes(' ') && p.name.trim().length > 4) {
+                    // Проверяем — не профессия ли это
+                    if (knownProfessions.some(pr => nameLower.includes(pr) || pr.includes(nameLower))) return false;
+                }
+                return true;
+            });
+
+            // Попытка сопоставить с ростером (fuzzy match)
+            cleaned.forEach(p => {
+                const nk = normalizeNick(p.name);
+                // Точное совпадение
+                const exact = roster.find(r => normalizeNick(r.name) === nk);
+                if (exact) { p.name = exact.name; return; }
+                // Fuzzy: попробуем найти близкий ник в ростере (отличие в 1-2 символа)
+                for (const r of roster) {
+                    const rn = normalizeNick(r.name);
+                    if (rn.length > 3 && nk.length > 3 && Math.abs(rn.length - nk.length) <= 2) {
+                        let diff = 0;
+                        const shorter = rn.length < nk.length ? rn : nk;
+                        const longer = rn.length < nk.length ? nk : rn;
+                        for (let i = 0; i < shorter.length; i++) {
+                            if (shorter[i] !== longer[i]) diff++;
+                        }
+                        diff += longer.length - shorter.length;
+                        if (diff <= 2 && diff > 0) {
+                            p.name = r.name; // Заменяем на правильный ник из ростера
+                            p._fuzzyMatched = true;
+                            break;
+                        }
+                    }
+                }
+            });
+
             // Дедупликация по нику
             const seen = {};
-            const unique = allParsed.filter(p => {
+            const unique = cleaned.filter(p => {
                 if (!p.name) return false;
                 const key = normalizeNick(p.name);
                 if (seen[key]) return false;
@@ -4190,6 +4242,73 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             if (!player.profas.includes(profa)) player.profas.push(profa);
             saveToStorage();
             renderRoster();
+        }
+
+
+
+        // ===== СПРАВОЧНИК ПРОФ =====
+        const PROFA_INFO = {
+            'Archmage': { ru:'Архимаг', short:'Сорк', ru2:'Властитель Огня', en2:'Sorcerer', role:'Маг' },
+            'Mystic Muse': { ru:'Мистик Муза', short:'ММ', ru2:'Мудрец Воды', en2:'Spellsinger', role:'Маг' },
+            'Storm Screamer': { ru:'Заклинатель Бури', short:'СХ', ru2:'Заклинатель Бури', en2:'Spellhowler', role:'Маг' },
+            'Soultaker': { ru:'Забиратель Душ', short:'Некр', ru2:'Некромант', en2:'Necromancer', role:'Маг' },
+            'Arcana Lord': { ru:'Повелитель Арканы', short:'Кот', ru2:'Колдун', en2:'Warlock', role:'Маг' },
+            'Elemental Master': { ru:'Мастер Стихий', short:'Конь', ru2:'Последователь Стихий', en2:'Elemental Summoner', role:'Маг' },
+            'Spectral Master': { ru:'Призрачный Мастер', short:'Суммон', ru2:'Призыватель Фантомов', en2:'Phantom Summoner', role:'Маг' },
+            'Cardinal': { ru:'Кардинал', short:'Биш', ru2:'Епископ', en2:'Bishop', role:'Хилер' },
+            "Eva's Saint (EE)": { ru:'Святая Евы', short:'ЕЕ', ru2:'Оракул/Старейшина Евы', en2:'Elder', role:'Хилер' },
+            "Shillien Saint (SE)": { ru:'Святая Шилен', short:'СЕ', ru2:'Оракул/Старейшина Шилен', en2:'Shillien Elder', role:'Хилер' },
+            'Dominator': { ru:'Доминатор', short:'Овер', ru2:'Верховный Шаман', en2:'Overlord', role:'Баффер' },
+            'Doomcryer': { ru:'Крикун Рока', short:'Варк', ru2:'Вестник Войны', en2:'Warcryer', role:'Баффер' },
+            'Hierophant': { ru:'Иерофант', short:'ПП', ru2:'Проповедник', en2:'Prophet', role:'Баффер' },
+            'Sword Muse': { ru:'Мечевая Муза', short:'СВС', ru2:'Певец Войны', en2:'Swordsinger', role:'Баффер' },
+            'Spectral Dancer': { ru:'Призрачная Танцовщица', short:'БД', ru2:'Танцор Смерти', en2:'Bladedancer', role:'Баффер' },
+            'Sagittarius': { ru:'Стрелец', short:'Хавк', ru2:'Следопыт', en2:'Hawkeye', role:'Лучник' },
+            'Moonlight Sentinel': { ru:'Лунный Страж', short:'Сырок', ru2:'Серебряный Рейнджер', en2:'Silver Ranger', role:'Лучник' },
+            'Ghost Sentinel': { ru:'Призрачный Страж', short:'ФР', ru2:'Призрачный Рейнджер', en2:'Phantom Ranger', role:'Лучник' },
+            'Adventurer': { ru:'Авантюрист', short:'ТХ', ru2:'Искатель Сокровищ', en2:'Treasure Hunter', role:'Кинжал' },
+            'Wind Rider': { ru:'Наездник Ветра', short:'ПВ', ru2:'Странник Ветра', en2:'Plains Walker', role:'Кинжал' },
+            'Ghost Hunter': { ru:'Призрачный Охотник', short:'АВ', ru2:'Охотник из Бездны', en2:'Abyss Walker', role:'Кинжал' },
+            'Phoenix Knight': { ru:'Рыцарь Феникса', short:'Паладин', ru2:'Паладин', en2:'Paladin', role:'Танк' },
+            'Hell Knight': { ru:'Рыцарь Ада', short:'ДА', ru2:'Тёмный Мститель', en2:'Dark Avenger', role:'Танк' },
+            "Eva's Templar": { ru:'Храмовник Евы', short:'ТК', ru2:'Рыцарь Храма', en2:'Temple Knight', role:'Танк' },
+            'Shillien Templar': { ru:'Храмовник Шилен', short:'ШК', ru2:'Рыцарь Шилен', en2:'Shillien Knight', role:'Танк' },
+            'Duelist': { ru:'Дуэлянт', short:'Глад', ru2:'Гладиатор', en2:'Gladiator', role:'Воин' },
+            'Dreadnought': { ru:'Дредноут', short:'ВЛ', ru2:'Полководец/Копейщик', en2:'Warlord', role:'Воин' },
+            'Grand Khavatari': { ru:'Великий Каватари', short:'Тир', ru2:'Отшельник/Тиран', en2:'Tyrant', role:'Воин' },
+            'Titan': { ru:'Титан', short:'Дестр', ru2:'Разрушитель', en2:'Destroyer', role:'Воин' },
+            'Fortune Seeker': { ru:'Искатель Фортуны', short:'Спойл', ru2:'Охотник за Наградой', en2:'Bounty Hunter', role:'Воин' },
+            'Maestro': { ru:'Маэстро', short:'Крафтер', ru2:'Кузнец', en2:'Warsmith', role:'Воин' },
+            'Doombringer': { ru:'Вестник Судьбы', short:'Берс', ru2:'Берсерк/Палач', en2:'Berserker', role:'Воин' },
+            'Judicator': { ru:'Судикатор', short:'Джуд', ru2:'Инспектор', en2:'Inspector', role:'Воин' },
+            'Soulhound': { ru:'Ловец Душ', short:'СБ', ru2:'Странник Бездны', en2:'Soulbreaker', role:'Другой' },
+            'Trickster': { ru:'Трикстер', short:'Арба', ru2:'Арбалетчик', en2:'Arbalester', role:'Другой' },
+        };
+
+        function showProfaInfo(profa) {
+            const info = PROFA_INFO[profa] || PROFA_INFO[profa.split(' (')[0]];
+            if (!info) return;
+            const rows = [
+                ['3-я профа (англ)', profa],
+                ['Русское название', info.ru],
+                ['Сокращение', info.short],
+                ['Роль', info.role],
+                ['2-я профа (рус)', info.ru2],
+                ['2-я профа (англ)', info.en2],
+            ];
+            const bodyHtml = rows.map(function(r) {
+                return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2530"><span style="color:#64748b;font-size:12px">' + r[0] + '</span><span style="color:#e2e8f0;font-weight:700;font-size:12px;text-align:right">' + r[1] + '</span></div>';
+            }).join('');
+            var modal = document.getElementById('profaInfoModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'profaInfoModal';
+                modal.className = 'info-modal-overlay';
+                modal.addEventListener('click', function(e) { if(e.target===modal) modal.classList.remove('open'); });
+                document.body.appendChild(modal);
+            }
+            modal.innerHTML = '<div class="info-modal-bg"></div><div class="info-modal-box"><button class="info-modal-close" onclick="this.closest(\'.info-modal-overlay\').classList.remove(\'open\')">✕</button><div class="info-modal-icon">🎭</div><div class="info-modal-title">' + (info.short || profa) + '</div><div class="info-modal-sub">' + profa + ' · ' + info.role + '</div><div class="info-modal-body">' + bodyHtml + '</div></div>';
+            modal.classList.add('open');
         }
 
 
