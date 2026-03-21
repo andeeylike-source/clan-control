@@ -1160,6 +1160,9 @@
 
         // ===== МОДАЛКА ДНЯ =====
         function openDayModal(dateStr) {
+            // Закрываем любые модалки
+            document.getElementById('similarNicksOverlay')?.remove();
+            document.getElementById('dupesOverlay')?.remove();
             activeDayDate = dateStr;
             const dateObj = new Date(dateStr + 'T12:00:00');
             const formatted = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
@@ -4737,6 +4740,8 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
         async function analyzeDayScreenshots() {
+            document.getElementById('similarNicksOverlay')?.remove();
+            document.getElementById('dupesOverlay')?.remove();
             const dateStr = activeDayDate;
             const shots = dayScreenshots[dateStr] || [];
             if (!shots.length) return;
@@ -5444,6 +5449,9 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
 
         function applyDayParsedStats() {
             if (!dayLastParsed.length) return;
+            // Закрываем любые модалки которые могли остаться
+            document.getElementById('similarNicksOverlay')?.remove();
+            document.getElementById('dupesOverlay')?.remove();
             const dateStr = activeDayDate;
 
             // ===== ДОБАВЛЯЕМ НОВЫХ ИГРОКОВ В РОСТЕР (только если нет) =====
@@ -5774,6 +5782,8 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         function renderScreenshotArchive() { renderKmHistory(); }
 
         function debugDuplicates() {
+            // Только на странице Клан
+            if (!document.getElementById('page-roster')?.classList?.contains('active')) return;
             // Ищем игроков с одинаковым нормализованным ключом
             const groups = {};
             roster.forEach(p => {
