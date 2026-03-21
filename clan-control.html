@@ -5034,10 +5034,9 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     }
                 }
             });
-            // Перезаписываем screenPlayersMap дедуплицированным
-            const cleanMap = {};
-            Object.values(deduped).forEach(({packName, players}) => { cleanMap[packName] = players; });
-            screenPlayersMap = cleanMap;
+            // Перезаписываем screenPlayersMap дедуплицированным (in-place, т.к. const)
+            const cleanKeys = new Set(Object.values(deduped).map(d => d.packName));
+            Object.keys(screenPlayersMap).forEach(k => { if (!cleanKeys.has(k)) delete screenPlayersMap[k]; });
 
             // ===== АВТОКОРРЕКЦИЯ: свопаем kills/deaths по ВСЕМ пакам если не совпадают с КК =====
             if (commandChannel.length > 0 && Object.keys(screenPlayersMap).length > 0) {
