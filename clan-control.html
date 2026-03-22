@@ -6369,16 +6369,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         const allProfaKeys = Object.keys(PROFA_ICONS || {});
                         const otherProfas = allProfaKeys.filter(pf => !mProfas.includes(pf));
                         const menuProfas = [...mProfas, ...otherProfas];
-                        const profaSwitchHtml = inRoster ? (function() {
-                            const items = menuProfas.map((pf, idx) => {
-                                const shortName = (PROFA_NAMES&&PROFA_NAMES[pf]) ? pf.split(' (')[0].split(' ').slice(0,2).join(' ')+'('+PROFA_NAMES[pf]+')' : pf.split(' (')[0];
-                                const enc = encodeURIComponent(pf);
-                                const check = pf === memberProfa ? ' ✓' : '';
-                                const sep = idx === mProfas.length && otherProfas.length > 0 && mProfas.length > 0 ? '<div style="height:1px;background:#2d3748;margin:4px 0"></div>' : '';
-                                return sep + '<div onclick="setKmProfa(\'' + dateStr + '\',decodeURIComponent(\'' + encodeURIComponent(normPKey) + '\'),decodeURIComponent(\'' + enc + '\'));this.closest(\'.profa-menu\').style.display=\'none\'" style="padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-bottom:1px solid #1e253044" onmouseover="this.style.background=\'#6366f1\'" onmouseout="this.style.background=\'\'">' + profaIconHtml(pf,16) + ' ' + shortName + check + '</div>';
-                            }).join('');
-                            return '<span style="position:relative;display:inline-flex" class="profa-switch-wrap"><button onclick="toggleProfaMenu(this)" title="Сменить профу" style="background:#1e2530;border:none;color:#64748b;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;margin-left:4px">🎭▾</button><div class="profa-menu" style="display:none;position:absolute;top:calc(100%+4px);left:0;background:#1a1f29;border:1px solid #6366f1;border-radius:8px;z-index:50;min-width:200px;max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6)">' + items + '</div></span>';
-                          })()
+                        const profaSwitchHtml = inRoster ? '<button onclick="openKmProfaPicker(this,\'' + dateStr + '\',\'' + encodeURIComponent(normPKey) + '\')" title="Сменить профу" style="background:#1e2530;border:none;color:#64748b;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;margin-left:4px">🎭▾</button>'
                         : '';
                         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0b0e14;border-radius:6px;margin-bottom:4px;font-size:12px">
                             <span style="font-weight:600;display:flex;align-items:center;gap:6px">${memberProfaHtml}<span class="player-nick-link" onclick="openPlayerProfile('${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer">${p.name}</span>${badgeHtml}${profaSwitchHtml}${editBtn}</span>
@@ -6545,19 +6536,62 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
         }
 
         // Переименование игрока в Истории КМ — синхронизируется с ростером
-        function toggleProfaMenu(btn) {
-            const menu = btn.nextElementSibling;
-            const isOpen = menu.style.display === 'block';
-            // Закрываем все открытые меню
-            document.querySelectorAll('.profa-menu').forEach(m => m.style.display = 'none');
-            if (!isOpen) {
-                menu.style.display = 'block';
-                // Закрываем при клике снаружи
-                setTimeout(() => {
-                    const close = (e) => { if (!menu.contains(e.target) && e.target !== btn) { menu.style.display='none'; document.removeEventListener('click',close); } };
-                    document.addEventListener('click', close);
-                }, 10);
-            }
+        function toggleProfaMenu(btn) { /* deprecated */ }
+
+        // Центральный пикер профы с поиском для КМ
+        function openKmProfaPicker(btn, dateStr, encNormKey) {
+            // Убираем старый пикер если есть
+            document.getElementById('kmProfaPicker')?.remove();
+            const normPKey = decodeURIComponent(encNormKey);
+            const rect = btn.getBoundingClientRect();
+            const picker = document.createElement('div');
+            picker.id = 'kmProfaPicker';
+            picker.style.cssText = 'position:fixed;top:' + (rect.bottom + 4) + 'px;left:' + rect.left + 'px;background:#1a1f29;border:1px solid #6366f1;border-radius:10px;z-index:9999;width:300px;max-height:380px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.7)';
+            picker.innerHTML = '<div style="padding:8px;border-bottom:1px solid #1e2530"><input id="kmProfaPickerSearch" type="text" placeholder="Поиск: биш, cardinal, хилер..." style="width:100%;background:#0b0e14;border:1px solid #2d3748;border-radius:8px;padding:6px 10px;color:#e2e8f0;font-size:12px;outline:none" oninput="filterKmProfaPicker(this.value)"></div><div id="kmProfaPickerList" style="overflow-y:auto;max-height:320px"></div>';
+            document.body.appendChild(picker);
+            // Adjust if offscreen
+            const pr = picker.getBoundingClientRect();
+            if (pr.right > window.innerWidth) picker.style.left = (window.innerWidth - pr.width - 8) + 'px';
+            if (pr.bottom > window.innerHeight) picker.style.top = (rect.top - pr.height - 4) + 'px';
+            // Store context
+            picker.dataset.dateStr = dateStr;
+            picker.dataset.normKey = normPKey;
+            // Render items
+            filterKmProfaPicker('');
+            setTimeout(() => document.getElementById('kmProfaPickerSearch')?.focus(), 50);
+            // Close on outside click
+            setTimeout(() => {
+                const close = (e) => { if (!picker.contains(e.target) && e.target !== btn) { picker.remove(); document.removeEventListener('click', close); } };
+                document.addEventListener('click', close);
+            }, 10);
+        }
+
+        function filterKmProfaPicker(q) {
+            const el = document.getElementById('kmProfaPickerList');
+            const picker = document.getElementById('kmProfaPicker');
+            if (!el || !picker) return;
+            const dateStr = picker.dataset.dateStr;
+            const normPKey = picker.dataset.normKey;
+            q = q.toLowerCase().trim();
+            const qAlt = switchKeyboardLayout(q);
+            let html = '';
+            PROFA_DROPDOWN_GROUPS.forEach(function(group) {
+                const matched = group.items.filter(function(pf) {
+                    if (!q) return true;
+                    const info = PROFA_INFO[pf] || {};
+                    const searchable = [pf, info.ru||'', info.short||'', info.ru2||'', info.en2||'', info.role||''].join(' ').toLowerCase();
+                    return searchable.includes(q) || (qAlt && searchable.includes(qAlt));
+                });
+                if (matched.length === 0) return;
+                html += '<div style="padding:4px 10px;font-size:9px;font-weight:800;text-transform:uppercase;color:#475569;border-top:1px solid #1e2530">' + group.label + '</div>';
+                matched.forEach(function(pf) {
+                    const info = PROFA_INFO[pf] || {};
+                    const enc = encodeURIComponent(pf);
+                    html += '<div onclick="setKmProfa(\'' + dateStr + '\',decodeURIComponent(\'' + encodeURIComponent(normPKey) + '\'),decodeURIComponent(\'' + enc + '\'));document.getElementById(\'kmProfaPicker\')?.remove()" style="display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid #1e253044;transition:background .1s" onmouseover="this.style.background=\'#6366f122\'" onmouseout="this.style.background=\'\'">' + profaIconHtml(pf, 18) + '</div>';
+                });
+            });
+            if (!html) html = '<div style="padding:16px;text-align:center;color:#475569;font-size:11px">Не найдено</div>';
+            el.innerHTML = html;
         }
 
         function kmRenamePlayer(dateStr, oldName, btnEl) {
