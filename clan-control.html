@@ -1630,7 +1630,7 @@
             { label: '🔵 Маги', items: ['Archmage','Mystic Muse','Storm Screamer','Soultaker','Arcana Lord','Elemental Master','Spectral Master'] },
             { label: '💚 Поддержка', items: ['Cardinal',"Eva's Saint (EE)","Shillien Saint (SE)",'Dominator','Doomcryer','Hierophant','Sword Muse','Spectral Dancer'] },
             { label: '🏹 Лучники', items: ['Sagittarius','Moonlight Sentinel','Ghost Sentinel'] },
-            { label: '🗡️ Кинжалы', items: ['Adventurer','Wind Rider','Ghost Hunter'] },
+            { label: '🗡️ Кинжалы', items: ['Adventurer','Wind Rider','Ghost Hunter','АВ/ПВ'] },
             { label: '🛡️ Танки', items: ['Phoenix Knight','Hell Knight',"Eva's Templar",'Shillien Templar'] },
             { label: '⚔️ Воины', items: ['Duelist','Dreadnought','Grand Khavatari','Titan','Fortune Seeker','Maestro','Doombringer','Judicator'] },
             { label: '🐾 Другие', items: ['Soulhound','Trickster'] },
@@ -4370,6 +4370,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
             'Judicator': { ru:'Судикатор', short:'Джуд', ru2:'Инспектор', en2:'Inspector', role:'Воин' },
             'Soulhound': { ru:'Ловец Душ', short:'СБ', ru2:'Странник Бездны', en2:'Soulbreaker', role:'Другой' },
             'Trickster': { ru:'Трикстер', short:'Арба', ru2:'Арбалетчик', en2:'Arbalester', role:'Другой' },
+            'АВ/ПВ': { ru:'АВ или ПВ', short:'АВ/ПВ', ru2:'Ассасин/Разбойник', en2:'Abyss Walker / Plains Walker', role:'Кинжал' },
         };
 
         function showProfaInfo(profa) {
@@ -5477,29 +5478,31 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                     if (!rp.profas) rp.profas = rp.profa && rp.profa !== '—' ? [rp.profa] : [];
                     if (!rp.profas.includes(profa)) {
                         rp.profas.push(profa);
-                        if (!rp.profa || rp.profa === '—') rp.profa = profa;
                     }
+                    // Если основная профа не установлена — ставим
+                    if (!rp.profa || rp.profa === '—') rp.profa = profa;
                 }
             }
             saveToStorage();
 
-            // Обновляем иконку профы прямо в DOM — без полного перерендера
-            // Находим строку игрока в раскрытом паке по data-атрибутам
-            const rowEl = document.querySelector(`[data-kmprofa-key="${key}"][data-kmprofa-date="${dateStr}"]`);
+            // Обновляем иконку профы прямо в DOM + подсветка
+            const rowEl = document.querySelector('[data-kmprofa-key="' + key + '"][data-kmprofa-date="' + dateStr + '"]');
             if (rowEl && profa && profa !== '—') {
                 rowEl.innerHTML = profaIconHtml(profa, 20);
-            }
-
-            // Закрываем меню профы
-            document.querySelectorAll('.profa-menu').forEach(m => m.style.display = 'none');
-
-            // Если профиль этого игрока открыт — обновляем его
-            if (document.getElementById('page-profile').classList.contains('active') && currentProfileName) {
-                const rp2 = roster.find(r => normalizeNick(r.name) === key);
-                if (rp2 && normalizeNick(currentProfileName) === key) {
-                    renderPlayerProfile(rp2.name);
+                // Подсветка строки
+                const row = rowEl.closest('div[style*="display:flex"]');
+                if (row) {
+                    row.style.transition = 'background .2s';
+                    row.style.background = '#22c55e33';
+                    row.style.boxShadow = '0 0 0 1px #22c55e';
+                    setTimeout(function() { row.style.background = ''; row.style.boxShadow = ''; }, 1500);
                 }
             }
+
+            // Закрываем пикер
+            document.getElementById('kmProfaPicker')?.remove();
+
+            // НЕ перерисовываем страницу — только обновили иконку inline
         }
 
         function getKmProfa(dateStr, playerName) {
