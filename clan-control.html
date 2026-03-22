@@ -6357,9 +6357,12 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         const normPKey = normalizeNick(p.name);
                         const savedKmProfa = (playerProfaByDate[normPKey] && playerProfaByDate[normPKey][dateStr]) || null;
                         const memberProfa = savedKmProfa || (inRoster ? (inRoster.profa || '—') : '—');
+                        // Иконка 2й профы: из данных AI (class2) или маппинг из 3й профы
+                        const class2src = p.class2 ? getClass2Icon(p.class2) : (memberProfa && memberProfa !== '—' ? getClass2IconByClass3(memberProfa) : null);
+                        const class2iconHtml = class2src ? `<img src="${class2src}" style="width:20px;height:20px;border-radius:50%;border:1px solid #47556944;flex-shrink:0" title="${p.class2 || memberProfa} (2кл)">` : '';
                         const memberProfaHtml = memberProfa && memberProfa !== '—'
-                            ? `<span data-kmprofa-key="${normPKey}" data-kmprofa-date="${dateStr}" style="display:inline-flex;align-items:center">${profaIconHtml(memberProfa, 20)}</span>`
-                            : `<span data-kmprofa-key="${normPKey}" data-kmprofa-date="${dateStr}" style="display:inline-flex;align-items:center"></span>`;
+                            ? `<span data-kmprofa-key="${normPKey}" data-kmprofa-date="${dateStr}" style="display:inline-flex;align-items:center;gap:2px">${class2iconHtml}${profaIconHtml(memberProfa, 20)}</span>`
+                            : `<span data-kmprofa-key="${normPKey}" data-kmprofa-date="${dateStr}" style="display:inline-flex;align-items:center;gap:2px">${class2iconHtml}</span>`;
                         const mProfas = inRoster && inRoster.profas && inRoster.profas.length > 0 ? inRoster.profas : (inRoster && inRoster.profa && inRoster.profa !== '—' ? [inRoster.profa] : []);
                         // Список для меню: сначала профы игрока, потом разделитель, потом все остальные
                         const allProfaKeys = Object.keys(PROFA_ICONS || {});
@@ -6424,7 +6427,7 @@ function getClass2IconByClass3(c3) { return CLASS3_TO_CLASS2_ICON[c3] || null; }
                         <div onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='block'?'none':'block';this.querySelector('.arr').textContent=b.style.display==='block'?'▲':'▼'"
                              style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#1a1f29;cursor:pointer">
                             <div style="display:flex;align-items:center;gap:10px">
-                                ${(() => { const lr = roster.find(r => normalizeNick(r.name) === normalizeNick(cc.leader)); const lp = lr ? (lr.profa || '—') : '—'; return lp && lp !== '—' ? profaIconHtml(lp, 24) : ''; })()}
+                                ${(() => { const lr = roster.find(r => normalizeNick(r.name) === normalizeNick(cc.leader)); const lp = lr ? (lr.profa || '—') : '—'; const c2src = lp && lp !== '—' ? getClass2IconByClass3(lp) : null; const c2h = c2src ? '<img src="'+c2src+'" style="width:24px;height:24px;border-radius:50%;border:1px solid #47556944">' : ''; return (lp && lp !== '—' ? c2h + profaIconHtml(lp, 24) : ''); })()}
                                 <span class="player-nick-link" onclick="openPlayerProfile('${cc.leader.replace(/'/g,"\\'")}')" style="font-weight:800;font-size:13px;cursor:pointer">${cc.leader}</span>
                                 ${packName ? `<span style="font-size:9px;background:#1e2530;color:#94a3b8;padding:1px 6px;border-radius:3px;text-transform:uppercase">${packName}</span>` : ''}
                                 <span style="font-size:10px;color:#64748b">👥 ${partyPlayers.length > 0 ? partyPlayers.length : (cc.members||0)}</span>
