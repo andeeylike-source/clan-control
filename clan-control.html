@@ -5947,7 +5947,9 @@ function getClass2IconByClass3(c3) {
                     const dist1 = levenshtein(na, nb);
                     const dist2 = levenshtein(ta, tb);
                     const minDist = Math.min(dist1, dist2);
-                    if (minDist <= 2 && minDist > 0 && na.length > 3 && nb.length > 3) {
+                    const hasMixed = s => /[а-яёА-ЯЁ]/.test(s) && /[a-zA-Z]/.test(s);
+                    const isMixedMatch = (hasMixed(a.name) || hasMixed(b.name)) && (ta.startsWith(tb.slice(0,3)) || tb.startsWith(ta.slice(0,3)));
+                    if ((minDist <= 2 && minDist > 0 && na.length >= 3 && nb.length >= 3) || isMixedMatch) {
                         similarPairs.push({ a, b, dist: minDist });
                     }
                 }
