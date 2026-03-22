@@ -2019,7 +2019,7 @@ function getProfaIcon(profa) {
     return key ? PROFA_ICONS[key] : null;
 }
 
-const PROFA_NAMES = {"Archmage": "Сорк", "Mystic Muse": "ММ", "Storm Screamer": "СХ", "Soultaker": "Некр", "Arcana Lord": "Кот", "Elemental Master": "Конь", "Spectral Master": "Суммон", "Cardinal": "Биш", "Eva's Saint (EE)": "ЕЕ", "Shillien Saint (SE)": "СЕ", "Dominator": "Овер", "Doomcryer": "Варк", "Hierophant": "ПП", "Sword Muse": "СВС", "Spectral Dancer": "БД", "Sagittarius": "Хавк", "Moonlight Sentinel": "Сырок", "Ghost Sentinel": "ФР", "Adventurer": "ТХ", "Wind Rider": "ПВ", "Ghost Hunter": "АВ", "Phoenix Knight": "Паладин", "Hell Knight": "ДА", "Eva's Templar": "ТК", "Shillien Templar": "ШК", "Duelist": "Глад", "Dreadnought": "ВЛ", "Grand Khavatari": "Тир", "Titan": "Дестр", "Fortune Seeker": "Спойл", "Maestro": "Крафтер", "Doombringer": "Берс", "Judicator": "Джуд", "Soulhound": "СБ", "Trickster": "Арба", "АВ/ПВ": "АВ/ПВ"};
+const PROFA_NAMES = {"Archmage": "Сорк", "Mystic Muse": "ММ", "Storm Screamer": "СХ", "Soultaker": "Некр", "Arcana Lord": "Кот", "Elemental Master": "Конь", "Spectral Master": "ФС", "Cardinal": "Биш", "Eva's Saint (EE)": "ЕЕ", "Shillien Saint (SE)": "ШЕ", "Dominator": "Овер", "Doomcryer": "Варк", "Hierophant": "ПП", "Sword Muse": "СВС", "Spectral Dancer": "БД", "Sagittarius": "Хавк", "Moonlight Sentinel": "Сырок", "Ghost Sentinel": "ФР", "Adventurer": "ТХ", "Wind Rider": "ПВ", "Ghost Hunter": "АВ", "Phoenix Knight": "Паладин", "Hell Knight": "ДА", "Eva's Templar": "ТК", "Shillien Templar": "ШК", "Duelist": "Глад", "Dreadnought": "ВЛ", "Grand Khavatari": "Тир", "Titan": "Дестр", "Fortune Seeker": "Спойл", "Maestro": "Крафтер", "Doombringer": "Берс", "Judicator": "Джуд", "Soulhound": "СБ", "Trickster": "Арба", "АВ/ПВ": "АВ/ПВ"};
 
 function profaDisplay(profa) {
     if (!profa || profa === '—') return '—';
@@ -3210,7 +3210,8 @@ function getClass2IconByClass3(c3) {
                         <div class="prf-section-title">📝 Заметки офицера</div>
                         <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:12px;line-height:1.6" placeholder="Добавь заметку...">${note}</textarea>
                         <button onclick="savePlayerNote('${normKey}')" style="background:#6366f1;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;width:100%">💾 Сохранить</button>
-                        <span id="noteSaved" style="display:none;color:#22c55e;font-size:11px;margin-top:6px;display:block;text-align:center">✓ Сохранено</span>
+                        <span id="noteSaved" style="display:none;color:#22c55e;font-size:11px;margin-top:6px;text-align:center">✓ Сохранено</span>
+                        ${note ? '<div style="margin-top:8px;padding:8px 12px;background:#1e2530;border-radius:8px;font-size:11px;color:#94a3b8;line-height:1.6;white-space:pre-wrap">' + note.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : ''}
                     </div>
 
                 </div>
@@ -4338,41 +4339,41 @@ function getClass2IconByClass3(c3) {
 
         // ===== СПРАВОЧНИК ПРОФ =====
         const PROFA_INFO = {
-            'Archmage': { ru:'Архимаг', short:'Сорк', ru2:'Властитель Огня', en2:'Sorcerer', role:'Маг' },
-            'Mystic Muse': { ru:'Мистик Муза', short:'ММ', ru2:'Мудрец Воды', en2:'Spellsinger', role:'Маг' },
-            'Storm Screamer': { ru:'Заклинатель Бури', short:'СХ', ru2:'Заклинатель Бури', en2:'Spellhowler', role:'Маг' },
-            'Soultaker': { ru:'Забиратель Душ', short:'Некр', ru2:'Некромант', en2:'Necromancer', role:'Маг' },
-            'Arcana Lord': { ru:'Повелитель Арканы', short:'Кот', ru2:'Колдун', en2:'Warlock', role:'Маг' },
-            'Elemental Master': { ru:'Мастер Стихий', short:'Конь', ru2:'Последователь Стихий', en2:'Elemental Summoner', role:'Маг' },
-            'Spectral Master': { ru:'Призрачный Мастер', short:'Суммон', ru2:'Призыватель Фантомов', en2:'Phantom Summoner', role:'Маг' },
+            'Archmage': { ru:'Архимаг', short:'Сорк', ru2:'Волшебник', en2:'Sorcerer', role:'Маг' },
+            'Mystic Muse': { ru:'Повелитель Стихий', short:'ММ', ru2:'Певец Заклинаний', en2:'Spellsinger', role:'Маг' },
+            'Storm Screamer': { ru:'Повелитель Бури', short:'СХ', ru2:'Заклинатель Ветра', en2:'Spellhowler', role:'Маг' },
+            'Soultaker': { ru:'Пожиратель Душ', short:'Некр', ru2:'Некромант', en2:'Necromancer', role:'Маг' },
+            'Arcana Lord': { ru:'Чернокнижник', short:'Кот', ru2:'Чернокнижник', en2:'Warlock', role:'Маг' },
+            'Elemental Master': { ru:'Повелитель Элементалей', short:'Конь', ru2:'Призыватель', en2:'Elemental Summoner', role:'Маг' },
+            'Spectral Master': { ru:'Призрачный Лорд', short:'ФС', ru2:'Последователь Тьмы', en2:'Phantom Summoner', role:'Маг' },
             'Cardinal': { ru:'Кардинал', short:'Биш', ru2:'Епископ', en2:'Bishop', role:'Хилер' },
-            "Eva's Saint (EE)": { ru:'Святая Евы', short:'ЕЕ', ru2:'Оракул/Старейшина Евы', en2:'Elder', role:'Хилер' },
-            "Shillien Saint (SE)": { ru:'Святая Шилен', short:'СЕ', ru2:'Оракул/Старейшина Шилен', en2:'Shillien Elder', role:'Хилер' },
-            'Dominator': { ru:'Доминатор', short:'Овер', ru2:'Верховный Шаман', en2:'Overlord', role:'Баффер' },
-            'Doomcryer': { ru:'Крикун Рока', short:'Варк', ru2:'Вестник Войны', en2:'Warcryer', role:'Баффер' },
-            'Hierophant': { ru:'Иерофант', short:'ПП', ru2:'Проповедник', en2:'Prophet', role:'Баффер' },
-            'Sword Muse': { ru:'Мечевая Муза', short:'СВС', ru2:'Певец Войны', en2:'Swordsinger', role:'Баффер' },
-            'Spectral Dancer': { ru:'Призрачная Танцовщица', short:'БД', ru2:'Танцор Смерти', en2:'Bladedancer', role:'Баффер' },
-            'Sagittarius': { ru:'Стрелец', short:'Хавк', ru2:'Следопыт', en2:'Hawkeye', role:'Лучник' },
-            'Moonlight Sentinel': { ru:'Лунный Страж', short:'Сырок', ru2:'Серебряный Рейнджер', en2:'Silver Ranger', role:'Лучник' },
-            'Ghost Sentinel': { ru:'Призрачный Страж', short:'ФР', ru2:'Призрачный Рейнджер', en2:'Phantom Ranger', role:'Лучник' },
-            'Adventurer': { ru:'Авантюрист', short:'ТХ', ru2:'Искатель Сокровищ', en2:'Treasure Hunter', role:'Кинжал' },
-            'Wind Rider': { ru:'Наездник Ветра', short:'ПВ', ru2:'Странник Ветра', en2:'Plains Walker', role:'Кинжал' },
-            'Ghost Hunter': { ru:'Призрачный Охотник', short:'АВ', ru2:'Охотник из Бездны', en2:'Abyss Walker', role:'Кинжал' },
+            "Eva's Saint (EE)": { ru:'Жрец Евы', short:'ЕЕ', ru2:'Мудрец Евы', en2:'Elven Elder', role:'Хилер' },
+            "Shillien Saint (SE)": { ru:'Жрец Шилен', short:'ШЕ', ru2:'Мудрец Шилен', en2:'Shillien Elder', role:'Хилер' },
+            'Dominator': { ru:'Повелитель', short:'Овер', ru2:'Властитель', en2:'Overlord', role:'Баффер' },
+            'Doomcryer': { ru:'Вестник Войны', short:'Варк', ru2:'Шаман', en2:'Warcryer', role:'Баффер' },
+            'Hierophant': { ru:'Апостол', short:'ПП', ru2:'Пророк', en2:'Prophet', role:'Баффер' },
+            'Sword Muse': { ru:'Виртуоз', short:'СВС', ru2:'Менестрель', en2:'Swordsinger', role:'Баффер' },
+            'Spectral Dancer': { ru:'Призрачный Танцор', short:'БД', ru2:'Танцор Смерти', en2:'Bladedancer', role:'Баффер' },
+            'Sagittarius': { ru:'Снайпер', short:'Хавк', ru2:'Ястреб', en2:'Hawkeye', role:'Лучник' },
+            'Moonlight Sentinel': { ru:'Страж Лунного Света', short:'Сырок', ru2:'Серебряный Рейнджер', en2:'Silver Ranger', role:'Лучник' },
+            'Ghost Sentinel': { ru:'Призрачный Страж', short:'ФР', ru2:'Стрелок', en2:'Phantom Ranger', role:'Лучник' },
+            'Adventurer': { ru:'Авантюрист', short:'ТХ', ru2:'Следопыт', en2:'Treasure Hunter', role:'Кинжал' },
+            'Wind Rider': { ru:'Странник Ветра', short:'ПВ', ru2:'Следопыт', en2:'Plains Walker', role:'Кинжал' },
+            'Ghost Hunter': { ru:'Призрачный Охотник', short:'АВ', ru2:'Странник Бездны', en2:'Abyss Walker', role:'Кинжал' },
             'Phoenix Knight': { ru:'Рыцарь Феникса', short:'Паладин', ru2:'Паладин', en2:'Paladin', role:'Танк' },
             'Hell Knight': { ru:'Рыцарь Ада', short:'ДА', ru2:'Тёмный Мститель', en2:'Dark Avenger', role:'Танк' },
-            "Eva's Templar": { ru:'Храмовник Евы', short:'ТК', ru2:'Рыцарь Храма', en2:'Temple Knight', role:'Танк' },
+            "Eva's Templar": { ru:'Храмовник Евы', short:'ТК', ru2:'Рыцарь Евы', en2:'Temple Knight', role:'Танк' },
             'Shillien Templar': { ru:'Храмовник Шилен', short:'ШК', ru2:'Рыцарь Шилен', en2:'Shillien Knight', role:'Танк' },
-            'Duelist': { ru:'Дуэлянт', short:'Глад', ru2:'Гладиатор', en2:'Gladiator', role:'Воин' },
-            'Dreadnought': { ru:'Дредноут', short:'ВЛ', ru2:'Полководец/Копейщик', en2:'Warlord', role:'Воин' },
-            'Grand Khavatari': { ru:'Великий Каватари', short:'Тир', ru2:'Отшельник/Тиран', en2:'Tyrant', role:'Воин' },
+            'Duelist': { ru:'Дуэлист', short:'Глад', ru2:'Гладиатор', en2:'Gladiator', role:'Воин' },
+            'Dreadnought': { ru:'Полководец', short:'ВЛ', ru2:'Копейщик', en2:'Warlord', role:'Воин' },
+            'Grand Khavatari': { ru:'Аватар', short:'Тир', ru2:'Тиран', en2:'Tyrant', role:'Воин' },
             'Titan': { ru:'Титан', short:'Дестр', ru2:'Разрушитель', en2:'Destroyer', role:'Воин' },
-            'Fortune Seeker': { ru:'Искатель Фортуны', short:'Спойл', ru2:'Охотник за Наградой', en2:'Bounty Hunter', role:'Воин' },
-            'Maestro': { ru:'Маэстро', short:'Крафтер', ru2:'Кузнец', en2:'Warsmith', role:'Воин' },
-            'Doombringer': { ru:'Вестник Судьбы', short:'Берс', ru2:'Берсерк/Палач', en2:'Berserker', role:'Воин' },
-            'Judicator': { ru:'Судикатор', short:'Джуд', ru2:'Инспектор', en2:'Inspector', role:'Воин' },
-            'Soulhound': { ru:'Ловец Душ', short:'СБ', ru2:'Странник Бездны', en2:'Soulbreaker', role:'Другой' },
-            'Trickster': { ru:'Трикстер', short:'Арба', ru2:'Арбалетчик', en2:'Arbalester', role:'Другой' },
+            'Fortune Seeker': { ru:'Кладоискатель', short:'Спойл', ru2:'Собиратель', en2:'Bounty Hunter', role:'Гном' },
+            'Maestro': { ru:'Маэстро', short:'Крафтер', ru2:'Кузнец', en2:'Warsmith', role:'Гном' },
+            'Doombringer': { ru:'Разрушитель', short:'Берс', ru2:'Берсерк', en2:'Berserker', role:'Камаэль' },
+            'Judicator': { ru:'Судья', short:'Джуд', ru2:'Инспектор', en2:'Inspector', role:'Камаэль' },
+            'Soulhound': { ru:'Палач', short:'СБ', ru2:'Палач', en2:'Soul Breaker', role:'Камаэль' },
+            'Trickster': { ru:'Трикстер', short:'Арба', ru2:'Арбалетчик', en2:'Arbalester', role:'Камаэль' },
             'АВ/ПВ': { ru:'АВ или ПВ', short:'АВ/ПВ', ru2:'Ассасин/Разбойник', en2:'Abyss Walker / Plains Walker', role:'Кинжал' },
         };
 
