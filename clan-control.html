@@ -803,7 +803,7 @@
             <div id="promptProfaBlock" style="display:none;margin-bottom:16px">
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:8px">Профа на этом КМ</div>
                 <div id="promptProfaSearch" style="margin-bottom:6px">
-                    <input type="text" id="promptProfaInput" class="input-dark" style="font-size:12px;padding:8px 10px" placeholder="🔍 Поиск профы...">
+                    <input type="text" id="promptProfaInput" class="input-dark" style="font-size:12px;padding:8px 10px" placeholder="Поиск: биш, cardinal, хилер, се...">
                 </div>
                 <div id="promptProfaList" style="max-height:160px;overflow-y:auto;border:1px solid #1e2530;border-radius:8px;background:#0b0e14"></div>
                 <div id="promptProfaSelected" style="margin-top:6px;font-size:11px;color:#a5b4fc;min-height:18px"></div>
@@ -6642,7 +6642,14 @@ function getClass2IconByClass3(c3) {
 
             function renderProfaList(filter) {
                 const list = document.getElementById('promptProfaList');
-                const filtered = allProfas.filter(pf => !filter || pf.toLowerCase().includes(filter.toLowerCase()) || (PROFA_NAMES[pf]||'').toLowerCase().includes(filter.toLowerCase()));
+                const q = (filter||'').toLowerCase().trim();
+                const qAlt = switchKeyboardLayout(q);
+                const filtered = allProfas.filter(function(pf) {
+                    if (!q) return true;
+                    const info = PROFA_INFO[pf] || {};
+                    const searchable = [pf, info.ru||'', info.short||'', info.ru2||'', info.en2||'', info.role||'', PROFA_NAMES[pf]||''].join(' ').toLowerCase();
+                    return searchable.includes(q) || (qAlt && searchable.includes(qAlt));
+                });
                 list.innerHTML = filtered.map(pf => {
                     const isSelected = pf === selectedProfa;
                     const label = PROFA_NAMES && PROFA_NAMES[pf] ? pf.split(' (')[0] + ' (' + PROFA_NAMES[pf] + ')' : pf;
