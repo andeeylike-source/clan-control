@@ -107,16 +107,47 @@
         }
         .header-btn:hover { filter: brightness(1.12); }
 
-        .toggle-switch {
-            position: relative; width: 46px; height: 24px; border-radius: 30px;
-            background: #334155; border: 1px solid #475569; cursor: pointer; transition: background .2s;
+        .seg-toggle {
+            position: relative;
+            min-width: 78px;
+            height: 32px;
+            border-radius: 999px;
+            border: 1px solid #2a4f48;
+            background: #102725;
+            color: #c7f8ec;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            overflow: hidden;
         }
-        .toggle-switch::after {
-            content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
-            border-radius: 50%; background: #fff; transition: transform .2s;
+        .seg-toggle .seg-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 36px;
+            height: 26px;
+            border-radius: 999px;
+            background: #f5c84d;
+            transition: transform .2s ease;
+            box-shadow: 0 0 0 1px #00000030 inset;
         }
-        .toggle-switch.active { background: #14b8a6; border-color: #14b8a6; }
-        .toggle-switch.active::after { transform: translateX(22px); }
+        .seg-toggle .seg-label {
+            position: relative;
+            z-index: 1;
+            width: 32px;
+            text-align: center;
+            transition: color .2s ease;
+        }
+        .seg-toggle.theme-light .seg-knob,
+        .seg-toggle.lang-en .seg-knob { transform: translateX(38px); }
+        .seg-toggle.theme-light .seg-label.left,
+        .seg-toggle.lang-en .seg-label.left { color: #7aa29a; }
+        .seg-toggle.theme-light .seg-label.right,
+        .seg-toggle.lang-en .seg-label.right { color: #102725; }
 
         .auth-overlay {
             position: fixed; inset: 0; z-index: 1000; display: none;
@@ -481,14 +512,18 @@
         <div class="header-right">
             <button id="headerSettingsBtn" class="header-btn" onclick="showPage('settings')">⚙️ Настройки</button>
             <div class="header-pill">
-                <span>🌙</span>
-                <button id="themeToggle" class="toggle-switch active" type="button" onclick="toggleTheme()"></button>
-                <span>☀️</span>
+                <button id="themeToggle" class="seg-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span class="seg-knob"></span>
+                    <span class="seg-label left">🌙</span>
+                    <span class="seg-label right">☀️</span>
+                </button>
             </div>
             <div class="header-pill">
-                <span>RU</span>
-                <button id="langToggle" class="toggle-switch" type="button" onclick="toggleLanguage()"></button>
-                <span>EN</span>
+                <button id="langToggle" class="seg-toggle" type="button" onclick="toggleLanguage()" aria-label="Toggle language">
+                    <span class="seg-knob"></span>
+                    <span class="seg-label left">RU</span>
+                    <span class="seg-label right">EN</span>
+                </button>
             </div>
             <div class="header-pill" id="headerEmailPill">📧 —</div>
             <button id="logoutBtn" class="header-btn" onclick="logoutAuth()">↪ Выход</button>
@@ -7067,10 +7102,11 @@ function getClass2IconByClass3(c3) {
         function applyTheme() {
             const light = uiPrefs.theme === 'light';
             document.body.classList.toggle('theme-light', light);
-            document.getElementById('themeToggle')?.classList.toggle('active', !light);
+            document.getElementById('themeToggle')?.classList.toggle('theme-light', light);
         }
         function applyLanguage() {
             const isEn = uiPrefs.lang === 'en';
+            document.getElementById('langToggle')?.classList.toggle('lang-en', isEn);
             const settingsNav = document.getElementById('nav-settings');
             if (settingsNav) settingsNav.textContent = isEn ? '⚙️ Settings' : '⚙️ Настройки';
             const headerBtn = document.getElementById('headerSettingsBtn');
@@ -7087,7 +7123,6 @@ function getClass2IconByClass3(c3) {
         }
         function toggleLanguage() {
             uiPrefs.lang = uiPrefs.lang === 'ru' ? 'en' : 'ru';
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
             applyLanguage();
             persistUiPrefs();
         }
@@ -8606,7 +8641,6 @@ function getClass2IconByClass3(c3) {
             loadUiPrefs();
             applyTheme();
             applyLanguage();
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
             // Надёжные саппорты
             const relSup = allPS.filter(p=>isSup(p.profa)&&p.att>=80);
             if(relSup.length>0) items.push({icon:'💊',type:'good',title:relSup.length+' надёжных саппортов',text:relSup.slice(0,4).map(p=>p.name).join(', ')+'. Явка 80%+', players:relSup.map(p=>p.name), listType:'supports'});
