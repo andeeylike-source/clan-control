@@ -34,24 +34,103 @@
         }
 
         body.light {
-            --bg:        #f3eadc;
-            --bg2:       #fbf4ea;
-            --bg3:       #f0e2cf;
-            --bg4:       #e7d3b6;
-            --border:    #c8ab7a;
-            --border2:   #a88755;
-            --text:      #2a1d10;
-            --text2:     #4b3420;
-            --text3:     #6e5232;
-            --text4:     #8c6b42;
-            --text5:     #b08d61;
-            --accent:    #b88a3c;
-            --accent-h:  #9c7128;
-            --accent-s:  #d8b16a;
-            --accent2-s: #3f8f5f;
-            --shadow:    rgba(74, 50, 20, 0.12);
-            --glow:      rgba(184,138,60,0.12);
-            --input-bg:  #fff8ef;
+            --bg:        #f5efe6;
+            --bg2:       #fffaf3;
+            --bg3:       #f2e8dc;
+            --bg4:       #e8dccb;
+            --border:    #d6c3a3;
+            --border2:   #bfa980;
+            --text:      #2d2215;
+            --text2:     #4a3a24;
+            --text3:     #7a5f3b;
+            --text4:     #a4875c;
+            --text5:     #c2a77a;
+            --accent:    #c9a84c;
+            --accent-h:  #b8922e;
+            --accent-s:  #e8c97a;
+            --shadow:    rgba(60,40,10,0.08);
+            --glow:      rgba(201,168,76,0.08);
+            --input-bg:  #fffaf3;
+        }
+
+        body.light .dash-alert,
+        body.light .profile-stat-card,
+        body.light .dp-btn,
+        body.light .dp-popup,
+        body.light .dp-month-btn,
+        body.light .dp-year-btn,
+        body.light .dp-shortcut,
+        body.light .topbar-icon-btn,
+        body.light .topbar-user {
+            box-shadow: none;
+        }
+
+        body.light #page-roster [style*="background:#12171f"],
+        body.light #page-stats [style*="background:#12171f"],
+        body.light #page-screenshots [style*="background:#12171f"],
+        body.light #page-settings [style*="background:#12171f"],
+        body.light #page-pack-detail [style*="background:#12171f"] {
+            background: var(--bg2) !important;
+            border-color: var(--border2) !important;
+            color: var(--text2) !important;
+        }
+
+        body.light #page-roster [style*="background:#1e2530"],
+        body.light #page-stats [style*="background:#1e2530"],
+        body.light #page-screenshots [style*="background:#1e2530"],
+        body.light #page-settings [style*="background:#1e2530"],
+        body.light #page-pack-detail [style*="background:#1e2530"] {
+            background: var(--bg3) !important;
+            border-color: var(--border2) !important;
+            color: var(--text2) !important;
+        }
+
+        body.light #page-roster [style*="background:#1e3a5f"],
+        body.light #page-settings [style*="background:#1e3a5f"] {
+            background: #d7c1a0 !important;
+            color: var(--text) !important;
+            border-color: var(--border2) !important;
+        }
+
+        body.light #page-roster [style*="background:#1e4a7f"] {
+            background: #c7ab82 !important;
+        }
+
+        body.light [style*="color:#e2e8f0"],
+        body.light [style*="color:#94a3b8"],
+        body.light [style*="color:#64748b"],
+        body.light [style*="color:#475569"] {
+            color: var(--text3) !important;
+        }
+
+        body.light [style*="color:#a5b4fc"] {
+            color: #8c6b2f !important;
+        }
+
+        body.light [style*="border:1px solid #1e2530"],
+        body.light [style*="border:1px solid #2d3748"],
+        body.light [style*="border-color:#2d3748"],
+        body.light [style*="border-color:'#2d3748'"],
+        body.light [style*="border:1px solid #6366f144"] {
+            border-color: var(--border2) !important;
+        }
+
+        body.light #dashSubtitle,
+        body.light #rosterStats,
+        body.light #statsPeriodLabel,
+        body.light #calendarMonthLabel {
+            color: var(--text3) !important;
+        }
+
+        body.light #dashNextEvent {
+            background: rgba(201,168,76,0.12) !important;
+            border-color: rgba(191,169,128,0.6) !important;
+            color: var(--text2) !important;
+        }
+
+        body.light .login-input::placeholder,
+        body.light .input-dark::placeholder {
+            color: var(--text4);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -520,41 +599,6 @@
         .info-modal-close:hover { background: var(--border2); color: var(--text2); }
         .info-q-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border); border: 1px solid var(--border2); color: var(--text5); font-size: 10px; font-weight: 900; cursor: pointer; transition: all .15s; flex-shrink: 0; margin-left: 5px; vertical-align: middle; font-family: monospace; line-height: 1; }
         .info-q-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--accent); color: var(--accent-s); }
-    
-        body.light .text-slate-500,
-        body.light .text-slate-400,
-        body.light .text-slate-600 { color: var(--text3) !important; }
-
-        body.light .bg-slate-800,
-        body.light .bg-slate-700,
-        body.light .bg-slate-600 {
-            background: var(--bg3) !important;
-            color: var(--text) !important;
-            border-color: var(--border) !important;
-        }
-
-        body.light input,
-        body.light textarea,
-        body.light select {
-            color: var(--text) !important;
-            border-color: var(--border) !important;
-            background: var(--input-bg) !important;
-        }
-
-        body.light .topbar,
-        body.light #topbar,
-        body.light .sidebar,
-        body.light .dash-card,
-        body.light .card,
-        body.light .panel,
-        body.light .stat-card {
-            border-color: var(--border) !important;
-        }
-
-        body.light [style*="color:#475569"] { color: var(--text3) !important; }
-        body.light [style*="color:#94a3b8"] { color: var(--text3) !important; }
-        body.light [style*="color:#64748b"] { color: var(--text3) !important; }
-
     </style>
 </head>
 <body>
@@ -1159,131 +1203,207 @@
            UI — Login, Theme, Language
         ============================================= */
         (function() {
-            
             const TEXTS = {
-                ru: {
-                    docTitle: 'Clan Control v12',
-                    loginSubtitle: 'Инструмент офицера клана для отслеживания КМ-статистики',
-                    emailLabel: 'Введи email',
-                    clanLabel: 'Название клана',
-                    btn1: 'Продолжить →',
-                    btn2: 'Войти в Clan Control →',
-                    hint1: 'MVP — введи любой email',
-                    hint2: 'Можно изменить позже в настройках',
-                    back: '← Назад',
-                    emailPlaceholder: 'your@email.com',
-                    clanPlaceholder: '[TAG] или название',
-                    topbarSettingsTitle: 'Настройки',
-                    topbarLogoutTitle: 'Выйти',
-                    themeAria: 'Переключить тему',
-                    langAria: 'Переключить язык'
+                ru: { sub: 'Инструмент офицера клана для отслеживания КМ-статистики', emailLabel: 'Введи email', clanLabel: 'Название клана', btn1: 'Продолжить →', btn2: 'Войти в Clan Control →', hint1: 'MVP — введи любой email' },
+                en: { sub: 'Clan officer toolkit for tracking war statistics', emailLabel: 'Enter your email', clanLabel: 'Clan name or tag', btn1: 'Continue →', btn2: 'Enter Clan Control →', hint1: 'MVP mode — enter any email' }
+            };
+
+            const UI_PHRASES = [
+                ['Переключить тему', 'Toggle theme'],
+                ['Переключить язык', 'Toggle language'],
+                ['Настройки', 'Settings'],
+                ['Выйти', 'Sign out'],
+                ['Аналитика', 'Analytics'],
+                ['🏠 Дашборд', '🏠 Dashboard'],
+                ['📊 Статистика', '📊 Statistics'],
+                ['📅 Календарь КМ', '📅 War Calendar'],
+                ['📋 История КМ', '📋 War History'],
+                ['Управление', 'Management'],
+                ['👥 Клан', '👥 Clan'],
+                ['👤 Профиль', '👤 Profile'],
+                ['⚔️ Рейд Паки', '⚔️ Raid Packs'],
+                ['🗄️ Архив', '🗄️ Archive'],
+                ['Система', 'System'],
+                ['⚙️ Настройки', '⚙️ Settings'],
+                ['💾 Бэкап данных', '💾 Data Backup'],
+                ['Сохранено', 'Saved'],
+                ['Дашборд', 'Dashboard'],
+                ['🔔 Предупреждения', '🔔 Alerts'],
+                ['👁 Обратить внимание', '👁 Needs attention'],
+                ['🏆 Топ-5 ценных', '🏆 Top 5 valuable'],
+                ['📈 Растут', '📈 Rising'],
+                ['📉 Падают', '📉 Falling'],
+                ['💎 Редкие таланты', '💎 Rare talents'],
+                ['Ходят редко, но когда приходят — играют лучше многих', 'They attend rarely, but when they do, they outperform many others'],
+                ['прошло', 'past'],
+                ['выполнено', 'done'],
+                ['впереди', 'upcoming'],
+                ['Клан', 'Clan'],
+                ['Период КМ%:', 'War % period:'],
+                ['Начало', 'Start'],
+                ['Конец', 'End'],
+                ['🔬 Найти дубли', '🔬 Find duplicates'],
+                ['Снять NEW', 'Clear NEW'],
+                ['Снять ✓', 'Clear ✓'],
+                ['Сброс статы', 'Reset stats'],
+                ['+ Игрок', '+ Player'],
+                ['Поиск по нику...', 'Search by nickname...'],
+                ['📸 Импорт из скриншота клана', '📸 Import from clan screenshot'],
+                ['Ник', 'Nickname'],
+                ['Профа', 'Class'],
+                ['Пак', 'Pack'],
+                ['КМ %', 'War %'],
+                ['Ценность ⭐', 'Value ⭐'],
+                ['Действия', 'Actions'],
+                ['Рейд Паки', 'Raid Packs'],
+                ['+ Создать пак', '+ Create pack'],
+                ['Статистика КМ', 'War Statistics'],
+                ['Все паки', 'All packs'],
+                ['Период:', 'Period:'],
+                ['Сбросить', 'Reset'],
+                ['⚠️ Не попали в CC подряд', '⚠️ Missing CC in a row'],
+                ['Игроки из ростера которые отсутствовали в Командном канале N+ КМ подряд', 'Roster players absent from Clan Channel for N+ consecutive wars'],
+                ['Порог:', 'Threshold:'],
+                ['КМ подряд', 'wars in a row'],
+                ['Архив игроков', 'Player Archive'],
+                ['← Назад', '← Back'],
+                ['Группа', 'Group'],
+                ['Информация', 'Info'],
+                ['Распустить группу', 'Disband group'],
+                ['Участники', 'Members'],
+                ['Добавить СОЛО', 'Add SOLO'],
+                ['Ник...', 'Nickname...'],
+                ['📋 История КМ', '📋 War History'],
+                ['🔍 Поиск игрока по КМам...', '🔍 Search player in wars...'],
+                ['Диагностика', 'Diagnostics'],
+                ['🔍 Диагностика', '🔍 Diagnostics'],
+                ['🔑 API ключи', '🔑 API keys'],
+                ['Ключи хранятся только в твоём браузере — не в коде и не на GitHub. Получить ключ:', 'Keys are stored only in your browser — not in code and not on GitHub. Get a key:'],
+                ['+ Добавить ключ', '+ Add key'],
+                ['💾 Сохранить ключи', '💾 Save keys'],
+                ['🧪 Проверить', '🧪 Test'],
+                ['🔄 Сбросить счётчик', '🔄 Reset counter'],
+                ['🔗 Алиасы ников', '🔗 Nickname aliases'],
+                ['Если AI читает ник неправильно — укажи соответствие. Например:', 'If AI reads a nickname incorrectly — add a mapping. Example:'],
+                ['Пропустить', 'Skip'],
+                ['💾 Сохранить', '💾 Save'],
+                ['🎭 Назначить профы', '🎭 Assign classes'],
+                ['Добро пожаловать в Clan Control', 'Welcome to Clan Control'],
+                ['Инструмент офицера для отслеживания КМ-статистики клана. Давай настроим за 3 шага.', 'Officer tool for tracking clan war statistics. Let’s set it up in 3 steps.'],
+                ['1. Добавь игроков', '1. Add players'],
+                ['Заполни ростер клана — ники, профы, паки', 'Fill the clan roster — nicknames, classes, packs'],
+                ['2. Отметь КМ в Календаре', '2. Mark wars in Calendar'],
+                ['Открой день КМ и загрузи скриншоты для анализа', 'Open a war day and upload screenshots for analysis'],
+                ['3. Смотри статистику', '3. View statistics'],
+                ['История КМ, рейтинги, профили игроков', 'War history, rankings, player profiles'],
+                ['Начать с ростера →', 'Start with roster →'],
+                ['Также можно добавить API-ключ в Настройках для автоматического анализа скриншотов через AI', 'You can also add an API key in Settings for automatic AI screenshot analysis'],
+                ['Можно изменить позже в настройках', 'You can change it later in settings'],
+                ['[TAG] или название', '[TAG] or clan name'],
+                ['Проверен — ник и профа верны', 'Verified — nickname and class are correct'],
+                ['Введи ник чтобы найти все КМ где участвовал этот игрок', 'Enter a nickname to find all wars where this player participated'],
+                ['Диагностика', 'Diagnostics'],
+                ['Пн', 'Mon'],
+                ['Вт', 'Tue'],
+                ['Ср', 'Wed'],
+                ['Чт', 'Thu'],
+                ['Пт', 'Fri'],
+                ['Сб', 'Sat'],
+                ['Вс', 'Sun']
+            ];
+
+            const UI_ATTRS = {
+                title: {
+                    'Настройки': 'Settings',
+                    'Выйти': 'Sign out',
+                    'Проверен — ник и профа верны': 'Verified — nickname and class are correct',
+                    'Введи ник чтобы найти все КМ где участвовал этот игрок': 'Enter a nickname to find all wars where this player participated',
+                    'Диагностика': 'Diagnostics'
                 },
-                en: {
-                    docTitle: 'Clan Control v12',
-                    loginSubtitle: 'Clan officer toolkit for tracking war statistics',
-                    emailLabel: 'Enter your email',
-                    clanLabel: 'Clan name',
-                    btn1: 'Continue →',
-                    btn2: 'Enter Clan Control →',
-                    hint1: 'MVP mode — enter any email',
-                    hint2: 'You can change this later in settings',
-                    back: '← Back',
-                    emailPlaceholder: 'your@email.com',
-                    clanPlaceholder: '[TAG] or clan name',
-                    topbarSettingsTitle: 'Settings',
-                    topbarLogoutTitle: 'Log out',
-                    themeAria: 'Toggle theme',
-                    langAria: 'Toggle language'
+                placeholder: {
+                    '[TAG] или название': '[TAG] or clan name',
+                    'Поиск по нику...': 'Search by nickname...',
+                    'Ник...': 'Nickname...',
+                    '🔍 Поиск игрока по КМам...': '🔍 Search player in wars...'
+                },
+                'aria-label': {
+                    'Переключить тему': 'Toggle theme',
+                    'Переключить язык': 'Toggle language'
                 }
             };
 
-            const TEXT_NODE_MAP = {
-                en: {
-                    'Аналитика': 'Analytics',
-                    'Управление': 'Management',
-                    'Система': 'System',
-                    '🏠 Дашборд': '🏠 Dashboard',
-                    '📊 Статистика': '📊 Statistics',
-                    '📅 Календарь КМ': '📅 War Calendar',
-                    '📋 История КМ': '📋 War History',
-                    '👥 Клан': '👥 Clan',
-                    '⚔️ Рейд Паки': '⚔️ Raid Packs',
-                    '🗄️ Архив': '🗄️ Archive',
-                    '⚙️ Настройки': '⚙️ Settings',
-                    '💾 Бэкап данных': '💾 Backup data',
-                    'Сохранено': 'Saved',
-                    'Дашборд': 'Dashboard',
-                    '🔔 Предупреждения': '🔔 Warnings',
-                    '👁 Обратить внимание': '👁 Needs attention',
-                    '🏆 Топ-5 ценных': '🏆 Top 5 valuable',
-                    '📈 Растут': '📈 Rising',
-                    '📉 Падают': '📉 Falling',
-                    '💎 Редкие таланты': '💎 Rare talents',
-                    'Ходят редко, но когда приходят — играют лучше многих': 'They attend rarely, but when they do, they perform better than many others',
-                    'Календарь КМ': 'War Calendar',
-                    'прошло': 'past',
-                    'выполнено': 'done',
-                    'впереди': 'upcoming',
-                    '🔑 API ключи': '🔑 API keys',
-                    '🔗 Алиасы ников': '🔗 Nick aliases',
-                    'Настройки уведомления при завершении анализа скриншотов.': 'Notification settings after screenshot analysis is complete.',
-                    '+ Добавить ключ': '+ Add key',
-                    '💾 Сохранить ключи': '💾 Save keys',
-                    '🧪 Проверить': '🧪 Check',
-                    '🔄 Сбросить счётчик': '🔄 Reset counter',
-                    'Popup уведомление': 'Popup notification',
-                    'Звук уведомления': 'Sound notification',
-                    '239 игроков · 3 КМ': '239 players · 3 wars'
-                },
-                ru: {
-                    'Analytics': 'Аналитика',
-                    'Management': 'Управление',
-                    'System': 'Система',
-                    '🏠 Dashboard': '🏠 Дашборд',
-                    '📊 Statistics': '📊 Статистика',
-                    '📅 War Calendar': '📅 Календарь КМ',
-                    '📋 War History': '📋 История КМ',
-                    '👥 Clan': '👥 Клан',
-                    '⚔️ Raid Packs': '⚔️ Рейд Паки',
-                    '🗄️ Archive': '🗄️ Архив',
-                    '⚙️ Settings': '⚙️ Настройки',
-                    '💾 Backup data': '💾 Бэкап данных',
-                    'Saved': 'Сохранено',
-                    'Dashboard': 'Дашборд',
-                    '🔔 Warnings': '🔔 Предупреждения',
-                    '👁 Needs attention': '👁 Обратить внимание',
-                    '🏆 Top 5 valuable': '🏆 Топ-5 ценных',
-                    '📈 Rising': '📈 Растут',
-                    '📉 Falling': '📉 Падают',
-                    '💎 Rare talents': '💎 Редкие таланты',
-                    'They attend rarely, but when they do, they perform better than many others': 'Ходят редко, но когда приходят — играют лучше многих',
-                    'War Calendar': 'Календарь КМ',
-                    'past': 'прошло',
-                    'done': 'выполнено',
-                    'upcoming': 'впереди',
-                    '🔑 API keys': '🔑 API ключи',
-                    '🔗 Nick aliases': '🔗 Алиасы ников',
-                    'Notification settings after screenshot analysis is complete.': 'Настройки уведомления при завершении анализа скриншотов.',
-                    '+ Add key': '+ Добавить ключ',
-                    '💾 Save keys': '💾 Сохранить ключи',
-                    '🧪 Check': '🧪 Проверить',
-                    '🔄 Reset counter': '🔄 Сбросить счётчик',
-                    'Popup notification': 'Popup уведомление',
-                    'Sound notification': 'Звук уведомления',
-                    '239 players · 3 wars': '239 игроков · 3 КМ'
-                }
-            };
+            const UI_REPLACERS = {};
+            UI_PHRASES.forEach(([ru, en]) => {
+                UI_REPLACERS.ru = UI_REPLACERS.ru || {};
+                UI_REPLACERS.en = UI_REPLACERS.en || {};
+                UI_REPLACERS.ru[en] = ru;
+                UI_REPLACERS.en[ru] = en;
+            });
 
-            const ATTRIBUTE_MAP = {
-                ru: {
-                    loginEmailInput: { placeholder: 'your@email.com' },
-                    loginClanInput: { placeholder: '[TAG] или название' }
-                },
-                en: {
-                    loginEmailInput: { placeholder: 'your@email.com' },
-                    loginClanInput: { placeholder: '[TAG] or clan name' }
-                }
-            };
+            const UI_ATTR_REPLACERS = {};
+            Object.keys(UI_ATTRS).forEach(attr => {
+                UI_ATTR_REPLACERS[attr] = { ru: {}, en: {} };
+                Object.entries(UI_ATTRS[attr]).forEach(([ru, en]) => {
+                    UI_ATTR_REPLACERS[attr].en[ru] = en;
+                    UI_ATTR_REPLACERS[attr].ru[en] = ru;
+                });
+            });
+
+            function replaceExactText(value, map) {
+                if (!value || !map) return value;
+                const trimmed = value.trim();
+                if (!trimmed) return value;
+                const replacement = map[trimmed];
+                if (!replacement) return value;
+                const start = value.indexOf(trimmed);
+                return value.slice(0, start) + replacement + value.slice(start + trimmed.length);
+            }
+
+            function applyStaticTranslations(lang) {
+                const textMap = UI_REPLACERS[lang] || {};
+                const attrMaps = Object.fromEntries(Object.keys(UI_ATTR_REPLACERS).map(attr => [attr, UI_ATTR_REPLACERS[attr][lang] || {}]));
+                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        if (!node.parentElement) return NodeFilter.FILTER_REJECT;
+                        const tag = node.parentElement.tagName;
+                        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'OPTION') return NodeFilter.FILTER_REJECT;
+                        if (node.parentElement.closest && node.parentElement.closest('#apiKeysList input, #nickAliasesList input')) return NodeFilter.FILTER_REJECT;
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+                const nodes = [];
+                while (walker.nextNode()) nodes.push(walker.currentNode);
+                nodes.forEach(node => {
+                    const replaced = replaceExactText(node.nodeValue, textMap);
+                    if (replaced !== node.nodeValue) node.nodeValue = replaced;
+                });
+
+                document.querySelectorAll('input, button, [title], [aria-label], option, .dp-dow, .sidebar-section-label, .nav-item, h1, h2, h3, p, span, th, td, div').forEach(el => {
+                    ['title', 'placeholder', 'aria-label'].forEach(attr => {
+                        if (!el.hasAttribute || !el.hasAttribute(attr)) return;
+                        const current = el.getAttribute(attr);
+                        const replaced = replaceExactText(current, attrMaps[attr]);
+                        if (replaced !== current) el.setAttribute(attr, replaced);
+                    });
+                });
+
+                document.title = lang === 'en' ? 'Clan Control v12' : 'Clan Control v12';
+                document.documentElement.lang = lang;
+            }
+
+            let translationObserverStarted = false;
+            function ensureTranslationObserver() {
+                if (translationObserverStarted) return;
+                translationObserverStarted = true;
+                const observer = new MutationObserver(() => {
+                    clearTimeout(window.__ccTranslateTimer);
+                    window.__ccTranslateTimer = setTimeout(() => {
+                        const lang = localStorage.getItem('cc_lang') || 'ru';
+                        applyStaticTranslations(lang);
+                    }, 0);
+                });
+                observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+            }
 
             window._loginEmail = '';
 
@@ -1293,85 +1413,6 @@
                     if (!el) return;
                     el.dataset.state = isRight ? 'right' : 'left';
                 });
-            }
-
-            function applyElementAttributes(lang) {
-                const attrMap = ATTRIBUTE_MAP[lang] || {};
-                Object.entries(attrMap).forEach(([id, attrs]) => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    Object.entries(attrs).forEach(([attr, value]) => el.setAttribute(attr, value));
-                });
-            }
-
-            function translateDirectTextNodes(root, lang) {
-                const map = TEXT_NODE_MAP[lang] || {};
-                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-                    acceptNode(node) {
-                        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-                        const parent = node.parentElement;
-                        if (!parent) return NodeFilter.FILTER_REJECT;
-                        const tag = parent.tagName;
-                        if (['SCRIPT', 'STYLE', 'CODE', 'PRE'].includes(tag)) return NodeFilter.FILTER_REJECT;
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
-                });
-                const nodes = [];
-                while (walker.nextNode()) nodes.push(walker.currentNode);
-                nodes.forEach(node => {
-                    const raw = node.nodeValue;
-                    const trimmed = raw.trim();
-                    if (!map[trimmed]) return;
-                    const leading = raw.match(/^\s*/)[0];
-                    const trailing = raw.match(/\s*$/)[0];
-                    node.nodeValue = leading + map[trimmed] + trailing;
-                });
-            }
-
-            function applyStaticTranslations(lang) {
-                const t = TEXTS[lang] || TEXTS.ru;
-                document.documentElement.lang = lang;
-                document.title = t.docTitle;
-
-                const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-                s('loginSubtitle', t.loginSubtitle);
-                s('loginEmailLabel', t.emailLabel);
-                s('loginClanLabel', t.clanLabel);
-                s('loginBtnText1', t.btn1);
-                s('loginBtnText2', t.btn2);
-                s('loginHintText', t.hint1);
-
-                const hints = document.querySelectorAll('.login-hint');
-                if (hints[1]) hints[1].textContent = t.hint2;
-                const backs = document.querySelectorAll('.login-back');
-                if (backs[0]) backs[0].textContent = t.back;
-
-                applyElementAttributes(lang);
-                translateDirectTextNodes(document.body, lang);
-
-                const topbarSettings = document.querySelector(".topbar-icon-btn[onclick=\"showPage('settings')\"]");
-                if (topbarSettings) topbarSettings.title = t.topbarSettingsTitle;
-                const topbarLogout = document.querySelector(".topbar-icon-btn[onclick=\"loginLogout()\"]");
-                if (topbarLogout) topbarLogout.title = t.topbarLogoutTitle;
-
-                const themeToggle = document.getElementById('themeToggle');
-                const loginThemeToggle = document.getElementById('loginThemeToggle');
-                const langToggle = document.getElementById('langToggle');
-                const loginLangToggle = document.getElementById('loginLangToggle');
-                if (themeToggle) themeToggle.setAttribute('aria-label', t.themeAria);
-                if (loginThemeToggle) loginThemeToggle.setAttribute('aria-label', t.themeAria);
-                if (langToggle) langToggle.setAttribute('aria-label', t.langAria);
-                if (loginLangToggle) loginLangToggle.setAttribute('aria-label', t.langAria);
-            }
-
-            let translationObserver = null;
-            function ensureTranslationObserver() {
-                if (translationObserver) return;
-                translationObserver = new MutationObserver(() => {
-                    const current = localStorage.getItem('cc_lang') || 'ru';
-                    applyStaticTranslations(current);
-                });
-                translationObserver.observe(document.body, { childList: true, subtree: true, characterData: false });
             }
 
             window.setTheme = function(t) {
@@ -1385,18 +1426,33 @@
                 setTheme(current === 'dark' ? 'light' : 'dark');
             };
 
+            function applyDataI18n(lang) {
+                const dict = TEXTS[lang] || TEXTS.ru;
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.dataset.i18n;
+                    if (dict[key]) el.textContent = dict[key];
+                });
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                    const key = el.dataset.i18nPlaceholder;
+                    if (dict[key]) el.setAttribute('placeholder', dict[key]);
+                });
+            }
+
             window.setLang = function(l) {
                 localStorage.setItem('cc_lang', l);
+                const t = TEXTS[l] || TEXTS.ru;
                 syncFlipToggle(['langToggle','loginLangToggle'], l === 'en');
+                const s = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+                s('loginSubtitle', t.sub); s('loginEmailLabel', t.emailLabel); s('loginClanLabel', t.clanLabel);
+                s('loginBtnText1', t.btn1); s('loginBtnText2', t.btn2); s('loginHintText', t.hint1);
+                applyDataI18n(l);
                 applyStaticTranslations(l);
-                ensureTranslationObserver();
             };
 
             window.toggleLang = function() {
                 const current = localStorage.getItem('cc_lang') || 'ru';
                 setLang(current === 'ru' ? 'en' : 'ru');
             };
-
 
             window.loginGoStep2 = function() {
                 const inp = document.getElementById('loginEmailInput');
@@ -1450,11 +1506,16 @@
             const lang  = localStorage.getItem('cc_lang')  || 'ru';
             setTheme(theme);
             setLang(lang);
+            ensureTranslationObserver();
             const savedUser = sessionStorage.getItem('cc_user') || localStorage.getItem('cc_user');
             if (savedUser) {
                 window._loginEmail = savedUser;
                 const savedClan = sessionStorage.getItem('cc_clan') || localStorage.getItem('cc_clan') || '';
                 _showApp(savedUser, savedClan);
+                const initialPage = (location.hash || '').replace('#', '');
+                if (initialPage && typeof window.showPage === 'function') {
+                    setTimeout(() => window.showPage(initialPage), 0);
+                }
             }
         })();
 
