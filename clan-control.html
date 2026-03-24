@@ -38,99 +38,16 @@
             --bg2:       #fffaf3;
             --bg3:       #f2e8dc;
             --bg4:       #e8dccb;
-            --border:    #d6c3a3;
-            --border2:   #bfa980;
-            --text:      #2d2215;
-            --text2:     #4a3a24;
-            --text3:     #7a5f3b;
-            --text4:     #a4875c;
-            --text5:     #c2a77a;
-            --accent:    #c9a84c;
-            --accent-h:  #b8922e;
-            --accent-s:  #e8c97a;
-            --shadow:    rgba(60,40,10,0.08);
-            --glow:      rgba(201,168,76,0.08);
-            --input-bg:  #fffaf3;
-        }
-
-        body.light .dash-alert,
-        body.light .profile-stat-card,
-        body.light .dp-btn,
-        body.light .dp-popup,
-        body.light .dp-month-btn,
-        body.light .dp-year-btn,
-        body.light .dp-shortcut,
-        body.light .topbar-icon-btn,
-        body.light .topbar-user {
-            box-shadow: none;
-        }
-
-        body.light #page-roster [style*="background:#12171f"],
-        body.light #page-stats [style*="background:#12171f"],
-        body.light #page-screenshots [style*="background:#12171f"],
-        body.light #page-settings [style*="background:#12171f"],
-        body.light #page-pack-detail [style*="background:#12171f"] {
-            background: var(--bg2) !important;
-            border-color: var(--border2) !important;
-            color: var(--text2) !important;
-        }
-
-        body.light #page-roster [style*="background:#1e2530"],
-        body.light #page-stats [style*="background:#1e2530"],
-        body.light #page-screenshots [style*="background:#1e2530"],
-        body.light #page-settings [style*="background:#1e2530"],
-        body.light #page-pack-detail [style*="background:#1e2530"] {
-            background: var(--bg3) !important;
-            border-color: var(--border2) !important;
-            color: var(--text2) !important;
-        }
-
-        body.light #page-roster [style*="background:#1e3a5f"],
-        body.light #page-settings [style*="background:#1e3a5f"] {
-            background: #d7c1a0 !important;
-            color: var(--text) !important;
-            border-color: var(--border2) !important;
-        }
-
-        body.light #page-roster [style*="background:#1e4a7f"] {
-            background: #c7ab82 !important;
-        }
-
-        body.light [style*="color:#e2e8f0"],
-        body.light [style*="color:#94a3b8"],
-        body.light [style*="color:#64748b"],
-        body.light [style*="color:#475569"] {
-            color: var(--text3) !important;
-        }
-
-        body.light [style*="color:#a5b4fc"] {
-            color: #8c6b2f !important;
-        }
-
-        body.light [style*="border:1px solid #1e2530"],
-        body.light [style*="border:1px solid #2d3748"],
-        body.light [style*="border-color:#2d3748"],
-        body.light [style*="border-color:'#2d3748'"],
-        body.light [style*="border:1px solid #6366f144"] {
-            border-color: var(--border2) !important;
-        }
-
-        body.light #dashSubtitle,
-        body.light #rosterStats,
-        body.light #statsPeriodLabel,
-        body.light #calendarMonthLabel {
-            color: var(--text3) !important;
-        }
-
-        body.light #dashNextEvent {
-            background: rgba(201,168,76,0.12) !important;
-            border-color: rgba(191,169,128,0.6) !important;
-            color: var(--text2) !important;
-        }
-
-        body.light .login-input::placeholder,
-        body.light .input-dark::placeholder {
-            color: var(--text4);
+            --border:    #5c4326;
+            --border2:   #3e2d1a;
+            --text:      #000000;
+            --text2:     #111111;
+            --text3:     #1f1f1f;
+            --text4:     #3a3128;
+            --text5:     #5b4a3a;
+            --shadow:    rgba(60,40,10,0.12);
+            --glow:      rgba(139,94,52,0.12);
+            --input-bg:  #ffffff;
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -145,6 +62,60 @@
             height: 100vh;
             overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.light,
+        body.light .app-shell,
+        body.light .page,
+        body.light .card,
+        body.light .modal-card,
+        body.light .topbar-user,
+        body.light .dash-alert,
+        body.light .profile-stat-card,
+        body.light .dp-popup,
+        body.light .login-card,
+        body.light .sidebar,
+        body.light .topbar,
+        body.light .day-modal-card,
+        body.light .drawer-card,
+        body.light table,
+        body.light tr,
+        body.light td,
+        body.light th,
+        body.light div,
+        body.light span,
+        body.light p,
+        body.light h1,
+        body.light h2,
+        body.light h3,
+        body.light h4,
+        body.light h5,
+        body.light h6,
+        body.light label,
+        body.light button {
+            color: var(--text);
+        }
+
+        body.light input,
+        body.light textarea,
+        body.light select {
+            color: #000 !important;
+            background: var(--input-bg) !important;
+            border-color: var(--border) !important;
+        }
+
+        body.light .card,
+        body.light .modal-card,
+        body.light .login-card,
+        body.light .sidebar,
+        body.light .topbar,
+        body.light .day-modal-card,
+        body.light .drawer-card,
+        body.light table,
+        body.light tr,
+        body.light td,
+        body.light th {
+            border-color: var(--border) !important;
         }
 
         /* =============================================
@@ -1359,6 +1330,21 @@
                 return value.slice(0, start) + replacement + value.slice(start + trimmed.length);
             }
 
+            function escapeRegExp(str) {
+                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function replaceTextDeep(value, map) {
+                if (!value || !map) return value;
+                let result = value;
+                const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+                keys.forEach(key => {
+                    if (!key || !result.includes(key)) return;
+                    result = result.replace(new RegExp(escapeRegExp(key), 'g'), map[key]);
+                });
+                return result;
+            }
+
             function applyStaticTranslations(lang) {
                 const textMap = UI_REPLACERS[lang] || {};
                 const attrMaps = Object.fromEntries(Object.keys(UI_ATTR_REPLACERS).map(attr => [attr, UI_ATTR_REPLACERS[attr][lang] || {}]));
@@ -1374,7 +1360,7 @@
                 const nodes = [];
                 while (walker.nextNode()) nodes.push(walker.currentNode);
                 nodes.forEach(node => {
-                    const replaced = replaceExactText(node.nodeValue, textMap);
+                    const replaced = replaceTextDeep(node.nodeValue, textMap);
                     if (replaced !== node.nodeValue) node.nodeValue = replaced;
                 });
 
@@ -1382,13 +1368,50 @@
                     ['title', 'placeholder', 'aria-label'].forEach(attr => {
                         if (!el.hasAttribute || !el.hasAttribute(attr)) return;
                         const current = el.getAttribute(attr);
-                        const replaced = replaceExactText(current, attrMaps[attr]);
+                        const replaced = replaceTextDeep(current, attrMaps[attr]);
                         if (replaced !== current) el.setAttribute(attr, replaced);
                     });
                 });
 
-                document.title = lang === 'en' ? 'Clan Control v12' : 'Clan Control v12';
+                document.title = 'Clan Control v12';
                 document.documentElement.lang = lang;
+            }
+
+            function normalizeLightThemeInlineStyles() {
+                const isLight = document.body.classList.contains('light');
+                const colorMap = {
+                    '#0b0e14': '#fffaf3',
+                    '#12171f': '#fffaf3',
+                    '#1a1f29': '#f2e8dc',
+                    '#1e2530': '#eadfce',
+                    '#2d3748': '#5c4326',
+                    '#475569': '#3e2d1a',
+                    '#64748b': '#3a3128',
+                    '#94a3b8': '#1f1f1f',
+                    '#a5b4fc': '#000000',
+                    '#6366f1': '#8b5e34',
+                    '#6366f122': '#eadfce',
+                    '#6366f144': '#5c4326',
+                    '#e2e8f0': '#000000',
+                    '#f8fafc': '#000000'
+                };
+                document.querySelectorAll('[style]').forEach(el => {
+                    const original = el.dataset.ccOriginalStyle || el.getAttribute('style') || '';
+                    if (!el.dataset.ccOriginalStyle) el.dataset.ccOriginalStyle = original;
+                    if (!isLight) {
+                        el.setAttribute('style', original);
+                        return;
+                    }
+                    let updated = original;
+                    Object.entries(colorMap).forEach(([from, to]) => {
+                        updated = updated.split(from).join(to);
+                    });
+                    updated = updated
+                        .replace(/color:\s*#(?:cbd5e1|d1d5db|9ca3af|6b7280)/gi, 'color:#000000')
+                        .replace(/border:\s*1px dashed #5c4326/gi, 'border:1px dashed #5c4326')
+                        .replace(/border:\s*1px solid #5c4326/gi, 'border:1px solid #5c4326');
+                    el.setAttribute('style', updated);
+                });
             }
 
             let translationObserverStarted = false;
@@ -1400,6 +1423,7 @@
                     window.__ccTranslateTimer = setTimeout(() => {
                         const lang = localStorage.getItem('cc_lang') || 'ru';
                         applyStaticTranslations(lang);
+                        normalizeLightThemeInlineStyles();
                     }, 0);
                 });
                 observer.observe(document.body, { childList: true, subtree: true, characterData: true });
@@ -1419,24 +1443,13 @@
                 localStorage.setItem('cc_theme', t);
                 document.body.classList.toggle('light', t === 'light');
                 syncFlipToggle(['themeToggle','loginThemeToggle'], t === 'light');
+                normalizeLightThemeInlineStyles();
             };
 
             window.toggleTheme = function() {
                 const current = localStorage.getItem('cc_theme') || 'dark';
                 setTheme(current === 'dark' ? 'light' : 'dark');
             };
-
-            function applyDataI18n(lang) {
-                const dict = TEXTS[lang] || TEXTS.ru;
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.dataset.i18n;
-                    if (dict[key]) el.textContent = dict[key];
-                });
-                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                    const key = el.dataset.i18nPlaceholder;
-                    if (dict[key]) el.setAttribute('placeholder', dict[key]);
-                });
-            }
 
             window.setLang = function(l) {
                 localStorage.setItem('cc_lang', l);
@@ -1445,8 +1458,8 @@
                 const s = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
                 s('loginSubtitle', t.sub); s('loginEmailLabel', t.emailLabel); s('loginClanLabel', t.clanLabel);
                 s('loginBtnText1', t.btn1); s('loginBtnText2', t.btn2); s('loginHintText', t.hint1);
-                applyDataI18n(l);
                 applyStaticTranslations(l);
+                normalizeLightThemeInlineStyles();
             };
 
             window.toggleLang = function() {
