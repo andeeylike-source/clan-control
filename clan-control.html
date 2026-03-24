@@ -34,20 +34,130 @@
         }
 
         body.light {
-            --bg:        #f5efe6;
-            --bg2:       #fffaf3;
-            --bg3:       #f2e8dc;
-            --bg4:       #e8dccb;
-            --border:    #5c4326;
-            --border2:   #3e2d1a;
-            --text:      #000000;
-            --text2:     #111111;
-            --text3:     #1f1f1f;
-            --text4:     #3a3128;
-            --text5:     #5b4a3a;
-            --shadow:    rgba(60,40,10,0.12);
-            --glow:      rgba(139,94,52,0.12);
-            --input-bg:  #ffffff;
+            --bg:        #f4efe7;
+            --bg2:       #fbf7f0;
+            --bg3:       #efe4d6;
+            --bg4:       #e3d3bf;
+            --border:    #7b5a3a;
+            --border2:   #5f442b;
+            --text:      #0b0b0b;
+            --text2:     #20160f;
+            --text3:     #4a3626;
+            --text4:     #705136;
+            --text5:     #9a7550;
+            --accent:    #7a4f2a;
+            --accent-h:  #5f3d21;
+            --accent-s:  #9b6a3d;
+            --shadow:    rgba(58,35,18,0.12);
+            --glow:      rgba(122,79,42,0.12);
+            --input-bg:  #fffdf9;
+        }
+
+        /* polished light theme */
+        body.light .topbar-logo,
+        body.light .login-logo-name { color: #111 !important; }
+        body.light .topbar-logo span,
+        body.light .login-logo-name span { color: var(--accent) !important; }
+        body.light .topbar-clan {
+            display: inline-flex; align-items: center;
+            border: 1px solid var(--border2) !important;
+            background: linear-gradient(180deg, #f8f2e7 0%, #efe2d1 100%) !important;
+            color: var(--text2) !important;
+            box-shadow: 0 6px 16px rgba(95,68,43,.08);
+        }
+        body.light .nav-item:hover,
+        body.light .calendar-day:hover,
+        body.light .dash-alert:hover,
+        body.light .suggestion-item:hover,
+        body.light .dp-day:hover,
+        body.light .dp-month-btn:hover,
+        body.light .dp-year-btn:hover,
+        body.light .dp-shortcut:hover,
+        body.light .pfa-dd-item:hover,
+        body.light .pack-card:hover,
+        body.light .toggle-done-btn:hover,
+        body.light .dp-nav:hover,
+        body.light .dp-month-label:hover {
+            background: var(--bg3) !important;
+            color: var(--text) !important;
+            border-color: var(--border2) !important;
+            box-shadow: none !important;
+        }
+        body.light tr:hover td,
+        body.light .km-row:hover,
+        body.light tr[onclick*="openPlayerProfile"]:hover td,
+        body.light .group:hover td {
+            background: #eadbc8 !important;
+            color: var(--text) !important;
+        }
+        body.light .prf-card,
+        body.light .profile-stat-card,
+        body.light .km-bar-wrap,
+        body.light .modal-card,
+        body.light #dayMinibar,
+        body.light [style*="background:#12171f"],
+        body.light [style*="background: #12171f"],
+        body.light [style*="background:#0b0e14"],
+        body.light [style*="background: #0b0e14"],
+        body.light [style*="background:#1a1f29"],
+        body.light [style*="background: #1a1f29"],
+        body.light [style*="background:#080e0c"],
+        body.light [style*="background: #080e0c"] {
+            background: var(--bg2) !important;
+            color: var(--text2) !important;
+            border-color: var(--border) !important;
+            box-shadow: 0 8px 18px rgba(95,68,43,.05) !important;
+        }
+        body.light [style*="border:1px solid #1e2530"],
+        body.light [style*="border: 1px solid #1e2530"],
+        body.light [style*="border:1px solid #2d3748"],
+        body.light [style*="border: 1px solid #2d3748"],
+        body.light [style*="border:1px solid #6366f1"],
+        body.light [style*="border: 1px solid #6366f1"],
+        body.light [style*="border-bottom:1px solid #1e2530"],
+        body.light [style*="border-bottom: 1px solid #1e2530"] {
+            border-color: var(--border2) !important;
+        }
+        body.light .prf-section-title,
+        body.light .prf-val-label,
+        body.light [style*="color:#475569"],
+        body.light [style*="color: #475569"],
+        body.light [style*="color:#64748b"],
+        body.light [style*="color: #64748b"],
+        body.light [style*="color:#94a3b8"],
+        body.light [style*="color: #94a3b8"],
+        body.light [style*="color:white"],
+        body.light [style*="color: white"],
+        body.light [style*="color:#e2e8f0"],
+        body.light [style*="color: #e2e8f0"] { color: var(--text) !important; }
+        body.light [style*="color:#a5b4fc"],
+        body.light [style*="color: #a5b4fc"],
+        body.light [style*="color:#818cf8"],
+        body.light [style*="color: #818cf8"] { color: var(--accent-s) !important; }
+        body.light [style*="background:#6366f1"],
+        body.light [style*="background: #6366f1"],
+        body.light [style*="background:#6366f122"],
+        body.light [style*="background: #6366f122"],
+        body.light [style*="background:#6366f133"],
+        body.light [style*="background: #6366f133"] {
+            background: rgba(122,79,42,.10) !important;
+            color: var(--text2) !important;
+            border-color: var(--border2) !important;
+        }
+        body.light .profa-tab-btn,
+        body.light .pac-tag,
+        body.light .badge,
+        body.light .btn,
+        body.light button,
+        body.light input,
+        body.light textarea,
+        body.light select { border-color: var(--border) !important; }
+        body.light input,
+        body.light textarea,
+        body.light select { background: #fffdf9 !important; color: #111 !important; }
+        body.light .nav-item.active {
+            background: linear-gradient(180deg, #f0e3d2 0%, #e7d7c4 100%) !important;
+            border-color: var(--border2) !important;
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -62,60 +172,6 @@
             height: 100vh;
             overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
-        }
-
-        body.light,
-        body.light .app-shell,
-        body.light .page,
-        body.light .card,
-        body.light .modal-card,
-        body.light .topbar-user,
-        body.light .dash-alert,
-        body.light .profile-stat-card,
-        body.light .dp-popup,
-        body.light .login-card,
-        body.light .sidebar,
-        body.light .topbar,
-        body.light .day-modal-card,
-        body.light .drawer-card,
-        body.light table,
-        body.light tr,
-        body.light td,
-        body.light th,
-        body.light div,
-        body.light span,
-        body.light p,
-        body.light h1,
-        body.light h2,
-        body.light h3,
-        body.light h4,
-        body.light h5,
-        body.light h6,
-        body.light label,
-        body.light button {
-            color: var(--text);
-        }
-
-        body.light input,
-        body.light textarea,
-        body.light select {
-            color: #000 !important;
-            background: var(--input-bg) !important;
-            border-color: var(--border) !important;
-        }
-
-        body.light .card,
-        body.light .modal-card,
-        body.light .login-card,
-        body.light .sidebar,
-        body.light .topbar,
-        body.light .day-modal-card,
-        body.light .drawer-card,
-        body.light table,
-        body.light tr,
-        body.light td,
-        body.light th {
-            border-color: var(--border) !important;
         }
 
         /* =============================================
@@ -1283,7 +1339,81 @@
                 ['Вс', 'Sun']
             ];
 
-            const UI_ATTRS = {
+            
+            UI_PHRASES.push(
+                ['Клан', 'Clan'],
+                ['Всего', 'Total'],
+                ['Паков', 'Packs'],
+                ['КМ дней', 'War days'],
+                ['Период КМ', 'War period'],
+                ['Начало', 'Start'],
+                ['Конец', 'End'],
+                ['Найти дубли', 'Find duplicates'],
+                ['Снять NEW', 'Clear NEW'],
+                ['Снять ✓', 'Clear ✓'],
+                ['Сброс статы', 'Reset stats'],
+                ['Игрок', 'Player'],
+                ['Импорт из скриншота клана', 'Import clan screenshot'],
+                ['ник', 'nickname'],
+                ['профа', 'class'],
+                ['пак', 'pack'],
+                ['ценность', 'value'],
+                ['действия', 'actions'],
+                ['Редактировать', 'Edit'],
+                ['Назад', 'Back'],
+                ['Убийства', 'Kills'],
+                ['Смерти', 'Deaths'],
+                ['Ценность для клана', 'Value for clan'],
+                ['Средняя', 'Average'],
+                ['Лучший КМ', 'Best war'],
+                ['Худший КМ', 'Worst war'],
+                ['Место в клане', 'Clan rank'],
+                ['Тренд формы', 'Form trend'],
+                ['История КМ', 'War history'],
+                ['Среди своего класса', 'Among class'],
+                ['Среди своей роли', 'Among role'],
+                ['Стиль игры', 'Play style'],
+                ['Явка', 'Attendance'],
+                ['Живучесть', 'Survivability'],
+                ['Рейтинг класса', 'Class rating'],
+                ['Рейтинг клана', 'Clan rating'],
+                ['Хилер/Баффер', 'Healer/Buffer'],
+                ['Рейд Паки', 'Raid packs'],
+                ['Участников', 'Members'],
+                ['Настройки', 'Settings'],
+                ['API ключи', 'API keys'],
+                ['Ключи хранятся только в твоём браузере — не в коде и не на GitHub. Получить ключ:', 'Keys are stored only in your browser — not in code and not on GitHub. Get a key:'],
+                ['Добавить ключ', 'Add key'],
+                ['Сохранить ключи', 'Save keys'],
+                ['Проверить', 'Check'],
+                ['Сбросить счётчик', 'Reset counter'],
+                ['Веса ценности', 'Value weights'],
+                ['Настрой формулу расчёта "ценности" для каждой роли. Сумма весов должна быть 100%.', 'Configure the value formula for each role. The total weight must be 100%.'],
+                ['Танк', 'Tank'],
+                ['Календарь КМ', 'War Calendar'],
+                ['История КМ', 'War History'],
+                ['Дашборд', 'Dashboard'],
+                ['Статистика', 'Statistics'],
+                ['Архив', 'Archive'],
+                ['Бэкап данных', 'Data backup'],
+                ['Аналитика', 'Analytics'],
+                ['Управление', 'Management'],
+                ['Система', 'System'],
+                ['Поиск по нику...', 'Search by nickname...'],
+                ['Поиск профы...', 'Search class...'],
+                ['Добавить профу', 'Add class'],
+                ['Профиль', 'Profile'],
+                ['Нет данных', 'No data'],
+                ['ОТСУТСТВОВАЛ', 'ABSENT'],
+                ['другая профа', 'other class'],
+                ['убийств', 'kills'],
+                ['смертей', 'deaths'],
+                ['сравнение последних 3 КМ', 'comparison of the last 3 wars'],
+                ['Дата', 'Date'],
+                ['Активность', 'Activity']
+            );
+
+const UI_ATTRS = {
                 title: {
                     'Настройки': 'Settings',
                     'Выйти': 'Sign out',
@@ -1322,27 +1452,13 @@
 
             function replaceExactText(value, map) {
                 if (!value || !map) return value;
-                const trimmed = value.trim();
-                if (!trimmed) return value;
-                const replacement = map[trimmed];
-                if (!replacement) return value;
-                const start = value.indexOf(trimmed);
-                return value.slice(0, start) + replacement + value.slice(start + trimmed.length);
-            }
-
-            function escapeRegExp(str) {
-                return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }
-
-            function replaceTextDeep(value, map) {
-                if (!value || !map) return value;
-                let result = value;
-                const keys = Object.keys(map).sort((a, b) => b.length - a.length);
-                keys.forEach(key => {
-                    if (!key || !result.includes(key)) return;
-                    result = result.replace(new RegExp(escapeRegExp(key), 'g'), map[key]);
-                });
-                return result;
+                let out = value;
+                const entries = Object.entries(map).sort((a,b) => b[0].length - a[0].length);
+                for (const [from, to] of entries) {
+                    if (!from || from === to || typeof out !== 'string' || !out.includes(from)) continue;
+                    out = out.split(from).join(to);
+                }
+                return out;
             }
 
             function applyStaticTranslations(lang) {
@@ -1360,7 +1476,7 @@
                 const nodes = [];
                 while (walker.nextNode()) nodes.push(walker.currentNode);
                 nodes.forEach(node => {
-                    const replaced = replaceTextDeep(node.nodeValue, textMap);
+                    const replaced = replaceExactText(node.nodeValue, textMap);
                     if (replaced !== node.nodeValue) node.nodeValue = replaced;
                 });
 
@@ -1368,50 +1484,13 @@
                     ['title', 'placeholder', 'aria-label'].forEach(attr => {
                         if (!el.hasAttribute || !el.hasAttribute(attr)) return;
                         const current = el.getAttribute(attr);
-                        const replaced = replaceTextDeep(current, attrMaps[attr]);
+                        const replaced = replaceExactText(current, attrMaps[attr]);
                         if (replaced !== current) el.setAttribute(attr, replaced);
                     });
                 });
 
-                document.title = 'Clan Control v12';
+                document.title = lang === 'en' ? 'Clan Control v12' : 'Clan Control v12';
                 document.documentElement.lang = lang;
-            }
-
-            function normalizeLightThemeInlineStyles() {
-                const isLight = document.body.classList.contains('light');
-                const colorMap = {
-                    '#0b0e14': '#fffaf3',
-                    '#12171f': '#fffaf3',
-                    '#1a1f29': '#f2e8dc',
-                    '#1e2530': '#eadfce',
-                    '#2d3748': '#5c4326',
-                    '#475569': '#3e2d1a',
-                    '#64748b': '#3a3128',
-                    '#94a3b8': '#1f1f1f',
-                    '#a5b4fc': '#000000',
-                    '#6366f1': '#8b5e34',
-                    '#6366f122': '#eadfce',
-                    '#6366f144': '#5c4326',
-                    '#e2e8f0': '#000000',
-                    '#f8fafc': '#000000'
-                };
-                document.querySelectorAll('[style]').forEach(el => {
-                    const original = el.dataset.ccOriginalStyle || el.getAttribute('style') || '';
-                    if (!el.dataset.ccOriginalStyle) el.dataset.ccOriginalStyle = original;
-                    if (!isLight) {
-                        el.setAttribute('style', original);
-                        return;
-                    }
-                    let updated = original;
-                    Object.entries(colorMap).forEach(([from, to]) => {
-                        updated = updated.split(from).join(to);
-                    });
-                    updated = updated
-                        .replace(/color:\s*#(?:cbd5e1|d1d5db|9ca3af|6b7280)/gi, 'color:#000000')
-                        .replace(/border:\s*1px dashed #5c4326/gi, 'border:1px dashed #5c4326')
-                        .replace(/border:\s*1px solid #5c4326/gi, 'border:1px solid #5c4326');
-                    el.setAttribute('style', updated);
-                });
             }
 
             let translationObserverStarted = false;
@@ -1423,7 +1502,6 @@
                     window.__ccTranslateTimer = setTimeout(() => {
                         const lang = localStorage.getItem('cc_lang') || 'ru';
                         applyStaticTranslations(lang);
-                        normalizeLightThemeInlineStyles();
                     }, 0);
                 });
                 observer.observe(document.body, { childList: true, subtree: true, characterData: true });
@@ -1443,7 +1521,6 @@
                 localStorage.setItem('cc_theme', t);
                 document.body.classList.toggle('light', t === 'light');
                 syncFlipToggle(['themeToggle','loginThemeToggle'], t === 'light');
-                normalizeLightThemeInlineStyles();
             };
 
             window.toggleTheme = function() {
@@ -1459,7 +1536,6 @@
                 s('loginSubtitle', t.sub); s('loginEmailLabel', t.emailLabel); s('loginClanLabel', t.clanLabel);
                 s('loginBtnText1', t.btn1); s('loginBtnText2', t.btn2); s('loginHintText', t.hint1);
                 applyStaticTranslations(l);
-                normalizeLightThemeInlineStyles();
             };
 
             window.toggleLang = function() {
