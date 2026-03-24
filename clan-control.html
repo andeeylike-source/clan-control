@@ -6,517 +6,384 @@
     <title>Clan Control v12</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        body.theme-light {
-            background-color: #eef3f1;
-            color: #0f1f1b;
-        }
-            margin-top: 58px;
-            height: calc(100vh - 58px);
-            margin-top: 58px;
-            height: calc(100vh - 58px);
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+        /* =============================================
+           CSS ПЕРЕМЕННЫЕ
+        ============================================= */
         :root {
-            --bg-primary: #0b0e14;
-            --bg-secondary: #12171f;
-            --bg-tertiary: #1a1f29;
-            --border-color: #1e2530;
-            --text-primary: #ffffff;
-            --text-muted: #94a3b8;
-            --accent: #14b8a6;
-            --accent-strong: #0d9488;
-            --accent-soft: #14b8a622;
+            --bg:        #080e0c;
+            --bg2:       #0d1510;
+            --bg3:       #131f18;
+            --bg4:       #1a2a20;
+            --border:    #1e3028;
+            --border2:   #2a4035;
+            --text:      #e8f0eb;
+            --text2:     #c5d8cb;
+            --text3:     #7a9e88;
+            --text4:     #4d7060;
+            --text5:     #2d4a38;
+            --accent:    #c9a84c;
+            --accent-h:  #b8922e;
+            --accent-s:  #e8c97a;
+            --accent2-s: #22c55e;
+            --shadow:    rgba(0,0,0,0.7);
+            --glow:      rgba(201,168,76,0.1);
+            --input-bg:  #080e0c;
+            --topbar-h:  52px;
         }
 
-        body[data-theme="light"] {
-            --bg-primary: #eef3f1;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #ecf2ef;
-            --border-color: #c8d8d1;
-            --text-primary: #10231f;
-            --text-muted: #476c62;
-            --accent: #0f766e;
-            --accent-strong: #115e59;
-            --accent-soft: #0f766e1a;
+        body.light {
+            --bg:        #f0f4f1;
+            --bg2:       #ffffff;
+            --bg3:       #f6f9f7;
+            --bg4:       #edf3ef;
+            --border:    #d4e0d8;
+            --border2:   #b8ccbe;
+            --text:      #0d1a12;
+            --text2:     #1e3328;
+            --text3:     #4a7058;
+            --text4:     #6a9078;
+            --text5:     #9ab8a4;
+            --shadow:    rgba(0,0,0,0.08);
+            --glow:      rgba(201,168,76,0.05);
+            --input-bg:  #f6f9f7;
         }
+
+        *, *::before, *::after { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             display: flex;
+            flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
+        /* =============================================
+           LOGIN SCREEN
+        ============================================= */
+        #loginScreen {
+            position: fixed; inset: 0; z-index: 9000;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        #loginScreen.hidden { display: none; }
+
+        .login-bg-art { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .login-bg-art::before {
+            content: ''; position: absolute; top: -20%; left: -10%; width: 70%; height: 140%;
+            background: linear-gradient(135deg, transparent 48%, rgba(201,168,76,0.04) 49%, rgba(201,168,76,0.04) 50%, transparent 51%);
+            transform: rotate(-14deg);
+        }
+        .login-bg-art::after {
+            content: ''; position: absolute; top: 15%; right: -5%; width: 55%; height: 90%;
+            background: linear-gradient(135deg, transparent 44%, rgba(201,168,76,0.03) 45%, rgba(201,168,76,0.03) 46%, transparent 47%);
+            transform: rotate(9deg);
+        }
+        .login-glow {
+            position: absolute; width: 600px; height: 600px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(29,185,84,0.04) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .login-line { position: absolute; background: linear-gradient(90deg, transparent, rgba(201,168,76,0.22), transparent); height: 1px; }
+        .login-line-1 { top: 24%; left: 4%; width: 36%; transform: rotate(-13deg); }
+        .login-line-2 { bottom: 26%; right: 5%; width: 26%; transform: rotate(8deg); }
+        .login-line-3 { top: 62%; left: 52%; width: 20%; transform: rotate(-5deg); }
+
+        .login-wrap { position: relative; z-index: 2; width: 100%; max-width: 420px; padding: 24px; }
+
+        .login-top-bar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 32px; }
+
+        .login-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0 40px 40px;
+            box-shadow: 0 0 0 1px rgba(201,168,76,0.06), 0 24px 60px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.03);
+            animation: loginIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+        @keyframes loginIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .login-card-top-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent) 40%, var(--accent-s) 60%, transparent);
+            margin: 0 -40px 36px;
+            opacity: 0.5;
+        }
+        .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .login-logo-icon { font-size: 24px; }
+        .login-logo-name { font-size: 21px; font-weight: 900; letter-spacing: -0.5px; color: var(--text); }
+        .login-logo-name span { color: var(--accent); }
+        .login-subtitle { font-size: 13px; color: var(--text3); line-height: 1.6; margin-bottom: 28px; }
+
+        .login-progress { display: flex; gap: 6px; margin-bottom: 24px; }
+        .login-progress-dot { height: 2px; flex: 1; border-radius: 2px; background: var(--border); transition: background 0.4s; }
+        .login-progress-dot.done { background: var(--accent); }
+
+        .login-step { display: none; }
+        .login-step.active { display: block; }
+
+        .login-back {
+            background: none; border: none; color: var(--text3); font-size: 12px; cursor: pointer;
+            font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 5px;
+            padding: 0; margin-bottom: 18px; transition: color 0.2s;
+        }
+        .login-back:hover { color: var(--accent); }
+
+        .login-step-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--text4);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+        }
+        .login-step-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 17px; height: 17px; border-radius: 50%;
+            background: var(--accent); color: #080e0c; font-size: 9px; font-weight: 900; flex-shrink: 0;
+        }
+        .login-input {
+            width: 100%; background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--text);
+            outline: none; font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 16px;
+        }
+        .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+        .login-input::placeholder { color: var(--text5); }
+        .login-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+        .login-btn {
+            width: 100%; background: var(--accent); color: #080e0c; border: none;
+            border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .login-btn:hover { background: var(--accent-s); box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+        .login-btn:active { transform: scale(0.98); }
+        .login-hint { font-size: 11px; color: var(--text4); text-align: center; margin-top: 12px; line-height: 1.6; }
+
+        /* =============================================
+           TOPBAR
+        ============================================= */
+        #topbar {
+            height: var(--topbar-h);
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center;
+            padding: 0 20px; gap: 10px;
+            flex-shrink: 0; position: relative; z-index: 300;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        #topbar.hidden { display: none; }
+
+        .topbar-logo { font-size: 15px; font-weight: 900; letter-spacing: -0.3px; color: var(--text); white-space: nowrap; margin-right: auto; }
+        .topbar-logo span { color: var(--accent); }
+        .topbar-right { display: flex; align-items: center; gap: 6px; }
+
+        .topbar-icon-btn {
+            width: 34px; height: 34px; border-radius: 9px;
+            border: 1px solid var(--border); background: var(--bg3);
+            color: var(--text3); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; font-size: 15px; flex-shrink: 0;
+        }
+        .topbar-icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--glow); }
+
+        .topbar-divider { width: 1px; height: 18px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
+
+        .topbar-clan {
+            font-size: 10px; font-weight: 700; color: var(--accent);
+            background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.18);
+            border-radius: 7px; padding: 4px 10px; text-transform: uppercase;
+            letter-spacing: 0.06em; white-space: nowrap;
+        }
+
+        .topbar-user {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 10px 4px 5px; border-radius: 9px;
+            border: 1px solid var(--border); background: var(--bg3);
+            cursor: default; transition: all 0.2s;
+        }
+        .topbar-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #1db954);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 900; color: #080e0c;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+        .topbar-user-email {
+            font-size: 12px; font-weight: 500; color: var(--text2);
+            max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        /* =============================================
+           SEGMENTED TOGGLE
+        ============================================= */
+        .seg-toggle {
+            display: inline-flex; align-items: center;
+            background: var(--bg3); border-radius: 9px;
+            padding: 3px; border: 1px solid var(--border); gap: 2px;
+        }
+        .seg-toggle-btn {
+            background: none; border: none; border-radius: 6px;
+            padding: 5px 11px; font-size: 11px; font-weight: 700;
+            cursor: pointer; color: var(--text4);
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+            white-space: nowrap; letter-spacing: 0.02em;
+        }
+        .seg-toggle-btn.active { background: var(--accent); color: #080e0c; box-shadow: 0 1px 6px rgba(201,168,76,0.3); }
+        .seg-toggle-btn:not(.active):hover { color: var(--text2); background: var(--border); }
+
+        /* =============================================
+           LAYOUT
+        ============================================= */
+        #appLayout { display: flex; flex: 1; overflow: hidden; }
+        #appLayout.hidden { display: none; }
+
         .sidebar {
-            width: 240px;
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            margin-top: 58px;
-            height: calc(100vh - 58px);
+            width: 224px;
+            background-color: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 14px 10px; flex-shrink: 0; overflow-y: auto;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .sidebar-section-label {
+            font-size: 9px; font-weight: 800; color: var(--text5);
+            text-transform: uppercase; letter-spacing: 0.12em;
+            padding: 6px 10px 3px; margin-top: 6px;
         }
 
         .main-content {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-            visibility: hidden;
-            margin-top: 58px;
-            height: calc(100vh - 58px);
+            flex: 1; padding: 32px 36px; overflow-y: auto;
+            background: var(--bg); visibility: hidden;
+            transition: background-color 0.3s;
         }
-        .main-content.ready {
-            visibility: visible;
-        }
+        .main-content.ready { visibility: visible; }
 
+        /* =============================================
+           NAV
+        ============================================= */
         .nav-item {
-            display: flex;
-            align-items: center;
-        .app-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 58px;
-            z-index: 700;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            background: linear-gradient(110deg, #07171a 0%, #071214 45%, #081d1a 100%);
-            border-bottom: 1px solid #12332e;
-            box-shadow: inset 0 -1px 0 #0f2a26;
+            display: flex; align-items: center;
+            padding: 9px 10px; border-radius: 8px; margin-bottom: 2px;
+            color: var(--text3); text-decoration: none;
+            transition: all 0.2s; cursor: pointer; font-size: 13px; gap: 2px;
         }
-        .header-brand { font-size: 26px; font-weight: 900; color: #e2fef6; letter-spacing: -0.03em; }
-        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-        .header-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 8px 11px; border-radius: 11px;
-            background: #0d211f; border: 1px solid #1f433e; color: #d2f8ef;
-            font-size: 12px; font-weight: 700;
-        }
-        .header-btn {
-            background: #102725; border: 1px solid #2a4f48; color: #c7f8ec;
-            border-radius: 10px; padding: 8px 12px; cursor: pointer;
-            font-size: 12px; font-weight: 700;
-        }
-        .header-btn:hover { filter: brightness(1.12); }
-
-        .toggle-switch {
-            position: relative; width: 46px; height: 24px; border-radius: 30px;
-            background: #334155; border: 1px solid #475569; cursor: pointer; transition: background .2s;
-        }
-        .toggle-switch::after {
-            content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
-            border-radius: 50%; background: #fff; transition: transform .2s;
-        }
-        .toggle-switch.active { background: #14b8a6; border-color: #14b8a6; }
-        .toggle-switch.active::after { transform: translateX(22px); }
-
-        .auth-overlay {
-            position: fixed; inset: 0; z-index: 1000; display: none;
-            align-items: center; justify-content: center; padding: 24px;
-            background: radial-gradient(circle at 20% 20%, #0b3b3426 0%, transparent 30%), linear-gradient(135deg, #05070a 0%, #0b1418 60%, #0f201d 100%);
-        }
-        .auth-overlay.open { display: flex; }
-        .auth-card {
-            width: min(480px, 94vw); border-radius: 18px;
-            background: #12171f; border: 1px solid #1e2530;
-            box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px #14b8a622 inset;
-            padding: 28px;
-        }
-        .auth-step { display: none; }
-        .auth-step.active { display: block; }
-        .status-hint {
-            margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 12px;
-            border: 1px solid #14b8a655; background: #14b8a622; color: #d8f5ef;
+        .nav-item:hover { background-color: var(--bg4); color: var(--text); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(201,168,76,0.1), transparent);
+            border-left: 2px solid var(--accent);
+            color: var(--accent-s); font-weight: 600; padding-left: 8px;
         }
 
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .nav-item:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
-        .nav-item.active { background-color: var(--border-color); color: var(--accent); font-weight: 600; }
-
-        .card { background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; }
+        /* =============================================
+           CARDS & TABLES
+        ============================================= */
+        .card { background-color: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: background-color 0.3s, border-color 0.3s; }
 
         table { width: 100%; border-collapse: collapse; }
-        th { color: #64748b; font-size: 11px; text-transform: uppercase; padding: 16px; text-align: left; border-bottom: 1px solid #1e2530; cursor: pointer; }
-        td { padding: 16px; border-bottom: 1px solid #1e2530; font-size: 14px; }
+        th { color: var(--text4); font-size: 11px; text-transform: uppercase; padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); cursor: pointer; letter-spacing: 0.05em; }
+        td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text2); }
+        tr:hover td { background: var(--bg3); }
 
         .badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 8px; text-transform: uppercase; }
-        .badge-кл { background: #f59e0b; color: #000; }
-        .badge-пл { background: #3b82f6; color: #fff; }
-        .badge-игрок { background: #475569; color: #fff; }
+        .badge-кл { background: rgba(201,168,76,0.15); color: var(--accent-s); border: 1px solid rgba(201,168,76,0.25); }
+        .badge-пл { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+        .badge-игрок { background: var(--bg4); color: var(--text3); border: 1px solid var(--border2); }
 
-        .pac-tag { background: #1e2530; padding: 4px 12px; border-radius: 6px; font-size: 11px; color: #94a3b8; border: 1px solid #2d3748; text-transform: uppercase; }
+        .pac-tag { background: var(--bg4); padding: 4px 12px; border-radius: 6px; font-size: 11px; color: var(--text3); border: 1px solid var(--border2); text-transform: uppercase; }
         *:hover > .km-edit-btn, span:hover .km-edit-btn { opacity: 1 !important; }
 
-        .btn-primary { background-color: var(--accent); color: #ffffff; padding: 10px 20px; border-radius: 10px; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer; }
-        .btn-primary:hover { background-color: var(--accent-strong); }
+        .btn-primary { background-color: var(--accent); color: #080e0c; padding: 10px 20px; border-radius: 10px; font-weight: 700; transition: all 0.2s; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .btn-primary:hover { background-color: var(--accent-s); box-shadow: 0 4px 16px rgba(201,168,76,0.25); }
 
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(4px);
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+            z-index: 100; backdrop-filter: blur(6px);
         }
 
         .input-dark {
-            width: 100%;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            color: white;
-            outline: none;
-            box-sizing: border-box;
+            width: 100%; background-color: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px; color: var(--text); outline: none;
+            box-sizing: border-box; font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s; font-size: 14px;
         }
-
-        .input-dark:focus { border-color: var(--accent); }
-
-        .auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 20% 20%, #0b3b3426 0%, transparent 30%), linear-gradient(135deg, #05070a 0%, #0b1418 60%, #0f201d 100%);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-        .auth-overlay.open { display: flex; }
-        .auth-card {
-            width: min(480px, 94vw);
-            border-radius: 18px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px #14b8a622 inset;
-            padding: 28px;
-        }
-        .auth-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
-        .auth-step { display: none; }
-        .auth-step.active { display: block; }
-        .status-hint {
-            margin-top: 12px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            border: 1px solid #14b8a655;
-            background: var(--accent-soft);
-            color: var(--text-primary);
-        }
-        .dual-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-        .toggle-switch {
-            position: relative;
-            width: 46px;
-            height: 24px;
-            border-radius: 30px;
-            background: #334155;
-            border: 1px solid #475569;
-            cursor: pointer;
-            transition: background .2s;
-            flex-shrink: 0;
-        }
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #fff;
-            transition: transform .2s;
-        }
-        .toggle-switch.active {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-        .toggle-switch.active::after { transform: translateX(22px); }
-
-        .app-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 58px;
-            z-index: 700;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            background:
-                linear-gradient(110deg, #07171a 0%, #071214 45%, #081d1a 100%);
-            border-bottom: 1px solid #12332e;
-            box-shadow: inset 0 -1px 0 #0f2a26;
-        }
-        .header-brand {
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            font-size: 26px;
-            color: #e2fef6;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-        .header-pill {
-            background: #0d211f;
-            border: 1px solid #1f433e;
-            color: #d2f8ef;
-            border-radius: 11px;
-            padding: 8px 11px;
-            .app-header { height: auto; min-height: 58px; padding: 8px 10px; }
-            .header-brand { font-size: 20px; }
-                width: 100%; position: fixed; top: 58px; left: 0; z-index: 400;
-            .main-content { padding: 16px; margin-top: 110px; }
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-        }
-        .header-btn {
-            background: #102725;
-            border: 1px solid #2a4f48;
-            color: #c7f8ec;
-            border-radius: 10px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .header-btn:hover { filter: brightness(1.12); }
+        .input-dark::placeholder { color: var(--text5); }
+        .input-dark:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,168,76,0.1); }
+        select.input-dark { cursor: pointer; }
 
         .autocomplete-suggestions {
-            position: absolute;
-            background: #1a1f29;
-            border: 1px solid #6366f1;
-            border-radius: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            width: 100%;
-            z-index: 1000;
-            margin-top: 4px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            position: absolute; background: var(--bg3); border: 1px solid var(--accent);
+            border-radius: 10px; max-height: 250px; overflow-y: auto;
+            width: 100%; z-index: 1000; margin-top: 4px; box-shadow: 0 10px 30px var(--shadow);
         }
-        .suggestion-item { 
-            padding: 12px 15px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            border-bottom: 1px solid #2d3748;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .suggestion-item { padding: 11px 14px; cursor: pointer; transition: all 0.15s; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text2); font-size: 13px; }
         .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover { background: #6366f1; }
+        .suggestion-item:hover { background: rgba(201,168,76,0.1); color: var(--accent-s); }
 
         .page-section { display: none; }
         .page-section.active { display: block; }
 
-        .pack-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-        
-        .pack-card {
-            background-color: #12171f;
-            border: 1px solid #1e2530;
-            border-radius: 12px;
-            padding: 24px;
-            transition: all 0.2s;
-            cursor: pointer;
-            position: relative;
-        }
-        .pack-card:hover { border-color: #6366f1; transform: translateY(-2px); }
+        .pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+        .pack-card { background-color: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
+        .pack-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity 0.2s; }
+        .pack-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+        .pack-card:hover::after { opacity: 0.4; }
 
-        .member-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #1a1f29;
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 1px solid #1e2530;
-            margin-bottom: 8px;
-        }
+        .member-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg3); padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 8px; }
 
-        /* ===== КАЛЕНДАРЬ ===== */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            background: #1e2530;
-            border: 1px solid #1e2530;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .calendar-header-cell {
-            background: #12171f;
-            padding: 15px;
-            text-align: center;
-            font-size: 11px;
-            font-weight: 800;
-            color: #64748b;
-            text-transform: uppercase;
-        }
-        .calendar-day {
-            background: #12171f;
-            min-height: 100px;
-            padding: 10px;
-            transition: background 0.2s;
-            cursor: pointer;
-            position: relative;
-        }
-        .calendar-day:hover { background: #1a1f29; }
-        .calendar-day.today { background: #0b0e14; outline: 1px solid #6366f155; }
-        .calendar-day.other-month { opacity: 0.3; pointer-events: none; }
-        .day-number { font-weight: 700; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-        
-        /* Точки статуса */
-        .status-dots {
-            display: flex;
-            gap: 3px;
-            align-items: center;
-        }
-        .dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        /* =============================================
+           CALENDAR
+        ============================================= */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .calendar-header-cell { background: var(--bg2); padding: 14px; text-align: center; font-size: 10px; font-weight: 800; color: var(--text4); text-transform: uppercase; letter-spacing: 0.08em; }
+        .calendar-day { background: var(--bg2); min-height: 96px; padding: 10px; transition: background 0.15s; cursor: pointer; position: relative; }
+        .calendar-day:hover { background: var(--bg3); }
+        .calendar-day.today { background: var(--bg); outline: 1px solid rgba(201,168,76,0.28); }
+        .calendar-day.other-month { opacity: 0.22; pointer-events: none; }
+        .day-number { font-weight: 700; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; color: var(--text2); }
+
+        .status-dots { display: flex; gap: 3px; align-items: center; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .dot-past { background: #ef4444; }
-        .dot-done { background: #22c55e; }
+        .dot-done { background: var(--accent2-s); }
         .dot-future { background: #3b82f6; }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
         .dot-blink { animation: blink 1.2s ease-in-out infinite; }
 
-        .event-chip {
-            font-size: 10px;
-            padding: 3px 7px;
-            border-radius: 4px;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-weight: 600;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 4px;
-            cursor: pointer;
-            transition: filter 0.15s;
-        }
+        .event-chip { font-size: 10px; padding: 3px 7px; border-radius: 4px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; gap: 4px; cursor: pointer; transition: filter 0.15s; }
         .event-chip:hover { filter: brightness(1.2); }
-        .event-epic { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b44; }
-        .event-siege { background: #ef444422; color: #ef4444; border: 1px solid #ef444444; }
-        .event-tv { background: #3b82f622; color: #3b82f6; border: 1px solid #3b82f644; }
-        .event-manual { background: #6366f122; color: #a5b4fc; border: 1px solid #6366f144; }
-        .event-done { opacity: 0.5; text-decoration: line-through; }
+        .event-epic   { background: rgba(201,168,76,0.1); color: var(--accent-s); border: 1px solid rgba(201,168,76,0.22); }
+        .event-siege  { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.22); }
+        .event-tv     { background: rgba(59,130,246,0.1); color: #93c5fd; border: 1px solid rgba(59,130,246,0.22); }
+        .event-manual { background: rgba(29,185,84,0.1); color: #86efac; border: 1px solid rgba(29,185,84,0.22); }
+        .event-done   { opacity: 0.4; text-decoration: line-through; }
+        .event-time   { font-size: 9px; opacity: 0.6; font-weight: 400; flex-shrink: 0; }
+        .km-stat-badge { position: absolute; bottom: 6px; right: 8px; font-size: 9px; color: var(--text4); background: var(--border); border-radius: 4px; padding: 1px 5px; }
 
-        .event-time { font-size: 9px; opacity: 0.7; font-weight: 400; flex-shrink: 0; }
-
-        /* Статистика КМ на дне */
-        .km-stat-badge {
-            position: absolute;
-            bottom: 6px;
-            right: 8px;
-            font-size: 9px;
-            color: #64748b;
-            background: #1e2530;
-            border-radius: 4px;
-            padding: 1px 5px;
-        }
-    <div id="authOverlay" class="auth-overlay">
-        <div class="auth-card">
-            <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#14b8a6;font-weight:800">Clan Control Secure Entry</div>
-            <h2 id="authTitle" style="font-size:28px;font-weight:900;margin:8px 0 0">Вход по email</h2>
-            <p id="authSubtitle" style="color:#94a3b8;font-size:13px;margin-top:6px">Шаг 1/2: введи email и получи magic-link.</p>
-            <div id="authStepEmail" class="auth-step active" style="margin-top:20px">
-                <input id="authEmailInput" type="email" class="input-dark" placeholder="name@example.com">
-                <button id="authSendBtn" onclick="sendMagicLink()" class="btn-primary" style="width:100%;margin-top:12px">Отправить ссылку</button>
-                <div id="authEmailStatus" class="status-hint" style="display:none"></div>
-            </div>
-            <div id="authStepConfirm" class="auth-step" style="margin-top:20px">
-                <div class="status-hint">Мы отправили ссылку на <b id="authMaskedEmail"></b>. Открой почту и вернись сюда.</div>
-                <button onclick="confirmMagicLink()" class="btn-primary" style="width:100%;margin-top:12px">Я подтвердил вход</button>
-                <button onclick="resetAuthFlow()" style="width:100%;margin-top:8px;background:none;border:1px solid #1e2530;color:#94a3b8;padding:10px 14px;border-radius:10px;cursor:pointer">Изменить email</button>
-            </div>
-            <div id="clanNameBlock" class="auth-step" style="margin-top:20px">
-                <label for="clanNameInput" style="font-size:12px;color:#94a3b8;display:block;margin-bottom:6px">Название клана</label>
-                <input id="clanNameInput" type="text" class="input-dark" placeholder="Например: Night Owls">
-                <button onclick="saveClanNameAndFinish()" class="btn-primary" style="width:100%;margin-top:12px">Продолжить</button>
-            </div>
-        </div>
-    </div>
-    <header class="app-header">
-        <div class="header-brand">⚔ ClanControl</div>
-        <div class="header-right">
-            <button id="headerSettingsBtn" class="header-btn" onclick="showPage('settings')">⚙️ Настройки</button>
-            <div class="header-pill">
-                <span>🌙</span>
-                <button id="themeToggle" class="toggle-switch active" type="button" onclick="toggleTheme()"></button>
-                <span>☀️</span>
-            </div>
-            <div class="header-pill">
-                <span>RU</span>
-                <button id="langToggle" class="toggle-switch" type="button" onclick="toggleLanguage()"></button>
-                <span>EN</span>
-            </div>
-            <div class="header-pill" id="headerEmailPill">📧 —</div>
-            <button id="logoutBtn" class="header-btn" onclick="logoutAuth()">↪ Выход</button>
-        </div>
-    </header>
-
-        
-            <div onclick="showPage('settings')" id="nav-settings" class="nav-item" style="display:none">⚙️ Настройки</div>
+        /* =============================================
+           MOBILE
+        ============================================= */
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow: auto; }
-            .app-header { height: auto; min-height: 58px; padding: 8px 10px; }
-            .header-brand { font-size: 20px; }
-            .sidebar { 
-                width: 100%; position: fixed; top: 58px; left: 0; z-index: 400;
-                flex-direction: row; padding: 10px 16px; gap: 8px;
-                overflow-x: auto; border-right: none; border-bottom: 1px solid #1e2530;
-                align-items: center; height: auto;
-            }
-            .sidebar h2 { font-size: 14px; white-space: nowrap; }
-            .sidebar > div:last-child { display: none; }
-            .sidebar nav { display: flex; gap: 4px; flex-wrap: nowrap; }
-            .sidebar nav > div[style*="font-size:9px"] { display: none; }
-            .nav-item { padding: 8px 12px; font-size: 12px; white-space: nowrap; margin-bottom: 0; }
-            .main-content { padding: 16px; margin-top: 110px; }
-            .main-content h1 { font-size: 22px !important; }
+            body { overflow: auto; }
+            #topbar { padding: 0 14px; }
+            .topbar-user-email { display: none; }
+            .topbar-clan { display: none; }
+            #appLayout { flex-direction: column; }
+            .sidebar { width: 100%; position: fixed; top: var(--topbar-h); left: 0; z-index: 200; flex-direction: row; padding: 8px 14px; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); align-items: center; height: auto; gap: 4px; }
+            .sidebar-section-label { display: none; }
+            .nav-item { padding: 8px 12px; font-size: 12px; white-space: nowrap; margin-bottom: 0; border-left: none !important; padding-left: 12px !important; }
+            .nav-item.active { border-left: none !important; border-bottom: 2px solid var(--accent); border-radius: 8px 8px 0 0; }
+            .main-content { padding: 16px; margin-top: calc(var(--topbar-h) + 48px); }
+            .main-content h1 { font-size: 20px !important; }
             .pack-grid { grid-template-columns: 1fr; }
-            .calendar-grid { font-size: 10px; }
-            .calendar-day { min-height: 80px; padding: 6px; }
+            .calendar-day { min-height: 72px; padding: 6px; }
             .event-chip { font-size: 8px; }
             .event-modal-card { width: 96vw !important; max-height: 92vh; }
             .card.w-\[450px\], .card.w-\[400px\] { width: 94vw !important; }
@@ -524,219 +391,207 @@
             th, td { padding: 10px 8px; }
         }
         @media (max-width: 480px) {
-            .calendar-day { min-height: 60px; }
+            .calendar-day { min-height: 56px; }
             .day-number { font-size: 11px; }
             .km-stat-badge { font-size: 8px; }
         }
 
-        /* ===== ДАШБОРД ===== */
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .dash-card { background: #12171f; border: 1px solid #1e2530; border-radius: 14px; padding: 20px; transition: border-color .2s; }
-        .dash-card:hover { border-color: #2d3748; }
-        .dash-card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #475569; letter-spacing: .08em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .dash-big-num { font-size: 32px; font-weight: 900; line-height: 1; }
-        .dash-sub { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .dash-alert { display: flex; gap: 12px; padding: 12px 16px; background: #0b0e14; border-radius: 10px; border-left: 3px solid #ef4444; margin-bottom: 8px; cursor: pointer; transition: background .15s; }
-        .dash-alert:hover { background: #12171f; }
+        /* =============================================
+           DASHBOARD
+        ============================================= */
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .dash-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: border-color .2s; }
+        .dash-card:hover { border-color: var(--border2); }
+        .dash-card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text5); letter-spacing: .1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .dash-big-num { font-size: 30px; font-weight: 900; line-height: 1; color: var(--text); }
+        .dash-sub { font-size: 11px; color: var(--text4); margin-top: 4px; }
+        .dash-alert { display: flex; gap: 12px; padding: 11px 14px; background: var(--bg); border-radius: 10px; border-left: 2px solid #ef4444; margin-bottom: 7px; cursor: pointer; transition: background .15s; }
+        .dash-alert:hover { background: var(--bg3); }
         .dash-alert-warn { border-left-color: #f59e0b; }
         .dash-alert-info { border-left-color: #3b82f6; }
-        .dash-alert-good { border-left-color: #22c55e; }
+        .dash-alert-good { border-left-color: var(--accent2-s); }
         .dash-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 32px; }
-        .dash-sparkline-bar { width: 6px; border-radius: 2px; background: #6366f1; min-height: 2px; transition: height .3s; }
+        .dash-sparkline-bar { width: 6px; border-radius: 2px; background: var(--accent); min-height: 2px; transition: height .3s; }
 
-        ::-webkit-scrollbar { width: 6px; }
-        .pfa-dd-item:hover { background: #6366f1 !important; }
-        ::-webkit-scrollbar-track { background: #0b0e14; }
-        ::-webkit-scrollbar-thumb { background: #1e2530; border-radius: 10px; }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+        .pfa-dd-item:hover { background: rgba(201,168,76,0.12) !important; color: var(--accent-s) !important; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 
-        /* Модалка события */
-        .event-modal-card { background: #12171f; border: 1px solid #1e2530; border-radius: 16px; padding: 28px; width: 480px; max-height: 90vh; overflow-y: auto; }
-        
-        .event-item-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #1a1f29;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border: 1px solid #1e2530;
-        }
+        .event-modal-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 480px; max-height: 90vh; overflow-y: auto; }
+        .event-item-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg3); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; border: 1px solid var(--border); }
         .event-item-row.is-done { opacity: 0.5; }
-        
-        .toggle-done-btn {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid #475569;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            background: transparent;
-        }
-        .toggle-done-btn.done { background: #22c55e; border-color: #22c55e; }
-        .toggle-done-btn:hover { border-color: #22c55e; }
+        .toggle-done-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text5); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; background: transparent; }
+        .toggle-done-btn.done { background: var(--accent2-s); border-color: var(--accent2-s); }
+        .toggle-done-btn:hover { border-color: var(--accent2-s); }
+        .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text5); letter-spacing: 0.1em; margin-bottom: 10px; margin-top: 16px; }
 
-        .section-label {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #475569;
-            letter-spacing: 0.1em;
-            margin-bottom: 10px;
-            margin-top: 16px;
-        }
-        /* Кастомный date picker */
-        .dp-wrap { position:relative; display:inline-block; }
-        .dp-btn { background:#0b0e14; border:1px solid #2d3748; border-radius:8px; padding:5px 12px; color:#e2e8f0; font-size:12px; cursor:pointer; min-width:110px; text-align:center; transition:border-color .2s; }
-        .dp-btn:hover { border-color:#6366f1; }
-        .dp-btn.active { border-color:#6366f1; color:#a5b4fc; }
-        .dp-popup { display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:1000; background:#12171f; border:1px solid #2d3748; border-radius:12px; padding:16px; width:260px; box-shadow:0 8px 32px rgba(0,0,0,.6); }
-        .dp-popup.open { display:block; }
-        .dp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-        .dp-nav { background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; padding:4px 8px; border-radius:6px; }
-        .dp-nav:hover { background:#1e2530; color:#fff; }
-        .dp-month-label { color:#e2e8f0; font-weight:700; font-size:13px; cursor:pointer; padding:4px 8px; border-radius:6px; }
-        .dp-month-label:hover { background:#1e2530; }
-        .dp-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-        .dp-dow { color:#475569; font-size:10px; text-align:center; padding:4px 0; font-weight:700; text-transform:uppercase; }
-        .dp-day { text-align:center; padding:6px 2px; font-size:12px; border-radius:6px; cursor:pointer; color:#94a3b8; }
-        .dp-day:hover { background:#1e2530; color:#fff; }
-        .dp-day.today { color:#6366f1; font-weight:700; }
-        .dp-day.selected { background:#6366f1; color:#fff; font-weight:700; }
-        .dp-day.in-range { background:#6366f122; color:#a5b4fc; }
-        .dp-day.empty { cursor:default; }
-        .dp-day.empty:hover { background:none; }
-        .dp-month-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-        .dp-month-btn { background:#1a1f29; border:none; color:#94a3b8; border-radius:8px; padding:8px 4px; font-size:12px; cursor:pointer; }
-        .dp-month-btn:hover { background:#2d3748; color:#fff; }
-        .dp-month-btn.selected { background:#6366f1; color:#fff; }
-        .dp-year-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-        .dp-year-btn { background:#1a1f29; border:none; color:#94a3b8; border-radius:8px; padding:8px 4px; font-size:11px; cursor:pointer; }
-        .dp-year-btn:hover { background:#2d3748; color:#fff; }
-        .dp-year-btn.selected { background:#6366f1; color:#fff; }
-        .dp-shortcuts { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-        .dp-shortcut { background:#1a1f29; border:none; color:#64748b; border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; }
-        .dp-shortcut:hover { background:#2d3748; color:#a5b4fc; }
-        .player-nick-link { cursor:pointer; color:inherit; text-decoration:none; border-bottom:1px dashed #475569; transition:color 0.15s, border-color 0.15s; }
-        .player-nick-link:hover { color:#a5b4fc; border-color:#a5b4fc; }
+        .dp-wrap { position: relative; display: inline-block; }
+        .dp-btn { background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 5px 12px; color: var(--text2); font-size: 12px; cursor: pointer; min-width: 110px; text-align: center; transition: border-color .2s; font-family: 'Inter', sans-serif; }
+        .dp-btn:hover { border-color: var(--accent); }
+        .dp-btn.active { border-color: var(--accent); color: var(--accent-s); }
+        .dp-popup { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 1000; background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; width: 260px; box-shadow: 0 8px 32px var(--shadow); }
+        .dp-popup.open { display: block; }
+        .dp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .dp-nav { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; }
+        .dp-nav:hover { background: var(--border); color: var(--text); }
+        .dp-month-label { color: var(--text2); font-weight: 700; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+        .dp-month-label:hover { background: var(--border); }
+        .dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .dp-dow { color: var(--text5); font-size: 10px; text-align: center; padding: 4px 0; font-weight: 700; text-transform: uppercase; }
+        .dp-day { text-align: center; padding: 6px 2px; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text3); }
+        .dp-day:hover { background: var(--border); color: var(--text); }
+        .dp-day.today { color: var(--accent); font-weight: 700; }
+        .dp-day.selected { background: var(--accent); color: #080e0c; font-weight: 700; }
+        .dp-day.in-range { background: rgba(201,168,76,0.12); color: var(--accent-s); }
+        .dp-day.empty { cursor: default; }
+        .dp-day.empty:hover { background: none; }
+        .dp-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .dp-month-btn { background: var(--bg3); border: none; color: var(--text3); border-radius: 8px; padding: 8px 4px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .dp-month-btn:hover { background: var(--border2); color: var(--text); }
+        .dp-month-btn.selected { background: var(--accent); color: #080e0c; }
+        .dp-year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .dp-year-btn { background: var(--bg3); border: none; color: var(--text3); border-radius: 8px; padding: 8px 4px; font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .dp-year-btn:hover { background: var(--border2); color: var(--text); }
+        .dp-year-btn.selected { background: var(--accent); color: #080e0c; }
+        .dp-shortcuts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .dp-shortcut { background: var(--bg3); border: none; color: var(--text4); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .dp-shortcut:hover { background: var(--border2); color: var(--accent-s); }
 
-        .profile-stat-card { background:#0b0e14; border:1px solid #1e2530; border-radius:10px; padding:16px; text-align:center; }
-        .profile-stat-val { font-size:22px; font-weight:900; }
-        .profile-stat-label { font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:.05em; margin-top:4px; }
+        .player-nick-link { cursor: pointer; color: inherit; text-decoration: none; border-bottom: 1px dashed var(--border2); transition: color 0.15s, border-color 0.15s; }
+        .player-nick-link:hover { color: var(--accent-s); border-color: var(--accent-s); }
+        .profile-stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+        .profile-stat-val { font-size: 22px; font-weight: 900; color: var(--text); }
+        .profile-stat-label { font-size: 10px; color: var(--text4); text-transform: uppercase; font-weight: 700; letter-spacing: .06em; margin-top: 4px; }
+        .trend-up   { color: var(--accent2-s); }
+        .trend-down { color: #ef4444; }
+        .trend-flat { color: var(--text4); }
+        .km-timeline-bar { height: 24px; border-radius: 4px; background: var(--accent); min-width: 2px; transition: width 0.3s; position: relative; }
+        .km-timeline-bar:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100%+4px); left: 50%; transform: translateX(-50%); background: var(--bg3); color: var(--text2); padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; z-index: 99; border: 1px solid var(--border2); pointer-events: none; }
 
-        .trend-up   { color:#22c55e; }
-        .trend-down { color:#ef4444; }
-        .trend-flat { color:#64748b; }
-
-        .km-timeline-bar { height:24px; border-radius:4px; background:#6366f1; min-width:2px; transition:width 0.3s; position:relative; }
-        .km-timeline-bar:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100%+4px); left:50%; transform:translateX(-50%); background:#1a1f29; color:#e2e8f0; padding:4px 8px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:99; border:1px solid #2d3748; pointer-events:none; }
-
-        /* Инфо-тултип модалка */
-        .info-modal-overlay { display:none; position:fixed; inset:0; z-index:600; align-items:center; justify-content:center; }
-        .info-modal-overlay.open { display:flex; }
-        .info-modal-bg { position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(3px); }
-        .info-modal-box {
-            position:relative; z-index:1;
-            background:linear-gradient(135deg,#12171f 0%,#0f1520 100%);
-            border:1px solid #1e2530;
-            border-radius:18px;
-            padding:28px 32px;
-            width:400px; max-width:92vw;
-            box-shadow: 0 0 0 1px #6366f133, 0 20px 60px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.05);
-            animation: infoModalIn .18s ease-out;
-        }
-        @keyframes infoModalIn { from { opacity:0; transform:scale(.94) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
-        .info-modal-icon { font-size:32px; margin-bottom:12px; }
-        .info-modal-title { font-size:17px; font-weight:900; color:#e2e8f0; margin-bottom:6px; letter-spacing:-.3px; }
-        .info-modal-sub { font-size:12px; color:#475569; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px; }
-        .info-modal-body { font-size:13px; color:#94a3b8; line-height:1.7; }
-        .info-modal-body b { color:#e2e8f0; }
-        .info-modal-formula { background:#0b0e14; border:1px solid #1e2530; border-radius:10px; padding:12px 14px; margin-top:14px; font-size:12px; color:#64748b; }
-        .info-modal-formula span { color:#a5b4fc; font-weight:700; }
-        .info-modal-close { position:absolute; top:16px; right:16px; background:#1e2530; border:none; color:#64748b; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all .15s; }
-        .info-modal-close:hover { background:#2d3748; color:#e2e8f0; }
-        .info-q-btn { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:#1e2530; border:1px solid #2d3748; color:#475569; font-size:10px; font-weight:900; cursor:pointer; transition:all .15s; flex-shrink:0; margin-left:5px; vertical-align:middle; font-family:monospace; line-height:1; }
-        .info-q-btn:hover { background:#6366f133; border-color:#6366f1; color:#a5b4fc; }
+        .info-modal-overlay { display: none; position: fixed; inset: 0; z-index: 600; align-items: center; justify-content: center; }
+        .info-modal-overlay.open { display: flex; }
+        .info-modal-bg { position: absolute; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(4px); }
+        .info-modal-box { position: relative; z-index: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 28px 32px; width: 400px; max-width: 92vw; box-shadow: 0 0 0 1px rgba(201,168,76,0.1), 0 24px 60px var(--shadow); animation: infoModalIn .18s ease-out; }
+        @keyframes infoModalIn { from { opacity:0; transform:scale(.93) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .info-modal-icon { font-size: 32px; margin-bottom: 12px; }
+        .info-modal-title { font-size: 17px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+        .info-modal-sub { font-size: 11px; color: var(--text5); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; }
+        .info-modal-body { font-size: 13px; color: var(--text3); line-height: 1.7; }
+        .info-modal-body b { color: var(--text2); }
+        .info-modal-formula { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 12px; color: var(--text4); }
+        .info-modal-formula span { color: var(--accent-s); font-weight: 700; }
+        .info-modal-close { position: absolute; top: 16px; right: 16px; background: var(--border); border: none; color: var(--text4); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+        .info-modal-close:hover { background: var(--border2); color: var(--text2); }
+        .info-q-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border); border: 1px solid var(--border2); color: var(--text5); font-size: 10px; font-weight: 900; cursor: pointer; transition: all .15s; flex-shrink: 0; margin-left: 5px; vertical-align: middle; font-family: monospace; line-height: 1; }
+        .info-q-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--accent); color: var(--accent-s); }
     </style>
 </head>
 <body>
-    <div id="authOverlay" class="auth-overlay">
-        <div class="auth-card">
-            <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#14b8a6;font-weight:800">Clan Control Secure Entry</div>
-            <h2 id="authTitle" style="font-size:28px;font-weight:900;margin:8px 0 0">Вход по email</h2>
-            <p id="authSubtitle" class="auth-subtitle">Шаг 1/2: введи email и получи magic-link.</p>
 
-            <div id="authStepEmail" class="auth-step active" style="margin-top:20px">
-                <input id="authEmailInput" type="email" class="input-dark" placeholder="name@example.com">
-                <button id="authSendBtn" onclick="sendMagicLink()" class="btn-primary" style="width:100%;margin-top:12px">Отправить ссылку</button>
-                <div id="authEmailStatus" class="status-hint" style="display:none"></div>
+<!-- =============================================
+     LOGIN SCREEN
+     ============================================= -->
+<div id="loginScreen">
+    <div class="login-bg-art"></div>
+    <div class="login-glow"></div>
+    <div class="login-line login-line-1"></div>
+    <div class="login-line login-line-2"></div>
+    <div class="login-line login-line-3"></div>
+    <div class="login-wrap">
+        <div class="login-top-bar">
+            <div class="seg-toggle">
+                <button class="seg-toggle-btn active" id="loginThemeDark" onclick="setTheme('dark')">🌙</button>
+                <button class="seg-toggle-btn" id="loginThemeLight" onclick="setTheme('light')">☀️</button>
             </div>
-
-            <div id="authStepConfirm" class="auth-step" style="margin-top:20px">
-                <div class="status-hint" id="authConfirmText">Мы отправили ссылку на <b id="authMaskedEmail"></b>. Открой почту и вернись сюда.</div>
-                <button onclick="confirmMagicLink()" class="btn-primary" style="width:100%;margin-top:12px">Я подтвердил вход</button>
-                <button onclick="resetAuthFlow()" style="width:100%;margin-top:8px;background:none;border:1px solid var(--border-color);color:var(--text-muted);padding:10px 14px;border-radius:10px;cursor:pointer">Изменить email</button>
+            <div class="seg-toggle">
+                <button class="seg-toggle-btn active" id="loginLangRu" onclick="setLang('ru')">RU</button>
+                <button class="seg-toggle-btn" id="loginLangEn" onclick="setLang('en')">EN</button>
             </div>
-
-            <div id="clanNameBlock" class="auth-step" style="margin-top:20px">
-                <label for="clanNameInput" style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px">Название клана</label>
-                <input id="clanNameInput" type="text" class="input-dark" placeholder="Например: Night Owls">
-                <button onclick="saveClanNameAndFinish()" class="btn-primary" style="width:100%;margin-top:12px">Продолжить</button>
+        </div>
+        <div class="login-card">
+            <div class="login-card-top-line"></div>
+            <div class="login-logo">
+                <span class="login-logo-icon">⚔️</span>
+                <span class="login-logo-name">Clan<span>Control</span></span>
+            </div>
+            <p class="login-subtitle" id="loginSubtitle">Инструмент офицера клана для отслеживания КМ-статистики</p>
+            <div class="login-progress">
+                <div class="login-progress-dot done" id="loginDot1"></div>
+                <div class="login-progress-dot" id="loginDot2"></div>
+            </div>
+            <!-- Шаг 1 — Email -->
+            <div class="login-step active" id="loginStep1">
+                <div class="login-step-label"><span class="login-step-num">1</span><span id="loginEmailLabel">Введи email</span></div>
+                <input type="email" class="login-input" id="loginEmailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter') loginGoStep2()">
+                <button class="login-btn" onclick="loginGoStep2()"><span id="loginBtnText1">Продолжить →</span></button>
+                <p class="login-hint" id="loginHintText">MVP — введи любой email</p>
+            </div>
+            <!-- Шаг 2 — Клан -->
+            <div class="login-step" id="loginStep2">
+                <button class="login-back" onclick="loginGoStep1()">← Назад</button>
+                <div class="login-step-label"><span class="login-step-num">2</span><span id="loginClanLabel">Название клана</span></div>
+                <input type="text" class="login-input" id="loginClanInput" placeholder="[TAG] или название" onkeydown="if(event.key==='Enter') loginFinish()">
+                <button class="login-btn" onclick="loginFinish()"><span id="loginBtnText2">Войти в Clan Control →</span></button>
+                <p class="login-hint">Можно изменить позже в настройках</p>
             </div>
         </div>
     </div>
-    <header class="app-header">
-        <div class="header-brand">⚔ ClanControl</div>
-        <div class="header-right">
-            <button id="headerSettingsBtn" class="header-btn" onclick="showPage('settings')">⚙️ Настройки</button>
-            <div class="header-pill">
-                <span>🌙</span>
-                <button id="themeToggle" class="toggle-switch active" type="button" onclick="toggleTheme()" aria-label="Theme toggle"></button>
-                <span>☀️</span>
-            </div>
-            <div class="header-pill">
-                <span>RU</span>
-                <button id="langToggle" class="toggle-switch" type="button" onclick="toggleLanguage()" aria-label="Language toggle"></button>
-                <span>EN</span>
-            </div>
-            <div class="header-pill" id="headerEmailPill">📧 —</div>
-            <button id="logoutBtn" class="header-btn" onclick="logoutAuth()">↪ Выход</button>
+</div>
+
+<!-- =============================================
+     TOPBAR
+     ============================================= -->
+<div id="topbar" class="hidden">
+    <div class="topbar-logo">⚔️ Clan<span>Control</span></div>
+    <div class="topbar-right">
+        <div class="topbar-clan" id="topbarClan" style="display:none"></div>
+        <div class="topbar-divider"></div>
+        <div class="seg-toggle">
+            <button class="seg-toggle-btn active" id="themeDark" onclick="setTheme('dark')">🌙</button>
+            <button class="seg-toggle-btn" id="themeLight" onclick="setTheme('light')">☀️</button>
         </div>
-    </header>
+        <div class="seg-toggle">
+            <button class="seg-toggle-btn active" id="langRu" onclick="setLang('ru')">RU</button>
+            <button class="seg-toggle-btn" id="langEn" onclick="setLang('en')">EN</button>
+        </div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-icon-btn" onclick="showPage('settings')" title="Настройки">⚙️</div>
+        <div class="topbar-user">
+            <div class="topbar-avatar" id="topbarAvatar">?</div>
+            <span class="topbar-user-email" id="topbarEmail">—</span>
+        </div>
+        <div class="topbar-icon-btn" onclick="loginLogout()" title="Выйти" style="color:var(--text4)">🚪</div>
+    </div>
+</div>
+
+<!-- =============================================
+     APP LAYOUT
+     ============================================= -->
+<div id="appLayout" class="hidden">
 
     <aside class="sidebar">
-        <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v12</div>
-        
-        <nav>
-            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px 4px;margin-top:4px">Аналитика</div>
-            <div onclick="showPage('dashboard')" id="nav-dashboard" class="nav-item">🏠 Дашборд</div>
-            <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
-            <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
-            <div onclick="showPage('screenshots')" id="nav-screenshots" class="nav-item">📋 История КМ</div>
-            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px 4px;margin-top:8px">Управление</div>
-            <div onclick="showPage('roster')" id="nav-roster" class="nav-item">👥 Клан</div>
-            <div onclick="showPage('profile')" id="nav-profile" class="nav-item" style="display:none">👤 Профиль</div>
-            <div onclick="showPage('packs')" id="nav-packs" class="nav-item">⚔️ Рейд Паки</div>
-            <div onclick="showPage('archive')" id="nav-archive" class="nav-item">🗄️ Архив</div>
-        </nav>
-        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #1e2530;display:flex;flex-direction:column;gap:2px">
-            <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:4px 16px 4px">Система</div>
-            <div onclick="showPage('settings')" id="nav-settings" class="nav-item" style="display:none">⚙️ Настройки</div>
-            <button onclick="exportData()" title="Скачать резервную копию всех данных" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:#475569;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;transition:all .2s;width:100%;text-align:left;font-family:inherit" onmouseover="this.style.background='#1a1f29';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='#475569'">💾 Бэкап данных</button>
-            <!-- Индикатор автосохранения -->
-            <div id="autoSaveIndicator" style="font-size:10px;color:#475569;padding:4px 16px;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .4s">
+        <div class="sidebar-section-label">Аналитика</div>
+        <div onclick="showPage('dashboard')" id="nav-dashboard" class="nav-item">🏠 Дашборд</div>
+        <div onclick="showPage('stats')" id="nav-stats" class="nav-item">📊 Статистика</div>
+        <div onclick="showPage('calendar')" id="nav-calendar" class="nav-item">📅 Календарь КМ</div>
+        <div onclick="showPage('screenshots')" id="nav-screenshots" class="nav-item">📋 История КМ</div>
+        <div class="sidebar-section-label">Управление</div>
+        <div onclick="showPage('roster')" id="nav-roster" class="nav-item">👥 Клан</div>
+        <div onclick="showPage('profile')" id="nav-profile" class="nav-item" style="display:none">👤 Профиль</div>
+        <div onclick="showPage('packs')" id="nav-packs" class="nav-item">⚔️ Рейд Паки</div>
+        <div onclick="showPage('archive')" id="nav-archive" class="nav-item">🗄️ Архив</div>
+        <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:1px">
+            <div class="sidebar-section-label" style="padding-left:0">Система</div>
+            <div onclick="showPage('settings')" id="nav-settings" class="nav-item">⚙️ Настройки</div>
+            <button onclick="exportData()" style="display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text4);border-radius:8px;padding:9px 10px;font-size:13px;cursor:pointer;transition:all .2s;width:100%;text-align:left;font-family:inherit" onmouseover="this.style.color='var(--text2)';this.style.background='var(--bg3)'" onmouseout="this.style.color='';this.style.background=''">💾 Бэкап данных</button>
+            <div id="autoSaveIndicator" style="font-size:10px;color:var(--text5);padding:4px 10px;display:flex;align-items:center;gap:5px;opacity:0;transition:opacity .4s">
                 <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>
                 <span id="autoSaveText">Сохранено</span>
             </div>
         </div>
     </aside>
-
     <main class="main-content">
         
         
@@ -1219,7 +1074,97 @@
         </div>
     </div>
 
+
+</div><!-- /appLayout -->
+
     <script>
+        /* =============================================
+           UI — Login, Theme, Language
+        ============================================= */
+        (function() {
+            const TEXTS = {
+                ru: { sub: 'Инструмент офицера клана для отслеживания КМ-статистики', emailLabel: 'Введи email', clanLabel: 'Название клана', btn1: 'Продолжить →', btn2: 'Войти в Clan Control →', hint1: 'MVP — введи любой email' },
+                en: { sub: 'Clan officer toolkit for tracking war statistics', emailLabel: 'Enter your email', clanLabel: 'Clan name or tag', btn1: 'Continue →', btn2: 'Enter Clan Control →', hint1: 'MVP mode — enter any email' }
+            };
+            window._loginEmail = '';
+
+            window.setTheme = function(t) {
+                localStorage.setItem('cc_theme', t);
+                document.body.classList.toggle('light', t === 'light');
+                ['themeDark','loginThemeDark'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('active', t==='dark'); });
+                ['themeLight','loginThemeLight'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('active', t==='light'); });
+            };
+
+            window.setLang = function(l) {
+                localStorage.setItem('cc_lang', l);
+                const t = TEXTS[l] || TEXTS.ru;
+                ['langRu','loginLangRu'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('active', l==='ru'); });
+                ['langEn','loginLangEn'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('active', l==='en'); });
+                const s = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+                s('loginSubtitle', t.sub); s('loginEmailLabel', t.emailLabel); s('loginClanLabel', t.clanLabel);
+                s('loginBtnText1', t.btn1); s('loginBtnText2', t.btn2); s('loginHintText', t.hint1);
+            };
+
+            window.loginGoStep2 = function() {
+                const inp = document.getElementById('loginEmailInput');
+                const v = inp ? inp.value.trim() : '';
+                if (!v || !v.includes('@')) { if(inp){inp.classList.add('error');setTimeout(()=>inp.classList.remove('error'),1400);inp.focus();} return; }
+                window._loginEmail = v;
+                document.getElementById('loginStep1').classList.remove('active');
+                document.getElementById('loginStep2').classList.add('active');
+                document.getElementById('loginDot2').classList.add('done');
+                const c = document.getElementById('loginClanInput'); if(c) c.focus();
+            };
+
+            window.loginGoStep1 = function() {
+                document.getElementById('loginStep2').classList.remove('active');
+                document.getElementById('loginStep1').classList.add('active');
+                document.getElementById('loginDot2').classList.remove('done');
+            };
+
+            window.loginFinish = function() {
+                const clan = (document.getElementById('loginClanInput')||{}).value || '';
+                sessionStorage.setItem('cc_user', window._loginEmail);
+                sessionStorage.setItem('cc_clan', clan);
+                localStorage.setItem('cc_user', window._loginEmail);
+                localStorage.setItem('cc_clan', clan);
+                _showApp(window._loginEmail, clan);
+            };
+
+            window.loginLogout = function() {
+                ['cc_user','cc_clan'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
+                const e = document.getElementById('loginEmailInput'); if(e) e.value = '';
+                const c = document.getElementById('loginClanInput'); if(c) c.value = '';
+                window._loginEmail = '';
+                loginGoStep1();
+                document.getElementById('loginDot2').classList.remove('done');
+                document.getElementById('topbar').classList.add('hidden');
+                document.getElementById('appLayout').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+            };
+
+            function _showApp(email, clan) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('topbar').classList.remove('hidden');
+                document.getElementById('appLayout').classList.remove('hidden');
+                const av = document.getElementById('topbarAvatar'); if(av) av.textContent = (email[0]||'?').toUpperCase();
+                const em = document.getElementById('topbarEmail'); if(em) em.textContent = email;
+                const cb = document.getElementById('topbarClan'); if(cb){ if(clan){cb.textContent=clan;cb.style.display='';}else cb.style.display='none'; }
+            }
+
+            // INIT
+            const theme = localStorage.getItem('cc_theme') || 'dark';
+            const lang  = localStorage.getItem('cc_lang')  || 'ru';
+            setTheme(theme);
+            setLang(lang);
+            const savedUser = sessionStorage.getItem('cc_user') || localStorage.getItem('cc_user');
+            if (savedUser) {
+                window._loginEmail = savedUser;
+                const savedClan = sessionStorage.getItem('cc_clan') || localStorage.getItem('cc_clan') || '';
+                _showApp(savedUser, savedClan);
+            }
+        })();
+
         // ===== ДАННЫЕ =====
         let roster = [
             { id: 1, name: "ВИЗАРД", rank: "КЛ", profa: "Bishop", pac: "СОЛО", attendance: 100, kills: 0, deaths: 0, pvp_dmg: 0, pve_dmg: 0 }
@@ -4676,7 +4621,7 @@ function getClass2IconByClass3(c3) {
             'Mystic Muse': { ru:'Повелитель Стихий', short:'ММ', ru2:'Певец Заклинаний', en2:'Spellsinger', role:'Маг' },
             'Storm Screamer': { ru:'Повелитель Бури', short:'СХ', ru2:'Заклинатель Ветра', en2:'Spellhowler', role:'Маг' },
             'Soultaker': { ru:'Пожиратель Душ', short:'Некр', ru2:'Некромант', en2:'Necromancer', role:'Маг' },
-            'Arcana Lord': { ru:'Чернокнижник', short:'Кот', ru2:'Чернокнижник', en2:'Warlock', role:'Маг' },
+            'Arcana Lord': { ru:'Чернокнижник', short:'Кот', ru2:'Чернокнижник/Колдун', en2:'Warlock', role:'Маг' },
             'Elemental Master': { ru:'Повелитель Элементалей', short:'Конь', ru2:'Призыватель/Последователь Стихий', en2:'Elemental Summoner', role:'Маг' },
             'Spectral Master': { ru:'Призрачный Лорд', short:'ФС', ru2:'Последователь Тьмы', en2:'Phantom Summoner', role:'Маг' },
             'Cardinal': { ru:'Кардинал', short:'Биш', ru2:'Епископ', en2:'Bishop', role:'Хилер' },
@@ -6991,11 +6936,6 @@ function getClass2IconByClass3(c3) {
                 }).join('') || '<div style="padding:10px 12px;color:#475569;font-size:12px">Ничего не найдено</div>';
             }
 
-        const APP_PREFS_KEY = 'cc_ui_prefs_v1';
-        const AUTH_SESSION_KEY = 'cc_auth_session_v1';
-        const CLAN_NAME_KEY = 'cc_clan_name_v1';
-        let uiPrefs = { theme: 'dark', lang: 'ru' };
-        let authSession = { email: '', confirmedAt: '' };
             window._kmSelectProfa = (pf, el) => {
                 selectedProfa = pf;
                 renderProfaList(document.getElementById('promptProfaInput').value);
@@ -7054,125 +6994,7 @@ function getClass2IconByClass3(c3) {
                 var rosterP = roster.find(function(r){ return r.name.toLowerCase() === oldName.toLowerCase(); });
                 if (rosterP) {
                     rosterP.name = newName;
-        function loadUiPrefs() {
-            try {
-                const raw = localStorage.getItem(APP_PREFS_KEY);
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-                uiPrefs.theme = parsed.theme === 'light' ? 'light' : 'dark';
-                uiPrefs.lang = parsed.lang === 'en' ? 'en' : 'ru';
-            } catch (e) {}
-        }
-        function persistUiPrefs() { localStorage.setItem(APP_PREFS_KEY, JSON.stringify(uiPrefs)); }
-        function applyTheme() {
-            const light = uiPrefs.theme === 'light';
-            document.body.classList.toggle('theme-light', light);
-            document.getElementById('themeToggle')?.classList.toggle('active', !light);
-        }
-        function applyLanguage() {
-            const isEn = uiPrefs.lang === 'en';
-            const settingsNav = document.getElementById('nav-settings');
-            if (settingsNav) settingsNav.textContent = isEn ? '⚙️ Settings' : '⚙️ Настройки';
-            const headerBtn = document.getElementById('headerSettingsBtn');
-            if (headerBtn) headerBtn.textContent = isEn ? '⚙️ Settings' : '⚙️ Настройки';
-            const sendBtn = document.getElementById('authSendBtn');
-            if (sendBtn) sendBtn.textContent = isEn ? 'Send sign-in link' : 'Отправить ссылку';
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) logoutBtn.textContent = isEn ? '↪ Logout' : '↪ Выход';
-        }
-        function toggleTheme() {
-            uiPrefs.theme = uiPrefs.theme === 'dark' ? 'light' : 'dark';
-            applyTheme();
-            persistUiPrefs();
-        }
-        function toggleLanguage() {
-            uiPrefs.lang = uiPrefs.lang === 'ru' ? 'en' : 'ru';
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
-            applyLanguage();
-            persistUiPrefs();
-        }
-        function maskEmail(email) {
-            const [name, domain] = email.split('@');
-            if (!name || !domain) return email;
-            return `${name.slice(0,2)}${'*'.repeat(Math.max(1, name.length - 2))}@${domain}`;
-        }
-        function showAuthStep(stepId) {
-            ['authStepEmail', 'authStepConfirm', 'clanNameBlock'].forEach(id => {
-                document.getElementById(id)?.classList.toggle('active', id === stepId);
-            });
-        }
-        function sendMagicLink() {
-            const email = (document.getElementById('authEmailInput').value || '').trim().toLowerCase();
-            const status = document.getElementById('authEmailStatus');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                status.style.display = 'block';
-                status.textContent = uiPrefs.lang === 'en' ? 'Please enter a valid email.' : 'Введите корректный email.';
-                return;
-            }
-            authSession.email = email;
-            status.style.display = 'block';
-            status.textContent = uiPrefs.lang === 'en' ? 'Magic link sent. Check your mailbox.' : 'Ссылка отправлена. Проверь почту.';
-            document.getElementById('authMaskedEmail').textContent = maskEmail(email);
-            showAuthStep('authStepConfirm');
-        }
-        function resetAuthFlow() { showAuthStep('authStepEmail'); }
-        function finishAuth() {
-            document.getElementById('authOverlay')?.classList.remove('open');
-            const clanName = localStorage.getItem(CLAN_NAME_KEY);
-            if (clanName) document.getElementById('dashSubtitle').textContent = `Клан: ${clanName}`;
-            document.getElementById('headerEmailPill').textContent = `📧 ${authSession.email || '—'}`;
-        }
-        function confirmMagicLink() {
-            authSession.confirmedAt = new Date().toISOString();
-            sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
-            if (!localStorage.getItem(CLAN_NAME_KEY)) return showAuthStep('clanNameBlock');
-            finishAuth();
-        }
-        function saveClanNameAndFinish() {
-            const clanName = (document.getElementById('clanNameInput').value || '').trim();
-            if (!clanName) return;
-            localStorage.setItem(CLAN_NAME_KEY, clanName);
-            finishAuth();
-        }
-        function ensureAuthGate() {
-            try {
-                const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    if (data?.email && data?.confirmedAt) {
-                        authSession = data;
-                        finishAuth();
-                        return;
-                    }
-                }
-            } catch(e) {}
-            document.getElementById('authOverlay')?.classList.add('open');
-            showAuthStep('authStepEmail');
-        }
-        function logoutAuth() {
-            sessionStorage.removeItem(AUTH_SESSION_KEY);
-            authSession = { email: '', confirmedAt: '' };
-            document.getElementById('headerEmailPill').textContent = '📧 —';
-            document.getElementById('authOverlay')?.classList.add('open');
-            showAuthStep('authStepEmail');
-        }
-
-        function validateImportFormat(d) {
-            if (!d || typeof d !== 'object') throw new Error('Неверный формат файла.');
-            if (!Array.isArray(d.roster)) throw new Error('Неверный формат: roster должен быть массивом.');
-            if (d.archive !== undefined && !Array.isArray(d.archive)) throw new Error('Неверный формат: archive должен быть массивом.');
-            if (d.packs !== undefined && !Array.isArray(d.packs)) throw new Error('Неверный формат: packs должен быть массивом.');
-            if (d.manualEvents !== undefined && !Array.isArray(d.manualEvents)) throw new Error('Неверный формат: manualEvents должен быть массивом.');
-            const objectKeys = ['eventStatuses', 'eventOverrides', 'nickAliases', 'exhaustedKeys', 'appliedStatsByDate', 'playerNotes', 'playerProfaByDate', 'valueWeights'];
-            objectKeys.forEach((key) => {
-                if (d[key] !== undefined && (typeof d[key] !== 'object' || Array.isArray(d[key]))) {
-                    throw new Error(`Неверный формат: ${key} должен быть объектом.`);
-                }
-            });
-            return true;
-        }
-
-                    validateImportFormat(d);
+                } else {
                     var snap = appliedStatsByDate[dateStr];
                     var sp = snap && snap.players && snap.players.find(function(p){ return p.name === newName; });
                     roster.push({ id: Date.now()+Math.random(), name: newName, rank: 'ИГРОК', profa: selectedProfa||'—', profas: selectedProfa?[selectedProfa]:[], pac: 'СОЛО', attendance: 0,
@@ -7328,11 +7150,6 @@ function getClass2IconByClass3(c3) {
 
         // ===== LOCAL STORAGE =====
         const LS_KEY = 'clanControl_v1';
-        const APP_PREFS_KEY = 'cc_ui_prefs_v1';
-        const AUTH_SESSION_KEY = 'cc_auth_session_v1';
-        const CLAN_NAME_KEY = 'cc_clan_name_v1';
-        let uiPrefs = { theme: 'dark', lang: 'ru' };
-        let authSession = { email: '', confirmedAt: '' };
 
         function saveToStorage() {
             // Показываем индикатор сохранения
@@ -7364,148 +7181,6 @@ function getClass2IconByClass3(c3) {
             } catch(e) {
                 console.warn('localStorage save failed:', e);
             }
-        }
-
-        function loadUiPrefs() {
-            try {
-                const raw = localStorage.getItem(APP_PREFS_KEY);
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-                uiPrefs.theme = parsed.theme === 'light' ? 'light' : 'dark';
-                uiPrefs.lang = parsed.lang === 'en' ? 'en' : 'ru';
-            } catch (e) {
-                console.warn('ui prefs load failed', e);
-            }
-        }
-        function persistUiPrefs() {
-            localStorage.setItem(APP_PREFS_KEY, JSON.stringify(uiPrefs));
-        }
-        function applyTheme() {
-            document.body.setAttribute('data-theme', uiPrefs.theme);
-            const isLight = uiPrefs.theme === 'light';
-            document.getElementById('themeToggle')?.classList.toggle('active', !isLight);
-        }
-        function applyLanguage() {
-            const isEn = uiPrefs.lang === 'en';
-            const title = document.querySelector('.sidebar h2');
-            if (title) title.textContent = 'Clan Control';
-            const settingsNav = document.getElementById('nav-settings');
-            if (settingsNav) settingsNav.innerHTML = isEn ? '⚙️ Settings' : '⚙️ Настройки';
-            const headerSettingsBtn = document.getElementById('headerSettingsBtn');
-            if (headerSettingsBtn) headerSettingsBtn.textContent = isEn ? '⚙️ Settings' : '⚙️ Настройки';
-            const exportBtn = document.querySelector('button[onclick="exportData()"]');
-            if (exportBtn && exportBtn.title) {
-                exportBtn.title = isEn ? 'Download backup data' : 'Скачать резервную копию всех данных';
-            }
-            const authTitle = document.getElementById('authTitle');
-            const authSubtitle = document.getElementById('authSubtitle');
-            if (authTitle) authTitle.textContent = isEn ? 'Sign in by email' : 'Вход по email';
-            if (authSubtitle) authSubtitle.textContent = isEn
-                ? 'Step 1/2: enter email and get a magic link.'
-                : 'Шаг 1/2: введи email и получи magic-link.';
-            const authSendBtn = document.getElementById('authSendBtn');
-            if (authSendBtn) authSendBtn.textContent = isEn ? 'Send sign-in link' : 'Отправить ссылку';
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) logoutBtn.textContent = isEn ? '↪ Logout' : '↪ Выход';
-        }
-        function toggleTheme() {
-            uiPrefs.theme = uiPrefs.theme === 'dark' ? 'light' : 'dark';
-            applyTheme();
-            persistUiPrefs();
-        }
-        function toggleLanguage() {
-            uiPrefs.lang = uiPrefs.lang === 'ru' ? 'en' : 'ru';
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
-            applyLanguage();
-            persistUiPrefs();
-        }
-        function maskEmail(email) {
-            const [name, domain] = email.split('@');
-            if (!name || !domain) return email;
-            const visible = name.slice(0, 2);
-            return `${visible}${'*'.repeat(Math.max(1, name.length - 2))}@${domain}`;
-        }
-        function showAuthStep(stepId) {
-            ['authStepEmail', 'authStepConfirm', 'clanNameBlock'].forEach(id => {
-                document.getElementById(id)?.classList.toggle('active', id === stepId);
-            });
-        }
-        function sendMagicLink() {
-            const emailInput = document.getElementById('authEmailInput');
-            const status = document.getElementById('authEmailStatus');
-            const email = (emailInput?.value || '').trim().toLowerCase();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                status.style.display = 'block';
-                status.textContent = uiPrefs.lang === 'en'
-                    ? 'Please enter a valid email.'
-                    : 'Введите корректный email.';
-                return;
-            }
-            authSession.email = email;
-            if (status) {
-                status.style.display = 'block';
-                status.textContent = uiPrefs.lang === 'en'
-                    ? 'Magic link sent. Check your mailbox.'
-                    : 'Ссылка отправлена. Проверь почту.';
-            }
-            const masked = document.getElementById('authMaskedEmail');
-            if (masked) masked.textContent = maskEmail(email);
-            showAuthStep('authStepConfirm');
-        }
-        function resetAuthFlow() {
-            showAuthStep('authStepEmail');
-        }
-        function finishAuth() {
-            document.getElementById('authOverlay')?.classList.remove('open');
-            const clanName = localStorage.getItem(CLAN_NAME_KEY);
-            const subtitle = document.getElementById('dashSubtitle');
-            if (subtitle && clanName) subtitle.textContent = `Клан: ${clanName}`;
-            const mail = authSession?.email || '—';
-            const emailPill = document.getElementById('headerEmailPill');
-            if (emailPill) emailPill.textContent = `📧 ${mail}`;
-        }
-        function confirmMagicLink() {
-            authSession.confirmedAt = new Date().toISOString();
-            sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
-            const clanName = localStorage.getItem(CLAN_NAME_KEY);
-            if (!clanName) {
-                showAuthStep('clanNameBlock');
-                return;
-            }
-            finishAuth();
-        }
-        function saveClanNameAndFinish() {
-            const input = document.getElementById('clanNameInput');
-            const clanName = (input?.value || '').trim();
-            if (!clanName) return;
-            localStorage.setItem(CLAN_NAME_KEY, clanName);
-            finishAuth();
-        }
-        function ensureAuthGate() {
-            const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
-            if (raw) {
-                try {
-                    const data = JSON.parse(raw);
-                    if (data?.email && data?.confirmedAt) {
-                        authSession = data;
-                        finishAuth();
-                        return;
-                    }
-                } catch (e) {
-                    console.warn('auth session parse failed', e);
-                }
-            }
-            document.getElementById('authOverlay')?.classList.add('open');
-            showAuthStep('authStepEmail');
-        }
-        function logoutAuth() {
-            sessionStorage.removeItem(AUTH_SESSION_KEY);
-            authSession = { email: '', confirmedAt: '' };
-            const emailPill = document.getElementById('headerEmailPill');
-            if (emailPill) emailPill.textContent = '📧 —';
-            document.getElementById('authEmailInput').value = '';
-            document.getElementById('authOverlay')?.classList.add('open');
-            showAuthStep('authStepEmail');
         }
 
         function loadFromStorage() {
@@ -7554,21 +7229,6 @@ function getClass2IconByClass3(c3) {
             URL.revokeObjectURL(url);
         }
 
-        function validateImportFormat(d) {
-            if (!d || typeof d !== 'object') throw new Error('Неверный формат файла.');
-            if (!Array.isArray(d.roster)) throw new Error('Неверный формат: roster должен быть массивом.');
-            if (d.archive !== undefined && !Array.isArray(d.archive)) throw new Error('Неверный формат: archive должен быть массивом.');
-            if (d.packs !== undefined && !Array.isArray(d.packs)) throw new Error('Неверный формат: packs должен быть массивом.');
-            if (d.manualEvents !== undefined && !Array.isArray(d.manualEvents)) throw new Error('Неверный формат: manualEvents должен быть массивом.');
-            const objectKeys = ['eventStatuses', 'eventOverrides', 'nickAliases', 'exhaustedKeys', 'appliedStatsByDate', 'playerNotes', 'playerProfaByDate', 'valueWeights'];
-            objectKeys.forEach((key) => {
-                if (d[key] !== undefined && (typeof d[key] !== 'object' || Array.isArray(d[key]))) {
-                    throw new Error(`Неверный формат: ${key} должен быть объектом.`);
-                }
-            });
-            return true;
-        }
-
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -7580,7 +7240,7 @@ function getClass2IconByClass3(c3) {
                 try {
                     const json = JSON.parse(e.target.result);
                     const d = json.data || json;
-                    validateImportFormat(d);
+                    if (!d.roster) throw new Error('Неверный формат — нет ростера');
                     showConfirm(
                         '📥 Импортировать данные?',
                         `Файл от ${json.exportedAt ? new Date(json.exportedAt).toLocaleString('ru-RU') : 'неизвестно'}. Игроков: ${d.roster.length}, КМ дней: ${Object.keys(d.appliedStatsByDate||{}).length}.\n\nТекущие данные будут заменены!`,
@@ -8603,10 +8263,6 @@ function getClass2IconByClass3(c3) {
             const dps=allPS.filter(p=>!isSup(p.profa)&&p.kills>3).map(p=>({...p,kda:p.kills/Math.max(p.deaths,1)})).sort((a,b)=>b.kda-a.kda);
             if(dps.length>0&&dps[0].kda>2) items.push({icon:'⭐',type:'good',title:'MVP: '+dps[0].name,text:'KDA '+dps[0].kda.toFixed(2)+' ('+dps[0].kills+'⚔️/'+dps[0].deaths+'💀)', player:dps[0].name});
 
-            loadUiPrefs();
-            applyTheme();
-            applyLanguage();
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
             // Надёжные саппорты
             const relSup = allPS.filter(p=>isSup(p.profa)&&p.att>=80);
             if(relSup.length>0) items.push({icon:'💊',type:'good',title:relSup.length+' надёжных саппортов',text:relSup.slice(0,4).map(p=>p.name).join(', ')+'. Явка 80%+', players:relSup.map(p=>p.name), listType:'supports'});
@@ -8686,7 +8342,6 @@ function getClass2IconByClass3(c3) {
                 }
             }
 
-            ensureAuthGate();
             // Хорошие новости
             if (totalDates >= 2) {
                 const last2 = allDates.slice(-2);
@@ -8984,10 +8639,6 @@ function getClass2IconByClass3(c3) {
         }
 
         window.onload = () => {
-            loadUiPrefs();
-            applyTheme();
-            applyLanguage();
-            document.getElementById('langToggle')?.classList.toggle('active', uiPrefs.lang === 'en');
             loadFromStorage();
             loadNotifySettings();
             loadActionLog();
@@ -9067,7 +8718,6 @@ function getClass2IconByClass3(c3) {
             document.querySelector('.main-content').classList.add('ready');
             // Показываем онбординг новым пользователям
             showOnboardingIfNeeded();
-            ensureAuthGate();
         };
     </script>
     <!-- DATE PICKER POPUP -->
