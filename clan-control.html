@@ -26,7 +26,7 @@
             --accent:    #c9a84c;
             --accent-h:  #b8922e;
             --accent-s:  #e8c97a;
-            --accent2-s: #16a34a;
+            --accent2-s: #22c55e;
             --shadow:    rgba(0,0,0,0.7);
             --glow:      rgba(201,168,76,0.1);
             --input-bg:  #080e0c;
@@ -47,7 +47,8 @@
             --text5:     #a07848;
             --accent:    #c9a84c;
             --accent-h:  #b8922e;
-            --accent-s:  #e8c86a;
+            --accent-s:  #e0bb55;
+            --accent2-s: #16a34a;
             --shadow:    rgba(60,30,5,0.18);
             --glow:      rgba(180,120,40,0.12);
             --input-bg:  #faf5ed;
@@ -238,10 +239,15 @@
         .topbar-divider { width: 1px; height: 18px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
 
         .topbar-clan {
-            font-size: 10px; font-weight: 700; color: var(--accent);
-            background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.18);
+            font-size: 10px; font-weight: 800; color: var(--accent-s);
+            background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3);
             border-radius: 7px; padding: 4px 10px; text-transform: uppercase;
             letter-spacing: 0.06em; white-space: nowrap;
+        }
+        body.light .topbar-clan {
+            color: #6a3c00 !important;
+            background: rgba(201,168,76,0.2) !important;
+            border-color: rgba(170,120,30,0.5) !important;
         }
 
         .topbar-user {
@@ -559,15 +565,10 @@
         .info-q-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border); border: 1px solid var(--border2); color: var(--text5); font-size: 10px; font-weight: 900; cursor: pointer; transition: all .15s; flex-shrink: 0; margin-left: 5px; vertical-align: middle; font-family: monospace; line-height: 1; }
         .info-q-btn:hover { background: rgba(201,168,76,0.12); border-color: var(--accent); color: var(--accent-s); }
 
-        /* ===================================================
-           LIGHT THEME — COMPLETE OVERRIDES v3
-           All hardcoded dark colors → warm brown palette
-        =================================================== */
+        /* ── GLOBAL FIXES ─────────────────────────────────── */
+        .cc-hover-row:hover td { background: var(--bg3) !important; }
 
-        /* Row hover */
-        .cc-row-hover:hover td { background: var(--bg3) !important; }
-
-        /* Font weight boost across light theme */
+        /* ── LIGHT THEME ──────────────────────────────────── */
         body.light td { font-weight: 500 !important; color: var(--text) !important; }
         body.light th { color: var(--text4) !important; font-weight: 800 !important; border-color: var(--border) !important; }
         body.light tr:hover td { background: var(--bg3) !important; }
@@ -576,11 +577,12 @@
         body.light .topbar-logo { color: var(--text) !important; }
         body.light .topbar-logo span { color: var(--accent) !important; }
         body.light .topbar-icon-btn { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text3) !important; }
-        body.light .topbar-icon-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; background: var(--bg2) !important; }
+        body.light .topbar-icon-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
         body.light .topbar-user { background: var(--bg3) !important; border-color: var(--border) !important; }
-        body.light .topbar-clan { background: rgba(201,168,76,0.25) !important; border-color: rgba(180,140,50,0.6) !important; color: #6a3c00 !important; font-weight: 800 !important; display: inline-flex !important; }
+        body.light .topbar-user-email { color: var(--text2) !important; }
+        body.light .topbar-divider { background: var(--border) !important; }
 
-        /* Flip toggles */
+        /* Flip toggle text */
         body.light .flip-toggle[data-state="left"] .flip-toggle-option:first-child,
         body.light .flip-toggle[data-state="right"] .flip-toggle-option:last-child { color: #1e0f04 !important; font-weight: 800 !important; }
         body.light .flip-toggle[data-state="left"] .flip-toggle-option:last-child,
@@ -593,119 +595,85 @@
         body.light .nav-item:hover { background: var(--bg3) !important; color: var(--text) !important; }
         body.light .nav-item.active { background: linear-gradient(90deg, rgba(201,168,76,0.22), transparent) !important; border-left-color: var(--accent) !important; color: #6a3c00 !important; font-weight: 700 !important; }
 
-        /* Cards & layout */
+        /* Cards */
         body.light .card { background: var(--bg2) !important; border-color: var(--border) !important; }
         body.light .dash-card { background: var(--bg2) !important; border-color: var(--border) !important; }
         body.light .dash-card:hover { border-color: var(--accent) !important; }
         body.light .dash-card-title { color: var(--text4) !important; font-weight: 800 !important; }
-        body.light .dash-big-num { color: var(--text) !important; font-weight: 900 !important; }
+        body.light .dash-big-num { color: var(--text) !important; }
         body.light .dash-sub { color: var(--text4) !important; }
-        body.light .dash-alert { background: var(--bg2) !important; color: var(--text) !important; }
+        body.light .dash-alert { background: var(--bg2) !important; }
         body.light .dash-alert:hover { background: var(--bg3) !important; }
 
         /* Calendar */
-        body.light .calendar-header-cell { background: var(--bg3) !important; color: var(--text3) !important; font-weight: 800 !important; border-color: var(--border) !important; }
         body.light .calendar-grid { border-color: var(--border) !important; background: var(--border) !important; }
+        body.light .calendar-header-cell { background: var(--bg3) !important; color: var(--text3) !important; font-weight: 800 !important; }
         body.light .calendar-day { background: var(--bg2) !important; }
         body.light .calendar-day:hover { background: var(--bg3) !important; }
         body.light .calendar-day.other-month { background: var(--bg3) !important; opacity: 0.5 !important; }
-        body.light .calendar-day.today { background: var(--bg) !important; outline: 2px solid rgba(201,168,76,0.7) !important; }
+        body.light .calendar-day.today { background: var(--bg) !important; outline: 2px solid rgba(201,168,76,0.6) !important; }
         body.light .day-number { color: var(--text2) !important; font-weight: 700 !important; }
         body.light .event-epic   { background: rgba(201,168,76,0.28) !important; color: #6a3c00 !important; border-color: rgba(180,140,40,0.6) !important; font-weight: 700 !important; }
         body.light .event-siege  { background: rgba(180,40,40,0.18) !important; color: #7a1010 !important; border-color: rgba(180,40,40,0.5) !important; font-weight: 700 !important; }
         body.light .event-tv     { background: rgba(30,90,200,0.15) !important; color: #0f3a8a !important; border-color: rgba(30,90,200,0.4) !important; font-weight: 700 !important; }
         body.light .event-manual { background: rgba(20,140,60,0.18) !important; color: #0d5c28 !important; border-color: rgba(20,140,60,0.45) !important; font-weight: 700 !important; }
-        body.light .event-done   { opacity: 0.45 !important; }
-        body.light .km-stat-badge { background: var(--bg4) !important; color: var(--text4) !important; }
         body.light .dot-past   { background: #c0181a !important; }
         body.light .dot-done   { background: #16a34a !important; }
         body.light .dot-future { background: #1650b0 !important; }
 
-        /* Green accent vivid in light mode */
+        /* Green accents in light */
         body.light .trend-up   { color: #16a34a !important; font-weight: 700 !important; }
         body.light .toggle-done-btn.done { background: #16a34a !important; border-color: #16a34a !important; }
-        body.light .dash-alert-good { border-left-color: #16a34a !important; }
+        body.light .text-emerald-400 { color: #16a34a !important; }
+        body.light .text-red-400 { color: #b91c1c !important; }
+        body.light .text-yellow-400 { color: #92400e !important; }
 
         /* Profile */
         body.light .prf-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-        body.light .profile-stat-card { background: var(--bg2) !important; border-color: var(--border) !important; }
         body.light .prf-section-title { color: var(--text4) !important; font-weight: 800 !important; }
         body.light .prf-val-label { color: var(--text4) !important; font-weight: 700 !important; }
+        body.light .prf-val-big { color: var(--text) !important; }
+        body.light .profile-stat-card { background: var(--bg2) !important; border-color: var(--border) !important; }
         body.light .km-row:hover { background: var(--bg3) !important; }
         body.light .km-bar-wrap { background: var(--bg4) !important; }
-        body.light .profile-stat-val { color: var(--text) !important; }
-        body.light .profile-stat-label { color: var(--text4) !important; }
 
-        /* Pack detail */
-        body.light .pack-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-        body.light .pack-card:hover { border-color: var(--accent) !important; }
-        body.light .member-list-item { background: var(--bg2) !important; border-color: var(--border) !important; }
-
-        /* Badges */
+        /* Badges & tags */
         body.light .pac-tag { background: var(--bg3) !important; color: var(--text3) !important; border-color: var(--border) !important; font-weight: 700 !important; }
         body.light .badge-игрок { background: var(--bg3) !important; color: var(--text3) !important; border-color: var(--border) !important; font-weight: 700 !important; }
         body.light .badge-кл { background: rgba(201,168,76,0.2) !important; color: #6a3c00 !important; border-color: rgba(180,140,40,0.4) !important; }
 
-        /* Settings — make labels + inputs more readable */
-        body.light .card input[type=number],
-        body.light .card input[type=text] { color: var(--text) !important; background: var(--bg3) !important; border-color: var(--border) !important; font-weight: 600 !important; }
-        body.light .card label, body.light .card span { font-weight: 500; }
+        /* Pack cards */
+        body.light .pack-card { background: var(--bg2) !important; border-color: var(--border) !important; }
+        body.light .pack-card:hover { border-color: var(--accent) !important; }
+        body.light .member-list-item { background: var(--bg2) !important; border-color: var(--border) !important; }
 
-        /* Settings weights section labels specifically */
-        body.light #page-settings .card label,
-        body.light #page-settings .card > div > span {
-            font-weight: 600 !important;
-            color: var(--text2) !important;
-        }
-
-        /* Inputs globally */
+        /* Inputs */
         body.light input, body.light textarea, body.light select {
             color: var(--text) !important; background: var(--input-bg) !important; border-color: var(--border) !important;
         }
         body.light input::placeholder, body.light textarea::placeholder { color: var(--text5) !important; }
         body.light .input-dark { background: var(--input-bg) !important; border-color: var(--border) !important; color: var(--text) !important; }
 
-        /* Inline style color overrides (via attribute selectors) */
-        body.light [style*="color:#475569"]  { color: var(--text3) !important; }
-        body.light [style*="color:#64748b"]  { color: var(--text4) !important; }
-        body.light [style*="color:#94a3b8"]  { color: var(--text3) !important; }
-        body.light [style*="color:#e2e8f0"]  { color: var(--text)  !important; }
-        body.light [style*="color:#a5b4fc"]  { color: #2a4ab8 !important; }
-        body.light [style*="color:#60a5fa"]  { color: #0f3a8a !important; }
-        body.light [style*="color:#f8fafc"]  { color: var(--text) !important; }
-        body.light .text-slate-500, body.light .text-slate-400 { color: var(--text3) !important; }
-        body.light .text-slate-600 { color: var(--text2) !important; }
-
-        /* Hardcoded bg overrides via attribute selectors */
-        body.light [style*="background:#12171f"] { background: var(--bg3) !important; border-color: var(--border) !important; }
-        body.light [style*="background:#1e2530"] { background: var(--bg3) !important; border-color: var(--border) !important; }
-        body.light [style*="background:#1a1f29"] { background: var(--bg3) !important; }
-        body.light [style*="background:#0b0e14"] { background: var(--bg4) !important; }
-        body.light [style*="background:#1e3a5f"] { background: var(--border2) !important; color: var(--bg2) !important; }
-        body.light [style*="background:#1a3a1a"] { background: rgba(20,120,60,0.18) !important; color: #0d5c28 !important; }
-
-        /* Day modal & calendar modal */
-        body.light .event-modal-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-        body.light .event-item-row { background: var(--bg3) !important; border-color: var(--border) !important; }
-        body.light .day-modal-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-
-        /* Drop zone border in day modal */
-        body.light #dayDropZone { border-color: var(--border2) !important; }
-        body.light #dayDropZone:hover { border-color: var(--accent) !important; }
-
-        /* Info & other modals */
-        body.light .info-modal-box { background: var(--bg2) !important; border-color: var(--border) !important; }
-        body.light .info-modal-title { color: var(--text) !important; font-weight: 900 !important; }
-        body.light .info-modal-body  { color: var(--text3) !important; }
-        body.light .info-modal-formula { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text4) !important; }
-        body.light .info-modal-close { background: var(--bg4) !important; color: var(--text3) !important; border: 1px solid var(--border) !important; }
+        /* Settings weight labels */
+        body.light #page-settings label,
+        body.light #valueWeightsConfig span { font-weight: 600 !important; color: var(--text2) !important; }
+        body.light #valueWeightsConfig input { font-weight: 700 !important; }
 
         /* Autocomplete */
         body.light .autocomplete-suggestions { background: var(--bg2) !important; border-color: var(--accent) !important; }
         body.light .suggestion-item { border-bottom-color: var(--border) !important; color: var(--text2) !important; }
-        body.light .suggestion-item:hover { background: rgba(201,168,76,0.15) !important; color: var(--accent-h) !important; }
 
-        /* Dp-popup datepicker */
+        /* Modals */
+        body.light .event-modal-card { background: var(--bg2) !important; border-color: var(--border) !important; }
+        body.light .event-item-row { background: var(--bg3) !important; border-color: var(--border) !important; }
+        body.light .day-modal-card { background: var(--bg2) !important; border-color: var(--border) !important; }
+        body.light .info-modal-box { background: var(--bg2) !important; border-color: var(--border) !important; }
+        body.light .info-modal-title { color: var(--text) !important; }
+        body.light .info-modal-body  { color: var(--text3) !important; }
+        body.light .info-modal-formula { background: var(--bg3) !important; border-color: var(--border) !important; }
+        body.light .info-modal-close { background: var(--bg4) !important; color: var(--text3) !important; }
+
+        /* Datepicker */
         body.light .dp-popup { background: var(--bg2) !important; border-color: var(--border) !important; }
         body.light .dp-btn { background: var(--bg3) !important; border-color: var(--border2) !important; color: var(--text2) !important; }
         body.light .dp-day { color: var(--text3) !important; }
@@ -716,35 +684,37 @@
         body.light .dp-month-btn, body.light .dp-year-btn { background: var(--bg3) !important; color: var(--text3) !important; }
         body.light .dp-month-btn.selected, body.light .dp-year-btn.selected { background: var(--accent) !important; color: #1e0f04 !important; }
 
-        /* Next event badge */
-        body.light #dashNextEvent { background: rgba(180,130,40,0.15) !important; border-color: rgba(180,130,40,0.4) !important; color: #6a3c00 !important; font-weight: 700 !important; }
+        /* All hardcoded dark bg selectors */
+        body.light [style*="background:#12171f"] { background: var(--bg3) !important; border-color: var(--border) !important; }
+        body.light [style*="background:#1e2530"] { background: var(--bg3) !important; border-color: var(--border) !important; }
+        body.light [style*="background:#1a1f29"] { background: var(--bg3) !important; }
+        body.light [style*="background:#0b0e14"] { background: var(--bg4) !important; }
+        body.light [style*="background:#1e3a5f"] { background: var(--border2) !important; color: var(--bg2) !important; }
+        body.light [style*="color:#475569"]  { color: var(--text3) !important; }
+        body.light [style*="color:#64748b"]  { color: var(--text4) !important; }
+        body.light [style*="color:#94a3b8"]  { color: var(--text3) !important; }
+        body.light [style*="color:#e2e8f0"]  { color: var(--text)  !important; }
+        body.light [style*="color:#a5b4fc"]  { color: #2a4ab8 !important; }
+        body.light [style*="color:#f8fafc"]  { color: var(--text) !important; }
+        body.light .text-slate-500, body.light .text-slate-400 { color: var(--text3) !important; }
+        body.light .text-slate-600 { color: var(--text2) !important; }
 
-        /* Settings specific buttons */
-        body.light button[style*="#1e2530"], body.light button[style*="#1a1f29"],
-        body.light button[style*="#1e3a5f"] { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text2) !important; }
-        body.light code[style] { background: var(--bg4) !important; color: var(--text3) !important; }
-        body.light label[style*="#1e3a5f"], body.light label[style*="#1a3a1a"] { background: var(--bg4) !important; color: var(--text2) !important; }
-
-        /* Calendar nav arrows */
+        /* Next event + misc */
+        body.light #dashNextEvent { background: rgba(180,130,40,0.15) !important; border-color: rgba(180,130,40,0.4) !important; color: #6a3c00 !important; }
+        body.light .login-step-num { color: #1e0f04 !important; }
+        body.light .login-card { background: var(--bg2) !important; border-color: var(--border) !important; }
+        body.light .player-nick-link { color: var(--text) !important; border-bottom-color: var(--border2) !important; }
+        body.light .player-nick-link:hover { color: var(--accent-h) !important; }
         body.light button[class*="bg-slate-800"] { background: var(--bg4) !important; color: var(--text) !important; border: 1px solid var(--border) !important; }
         body.light .p-2.bg-slate-800 { background: var(--bg4) !important; color: var(--text) !important; border: 1px solid var(--border) !important; }
+
+        /* History search input */
+        body.light #kmHistorySearch { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text) !important; }
 
         /* Profa dropdown */
         body.light #pProfaDrop { background: var(--bg2) !important; border-color: var(--accent) !important; }
         body.light #pProfaSearch { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text) !important; }
         body.light #promptProfaList { background: var(--bg3) !important; border-color: var(--border) !important; }
-
-        /* Login */
-        body.light .login-step-num { color: #1e0f04 !important; }
-        body.light .login-card { background: var(--bg2) !important; border-color: var(--border) !important; }
-        body.light .login-subtitle { color: var(--text3) !important; }
-
-        /* History/Stats section hardcoded boxes */
-        body.light #kmHistorySearch { background: var(--bg3) !important; border-color: var(--border) !important; color: var(--text) !important; }
-
-        /* Player nick links */
-        body.light .player-nick-link { border-bottom-color: var(--border2) !important; color: var(--text) !important; }
-        body.light .player-nick-link:hover { color: var(--accent-h) !important; border-bottom-color: var(--accent-h) !important; }
     </style>
 </head>
 <body>
@@ -1076,7 +1046,7 @@
                 </div>
                 <div class="space-y-6">
                     <div class="card sticky top-10">
-                        <h3 class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Добавить игрока</h3>
+                        <h3 class="text-sm font-black uppercase tracking-widest mb-4" style="color:var(--text4)">Добавить игрока</h3>
                         <div class="relative">
                             <input id="detailPlayerSearchInput" type="text" class="input-dark" placeholder="Ник..." onfocus="handleDetailSearch('')" oninput="handleDetailSearch(this.value)">
                             <div id="detailSearchSuggestions" class="autocomplete-suggestions hidden"></div>
@@ -1120,10 +1090,15 @@
                 <div id="apiKeyStatus" style="display:none;margin-top:12px;font-size:13px;padding:10px;border-radius:8px"></div>
             </div>
             <div class="card mb-6">
-                <h2 class="text-lg font-bold mb-2">🔗 Алиасы ников</h2>
-                <p class="text-slate-500 text-sm mb-4">Если AI читает ник неправильно — укажи соответствие. Например: <code style="background:#1e2530;padding:1px 6px;border-radius:4px;font-size:11px">НигативВ → НигатиВ</code></p>
-                <div id="aliasesList" class="space-y-2 mb-4"></div>
-                <button onclick="addAliasRow()" style="background:none;border:1px dashed #2d3748;color:#64748b;border-radius:10px;padding:10px;width:100%;cursor:pointer;font-size:13px;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#64748b'">+ Добавить алиас</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0" onclick="(function(){var b=document.getElementById('aliasesBody');var t=document.getElementById('aliasesToggle');var open=b.style.display!=='none';b.style.display=open?'none':'';t.textContent=open?'▼ Показать':'▲ Свернуть'})()">
+                    <h2 class="text-lg font-bold">🔗 Алиасы ников</h2>
+                    <span id="aliasesToggle" style="font-size:11px;color:var(--text4);font-weight:600;padding:2px 8px;border:1px solid var(--border);border-radius:6px">▲ Свернуть</span>
+                </div>
+                <div id="aliasesBody">
+                    <p class="text-slate-500 text-sm mb-4" style="margin-top:12px">Если AI читает ник неправильно — укажи соответствие. Например: <code style="background:var(--bg4);padding:1px 6px;border-radius:4px;font-size:11px;color:var(--text3)">НигативВ → НигатиВ</code></p>
+                    <div id="aliasesList" class="space-y-2 mb-4"></div>
+                    <button onclick="addAliasRow()" style="background:none;border:1px dashed var(--border2);color:var(--text4);border-radius:10px;padding:10px;width:100%;cursor:pointer;font-size:13px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-s)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text4)'">+ Добавить алиас</button>
+                </div>
             </div>
                         <div class="card mb-6">
                 <h2 class="text-lg font-bold mb-2">⚖️ Веса ценности</h2>
@@ -1563,7 +1538,7 @@
                     '#475569': '#7a5530',
                     '#64748b': '#7a5530',
                     '#94a3b8': '#5a3a1a',
-                    '#a5b4fc': '#3a5ab0',
+                    '#a5b4fc': '#2a4ab8',
                     '#6366f1': '#b8922e',
                     '#6366f122': 'rgba(200,165,70,0.15)',
                     '#6366f144': 'rgba(180,140,50,0.4)',
@@ -1574,7 +1549,13 @@
                     const original = el.dataset.ccOriginalStyle || el.getAttribute('style') || '';
                     if (!el.dataset.ccOriginalStyle) el.dataset.ccOriginalStyle = original;
                     if (!isLight) {
+                        // Restore original but preserve display/visibility set after init
+                        const cur = el.getAttribute('style') || '';
+                        const dispMatch = cur.match(/display\s*:\s*([^;!]+)/);
+                        const visMatch = cur.match(/visibility\s*:\s*([^;!]+)/);
                         el.setAttribute('style', original);
+                        if (dispMatch) el.style.display = dispMatch[1].trim();
+                        if (visMatch) el.style.visibility = visMatch[1].trim();
                         return;
                     }
                     let updated = original;
@@ -1582,10 +1563,16 @@
                         updated = updated.split(from).join(to);
                     });
                     updated = updated
-                        .replace(/color:\s*#(?:cbd5e1|d1d5db|9ca3af|6b7280)/gi, 'color:#000000')
-                        .replace(/border:\s*1px dashed #5c4326/gi, 'border:1px dashed #5c4326')
-                        .replace(/border:\s*1px solid #5c4326/gi, 'border:1px solid #5c4326');
+                        .replace(/color:\s*#(?:cbd5e1|d1d5db|9ca3af|6b7280)/gi, 'color:var(--text3)')
+                        .replace(/border:\s*1px dashed #5c4326/gi, 'border:1px dashed var(--border)')
+                        .replace(/border:\s*1px solid #5c4326/gi, 'border:1px solid var(--border)');
+                    // Preserve runtime display/visibility
+                    const cur = el.getAttribute('style') || '';
+                    const dispMatch = cur.match(/display\s*:\s*([^;!]+)/);
+                    const visMatch = cur.match(/visibility\s*:\s*([^;!]+)/);
                     el.setAttribute('style', updated);
+                    if (dispMatch) el.style.display = dispMatch[1].trim();
+                    if (visMatch) el.style.visibility = visMatch[1].trim();
                 });
             }
 
@@ -1599,7 +1586,7 @@
                         const lang = localStorage.getItem('cc_lang') || 'ru';
                         applyStaticTranslations(lang);
                         normalizeLightThemeInlineStyles();
-                    }, 120);
+                    }, 200);
                 });
                 observer.observe(document.body, { childList: true, subtree: true, characterData: true });
             }
@@ -2255,12 +2242,12 @@
             }
 
             body.innerHTML = sorted.map(p => `
-                <tr class="cc-row-hover transition-colors group" onclick="openPlayerProfile('${p.name}')" style="cursor:pointer">
+                <tr class="cc-hover-row transition-colors group" onclick="openPlayerProfile('${p.name}')" style="cursor:pointer">
                     <td>
-                        <span class="font-bold text-slate-200">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
+                        <span class="font-bold" style="color:var(--text)">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
-                    <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:#2d3748;font-size:14px">○</span>'}</td>
+                    <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:var(--text4);font-size:14px">○</span>'}</td>
                     <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="Нажми чтобы изменить профу" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:8px;padding:2px 4px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
                     <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="Нажми чтобы изменить пак" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
@@ -2372,8 +2359,8 @@
                 return;
             }
             body.innerHTML = archive.map(p => `
-                <tr class="cc-row-hover">
-                    <td class="font-bold text-slate-200">${p.name}</td>
+                <tr class="cc-hover-row">
+                    <td class="font-bold" style="color:var(--text)">${p.name}</td>
                     <td style="white-space:nowrap">${
                         (p.profas && p.profas.length > 1)
                             ? p.profas.map(pf => profaIconHtml(pf, 22)).join('<span style="color:#2d3748;margin:0 2px">·</span>')
@@ -2721,8 +2708,8 @@
             list.innerHTML = members.map(m => `
                 <div class="member-list-item">
                     <span style="display:flex;align-items:center;gap:10px">
-                        <span class="player-nick-link" onclick="openPlayerProfile('${m.name.replace(/'/g,"\\'")}'); event.stopPropagation();" style="font-weight:700;cursor:pointer">${m.name}</span>
-                        <span style="font-size:11px;color:var(--text4);white-space:nowrap">${profaIconHtml(m.profa,16)}</span>
+                        <span class="player-nick-link" onclick="openPlayerProfile('${m.name.replace(/'/g,"\\'")}');event.stopPropagation();" style="font-weight:700;cursor:pointer">${m.name}</span>
+                        <span style="font-size:11px;color:var(--text4)">${profaIconHtml(m.profa,16)}</span>
                     </span>
                     <button onclick="removeFromPack(${m.id})" class="text-slate-500 hover:text-red-500 text-sm">Удалить</button>
                 </div>
