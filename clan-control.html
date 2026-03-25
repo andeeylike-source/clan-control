@@ -1503,7 +1503,67 @@
                 ['КМ · avg', 'wars · avg'],
                 ['⚠️ Не попали в CC подряд', '⚠️ Missing CC in a row'],
                 ['Игроки из ростера которые отсутствовали в Командном канале N+ КМ подряд', 'Roster players absent from Clan Channel for N+ consecutive wars'],
-                ['КМ+', 'wars+']
+                ['Время (необязательно)', 'Time (optional)'],
+                ['➕ Добавить событие', '➕ Add event'],
+                ['Нажми чтобы развернуть', 'Click to expand'],
+                ['⏳ Анализирую...', '⏳ Analyzing...'],
+                ['Введи название...', 'Enter name...'],
+                ['Антарас', 'Antharas'],
+                ['Валакас', 'Valakas'],
+                ['Баюм', 'Baium'],
+                ['Ант Квин', 'Ant Queen'],
+                ['Коре', 'Core'],
+                ['Орфен', 'Orfen'],
+                ['Осада', 'Siege'],
+                ['Фарм', 'Farm'],
+                ['Нет данных КМ за выбранный период', 'No war data for selected period'],
+                ['КМ+', 'wars+'],
+                ['Календарь КМ', 'War Calendar'],
+                ['📅 Война Календарь', '📅 War Calendar'],
+                ['🔵 Предстоящий день', '🔵 Upcoming day'],
+                ['⚠️ Прошедший день', '⚠️ Past day'],
+                ['✅ Сегодня', '✅ Today'],
+                ['КМ события', 'War events'],
+                ['КМ событий нет', 'No war events'],
+                ['📸 Скриншоты КМ', '📸 War Screenshots'],
+                ['Нажми или перетащи скриншоты (до 25 шт.)', 'Click or drag screenshots (up to 25)'],
+                ['🔍 Анализировать скриншоты (AI)', '🔍 Analyze screenshots (AI)'],
+                ['✅ Применить в ростер', '✅ Apply to roster'],
+                ['👥 Распознанные игроки', '👥 Recognized players'],
+                ['Свернуть', 'Minimize'],
+                ['Редактировать событие', 'Edit event'],
+                ['Название', 'Name'],
+                ['Время', 'Time'],
+                ['Название...', 'Name...'],
+                ['Отмена', 'Cancel'],
+                ['Редактировать', 'Edit'],
+                ['Удалить', 'Delete'],
+                ['+ Добавить событие', '+ Add event'],
+                ['Снять отметку', 'Unmark'],
+                ['Подтвердить КМ', 'Confirm war'],
+                ['Используется пул из 6 ключей', 'Using pool of 6 keys'],
+                ['Закрыть', 'Close'],
+                ['🏷️ Новое событие', '🏷️ New event'],
+                ['Другое', 'Other'],
+                ['Выбери событие', 'Select an event'],
+                ['Очистить', 'Clear'],
+                ['мар', 'Mar'],
+                ['апр', 'Apr'],
+                ['май', 'May'],
+                ['июн', 'Jun'],
+                ['июл', 'Jul'],
+                ['авг', 'Aug'],
+                ['сен', 'Sep'],
+                ['окт', 'Oct'],
+                ['ноя', 'Nov'],
+                ['дек', 'Dec'],
+                ['янв', 'Jan'],
+                ['фев', 'Feb'],
+                ['г.', ''],
+                ['Перейти к КМ', 'Go to war'],
+                ['Нет данных', 'No data'],
+                ['Прошедший день', 'Past day'],
+                ['Предстоящий день', 'Upcoming day']
             ];
 
             const UI_ATTRS = {
@@ -1518,7 +1578,9 @@
                     '[TAG] или название': '[TAG] or clan name',
                     'Поиск по нику...': 'Search by nickname...',
                     'Ник...': 'Nickname...',
-                    '🔍 Поиск игрока по КМам...': '🔍 Search player in wars...'
+                    '🔍 Поиск игрока по КМам...': '🔍 Search player in wars...',
+                    'Введи название...': 'Enter name...',
+                    'Название...': 'Name...'
                 },
                 'aria-label': {
                     'Переключить тему': 'Toggle theme',
@@ -1697,6 +1759,8 @@
                 if (dashPage && dashPage.classList.contains('active')) renderDashboard();
                 const statsPage = document.getElementById('page-stats');
                 if (statsPage && statsPage.classList.contains('active') && typeof renderStats === 'function') renderStats();
+                const calPage = document.getElementById('page-calendar');
+                if (calPage && calPage.classList.contains('active') && typeof renderCalendar === 'function') renderCalendar();
                 normalizeLightThemeInlineStyles();
             };
 
@@ -1929,14 +1993,18 @@
             if (!grid || !label) return;
             grid.innerHTML = '';
 
-            const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            const _lang = localStorage.getItem('cc_lang') || 'ru';
+            const daysOfWeek = _lang === 'en'
+                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                : ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
             daysOfWeek.forEach(day => {
                 grid.innerHTML += `<div class="calendar-header-cell">${day}</div>`;
             });
 
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-            label.innerText = currentDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+            const _locale = _lang === 'en' ? 'en-US' : 'ru-RU';
+            label.innerText = currentDate.toLocaleString(_locale, { month: 'long', year: 'numeric' });
 
             const firstDay = new Date(year, month, 1);
             let startOffset = firstDay.getDay() - 1;
@@ -2013,14 +2081,16 @@
             document.getElementById('dupesOverlay')?.remove();
             activeDayDate = dateStr;
             const dateObj = new Date(dateStr + 'T12:00:00');
-            const formatted = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+            const _dlang = localStorage.getItem('cc_lang') || 'ru';
+            const _dlocale = _dlang === 'en' ? 'en-US' : 'ru-RU';
+            const formatted = dateObj.toLocaleDateString(_dlocale, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
             document.getElementById('dayModalTitle').innerText = formatted;
             
             const today = todayStr();
             let subtitle = '';
-            if (dateStr < today) subtitle = '⚠️ Прошедший день';
-            else if (dateStr === today) subtitle = '✅ Сегодня';
-            else subtitle = '🔵 Предстоящий день';
+            if (dateStr < today) subtitle = _dlang === 'en' ? '⚠️ Past day' : '⚠️ Прошедший день';
+            else if (dateStr === today) subtitle = _dlang === 'en' ? '✅ Today' : '✅ Сегодня';
+            else subtitle = _dlang === 'en' ? '🔵 Upcoming day' : '🔵 Предстоящий день';
             document.getElementById('dayModalSubtitle').innerText = subtitle;
 
             // Инициализируем превью скриншотов для этого дня
@@ -2038,10 +2108,11 @@
             const container = document.getElementById('dayEventsList');
             const events = getAllEventsForDate(dateStr);
 
+            const _elang = localStorage.getItem('cc_lang') || 'ru';
             if (events.length === 0) {
-                container.innerHTML = '<p class="text-slate-600 text-sm italic mb-2">КМ событий нет</p>';
+                container.innerHTML = '<p class="text-slate-600 text-sm italic mb-2">' + (_elang === 'en' ? 'No war events' : 'КМ событий нет') + '</p>';
             } else {
-                container.innerHTML = `<div class="section-label">КМ события</div>` + events.map(ev => {
+                container.innerHTML = `<div class="section-label">${_elang === 'en' ? 'War events' : 'КМ события'}</div>` + events.map(ev => {
                 const status = getEventStatus(dateStr, ev.key);
                 const isDone = status === 'done';
                 const doneClass = isDone ? ' is-done' : '';
@@ -2065,9 +2136,9 @@
                             ${timeLabel}
                         </div>
                         <div class="flex items-center gap-2 ml-2">
-                            <button onclick="openEditEventModal('${dateStr}', '${ev.key}')" class="text-slate-500 hover:text-indigo-400 text-xs" title="Редактировать">✏️</button>
+                            <button onclick="openEditEventModal('${dateStr}', '${ev.key}')" class="text-slate-500 hover:text-indigo-400 text-xs" title="${_elang==='en'?'Edit':'Редактировать'}">✏️</button>
                             ${!ev.isAuto ? `<button onclick="deleteManualEvent(${ev.id}, '${dateStr}')" style="background:none;border:none;color:#475569;cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#475569'" title="Удалить">✕</button>` : ''}
-                            <button class="toggle-done-btn${checkClass}" onclick="toggleEventDone('${dateStr}', '${ev.key}')" title="${isDone ? 'Снять отметку' : 'Подтвердить КМ'}">
+                            <button class="toggle-done-btn${checkClass}" onclick="toggleEventDone('${dateStr}', '${ev.key}')" title="${isDone ? (_elang === 'en' ? 'Unmark' : 'Снять отметку') : (_elang === 'en' ? 'Confirm war' : 'Подтвердить КМ')}">
                                 ${isDone ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
                             </button>
                         </div>
@@ -2079,7 +2150,7 @@
             // Кнопка добавить ручное событие — всегда внизу
             const addBtn = document.createElement('div');
             addBtn.style.marginTop = '8px';
-            addBtn.innerHTML = `<button style="background:none;border:1px dashed #2d3748;color:#64748b;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;width:100%;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#64748b'">+ Добавить событие</button>`;
+            addBtn.innerHTML = `<button style="background:none;border:1px dashed var(--border2);color:var(--text4);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;width:100%;transition:all .2s">${_elang === 'en' ? '+ Add event' : '+ Добавить событие'}</button>`;
             addBtn.querySelector('button').onclick = () => addManualEventToDay(dateStr);
             container.appendChild(addBtn);
         }
@@ -2339,7 +2410,7 @@
                     </td>
                     <td class="text-right">
                         <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="event.stopPropagation();editPlayer(${p.id})" class="text-orange-400" title="Редактировать">✏️</button>
+                            <button onclick="event.stopPropagation();editPlayer(${p.id})" class="text-orange-400" title="${_elang==='en'?'Edit':'Редактировать'}">✏️</button>
                             <button onclick="event.stopPropagation();moveToArchive(${p.id})" class="text-slate-500 hover:text-red-400" title="В архив">🗑️</button>
                         </div>
                     </td>
@@ -8758,7 +8829,10 @@ function getClass2IconByClass3(c3) {
             let total=0,done=0,missed=0;
             for(let d=1;d<=31;d++){const dt=new Date(year,month,d);if(dt.getMonth()!==month)break;const ds=localDateStr(dt);getAllEventsForDate(ds).forEach(ev=>{total++;const st=getEventStatus(ds,ev.key);if(st==='done')done++;else if(st==='past')missed++;});}
             const kmMonth = allDates.filter(d=>d.startsWith(year+'-'+String(month+1).padStart(2,'0'))).length;
-            el.innerHTML='<div style="background:#12171f;border:1px solid #1e2530;border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:#64748b">События:</span> <b style="color:#e2e8f0">'+total+'</b> <span style="color:#22c55e;margin-left:4px">✓'+done+'</span>'+(missed>0?' <span style="color:#ef4444">✗'+missed+'</span>':'')+'</div><div style="background:#12171f;border:1px solid #1e2530;border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:#64748b">КМ записано:</span> <b style="color:#3b82f6">'+kmMonth+'</b></div>';
+            const _slang = localStorage.getItem('cc_lang') || 'ru';
+            const _evLabel = _slang === 'en' ? 'Events:' : 'События:';
+            const _warLabel = _slang === 'en' ? 'Wars recorded:' : 'КМ записано:';
+            el.innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:var(--text4)">'+_evLabel+'</span> <b style="color:var(--text)">'+total+'</b> <span style="color:#22c55e;margin-left:4px">✓'+done+'</span>'+(missed>0?' <span style="color:#ef4444">✗'+missed+'</span>':'')+'</div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px"><span style="color:var(--text4)">'+_warLabel+'</span> <b style="color:#3b82f6">'+kmMonth+'</b></div>';
         }
 
         // Debounce будет применён при инициализации (window.onload)
