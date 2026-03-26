@@ -2598,13 +2598,22 @@
         }
 
         function restoreFromArchive(id) {
-            const idx = archive.findIndex(p => p.id === id);
-            if (idx === -1) return;
-            roster.push(archive[idx]);
-            archive.splice(idx, 1);
-            saveToStorage();
-            renderArchive();
-            renderRoster();
+            const player = archive.find(p => p.id === id);
+            if (!player) return;
+            showConfirm(
+                t('Восстановить игрока?','Restore player?'),
+                t(`"${player.name}" будет возвращён в ростер.`,`"${player.name}" will be moved back to the roster.`),
+                () => {
+                    const idx = archive.findIndex(p => p.id === id);
+                    if (idx === -1) return;
+                    roster.push(archive[idx]);
+                    archive.splice(idx, 1);
+                    saveToStorage();
+                    renderArchive();
+                    renderRoster();
+                },
+                false
+            );
         }
 
         // Текущие профы в модалке (массив)
@@ -2863,8 +2872,8 @@
             const player = archive.find(p => p.id === id);
             if (!player) return;
             showConfirm(
-                '⚠️ Удалить навсегда?',
-                `Игрок "${player.name}" будет удалён без возможности восстановления.`,
+                t('⚠️ Удалить навсегда?','⚠️ Delete permanently?'),
+                t(`Игрок "${player.name}" будет удалён без возможности восстановления.`,`Player "${player.name}" will be deleted with no way to recover.`),
                 () => {
                     archive = archive.filter(p => p.id !== id);
                     saveToStorage();
@@ -3587,7 +3596,7 @@ function getClass2IconByClass3(c3) {
                                     const a = dayProfa.toLowerCase().trim(), b = pf.toLowerCase().trim();
                                     return a === b || a.includes(b.split(' (')[0].toLowerCase()) || b.includes(a.split(' (')[0].toLowerCase());
                                 }).length;
-                                const countLabel = kmCount > 0 ? `<span style="font-size:9px;background:#6366f133;padding:1px 5px;border-radius:3px;margin-left:2px;color:#a5b4fc">${kmCount} КМ</span>` : `<span style="font-size:9px;color:#475569;margin-left:2px">0 КМ</span>`;
+                                const countLabel = kmCount > 0 ? `<span style="font-size:9px;background:#6366f133;padding:1px 5px;border-radius:3px;margin-left:2px;color:#a5b4fc">${kmCount} ${t('КМ','wars')}</span>` : `<span style="font-size:9px;color:#475569;margin-left:2px">0 ${t('КМ','wars')}</span>`;
                                 return `
                             <button onclick="switchProfileProfa('${player.name.replace(/'/g,"\'")}','${pf.replace(/'/g,"\'")}',this)"
                                 class="profa-tab-btn"
