@@ -1817,6 +1817,8 @@
                 if (archivePage && archivePage.classList.contains('active') && typeof renderArchive === 'function') renderArchive();
                 const rosterPage = document.getElementById('page-roster');
                 if (rosterPage && rosterPage.classList.contains('active') && typeof renderRoster === 'function') renderRoster();
+                const profilePage = document.getElementById('page-profile');
+                if (profilePage && profilePage.classList.contains('active') && typeof renderPlayerProfile === 'function') { const _cpn = (typeof currentProfileName !== 'undefined') ? currentProfileName : null; if (_cpn) renderPlayerProfile(_cpn); }
                 const settingsPage = document.getElementById('page-settings');
                 if (settingsPage && settingsPage.classList.contains('active')) {
                     if (typeof renderValueWeightsUI === 'function') renderValueWeightsUI();
@@ -2457,7 +2459,7 @@
                 const periodLabel = (rosterDateFrom || rosterDateTo)
                     ? ` · <span style="color:#6366f1">КМ% за: ${rosterDateFrom||'начало'}–${rosterDateTo||'сейчас'}</span>`
                     : (totalDates > 0 ? ` · КМ дней: ${totalDates}` : '');
-                statsEl.innerHTML = `👥 Всего: <b style="color:#e2e8f0">${total}</b> · Паков: <b style="color:#e2e8f0">${packsCount}</b>${newCount > 0 ? ` · <span style="color:#10b981">NEW: ${newCount}</span>` : ''}${periodLabel}`;
+                statsEl.innerHTML = `👥 ${t('Всего','Total')}: <b style="color:#e2e8f0">${total}</b> · ${t('Паков','Packs')}: <b style="color:#e2e8f0">${packsCount}</b>${newCount > 0 ? ` · <span style="color:#10b981">NEW: ${newCount}</span>` : ''}${periodLabel}`;
             }
 
             body.innerHTML = sorted.map(p => `
@@ -2467,7 +2469,7 @@
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:#2d3748;font-size:14px">○</span>'}</td>
-                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="${t('Нажми чтобы изменить профу','Click to change class')}" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:8px;padding:2px 4px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
+                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="${t('Нажми чтобы изменить профу','Click to change class')}" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:8px;padding:2px 4px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ ' + t('профа','class') + '</span>'}</td>
                     <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="${t('Нажми чтобы изменить пак','Click to change pack')}" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
                     <td onclick="event.stopPropagation()">
@@ -3597,7 +3599,7 @@ function getClass2IconByClass3(c3) {
                                     style="display:inline-flex;align-items:center;gap:4px;background:#0b0e14;border:1px dashed #2d3748;color:#475569;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .15s"
                                     onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'"
                                     onmouseout="this.style.borderColor='#2d3748';this.style.color='#475569'">
-                                    + профа
+                                    + ${t('профа','class')}
                                 </button>
                                 <div id="addProfaMenu_${normKey}" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#1a1f29;border:1px solid #6366f1;border-radius:10px;z-index:200;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.7)">
                                     <div style="padding:8px 10px;border-bottom:1px solid #1e2530">
