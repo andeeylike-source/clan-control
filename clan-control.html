@@ -3362,7 +3362,7 @@ function getClass2IconByClass3(c3) {
             const worstKm = presentStats.length > 0 ? presentStats.reduce((a,b)=>(b.kills<a.kills?b:a)) : null;
 
             // Тренд
-            let trendIcon = '→', trendColor = '#64748b', trendText = 'Стабильно';
+            let trendIcon = '→', trendColor = '#64748b', trendText = t('Стабильно','Stable');
             if (presentStats.length >= 4) {
                 const last3 = presentStats.slice(-3);
                 const prev3 = presentStats.slice(-6,-3);
@@ -3370,8 +3370,8 @@ function getClass2IconByClass3(c3) {
                     const avgL = last3.reduce((s,d)=>s+d.kills,0)/last3.length;
                     const avgP = prev3.reduce((s,d)=>s+d.kills,0)/prev3.length;
                     const diff = avgL - avgP;
-                    if (diff > 0.5)  { trendIcon='↑'; trendColor='#22c55e'; trendText=`+${diff.toFixed(1)} убийств/КМ`; }
-                    if (diff < -0.5) { trendIcon='↓'; trendColor='#ef4444'; trendText=`${diff.toFixed(1)} убийств/КМ`; }
+                    if (diff > 0.5)  { trendIcon='↑'; trendColor='#22c55e'; trendText=`+${diff.toFixed(1)} ${t('убийств/КМ','kills/war')}`; }
+                    if (diff < -0.5) { trendIcon='↓'; trendColor='#ef4444'; trendText=`${diff.toFixed(1)} ${t('убийств/КМ','kills/war')}`; }
                 }
             }
 
@@ -3402,6 +3402,7 @@ function getClass2IconByClass3(c3) {
             };
             const getRole = (pf) => pf ? Object.entries(ROLE_MAP).find(([,profas]) => profas.some(p => pf.includes(p.split(' ')[0])))?.[0] : null;
             const playerRole = getRole(profaName);
+            const displayRole = playerRole === 'Хилер/Баффер' ? t('Хилер/Баффер','Healer/Buffer') : playerRole === 'Танк' ? t('Танк','Tank') : playerRole === 'Лучник' ? t('Лучник','Archer') : playerRole === 'Призыватель' ? t('Призыватель','Summoner') : playerRole || '';
 
             // Статистика по классу — все у кого та же активная профа
             const classmates = profaName ? roster.filter(r => {
@@ -3462,19 +3463,19 @@ function getClass2IconByClass3(c3) {
             let valueFormula = '';
             const isSupportRole = playerRole === 'Хилер/Баффер' || playerRole === 'Танк';
             if (playerRole === 'Хилер/Баффер') {
-                radarLabels = ['ЯВКА','КЛАСС','KDA','ЖИВУЧЕСТЬ','PVP'];
+                radarLabels = [t('ЯВКА','ATTEND'),t('КЛАСС','CLASS'),'KDA',t('ЖИВУЧЕСТЬ','SURVIVAL'),'PVP'];
                 radarScores = [presScore, classScore, kdaScore, deathScore, pvpScore];
                 valueFormula = 'КМ-скор×65% + Явка×35% (vs медиана хилеров на каждом КМ)';
             } else if (playerRole === 'Танк') {
-                radarLabels = ['ЖИВУЧЕСТЬ','ЯВКА','КЛАСС','KDA','PVP'];
+                radarLabels = [t('ЖИВУЧЕСТЬ','SURVIVAL'),t('ЯВКА','ATTEND'),t('КЛАСС','CLASS'),'KDA','PVP'];
                 radarScores = [deathScore, presScore, classScore, kdaScore, pvpScore];
                 valueFormula = 'КМ-скор×65% + Явка×35% (vs медиана танков на каждом КМ)';
             } else if (playerRole === 'Призыватель') {
-                radarLabels = ['PVE','ЯВКА','КЛАСС','KDA','PVP'];
+                radarLabels = ['PVE',t('ЯВКА','ATTEND'),t('КЛАСС','CLASS'),'KDA','PVP'];
                 radarScores = [pveScore, presScore, classScore, kdaScore, pvpScore];
                 valueFormula = 'КМ-скор×65% + Явка×35%';
             } else {
-                radarLabels = ['ЯВКА','КЛАСС','KDA','PVP','PVE'];
+                radarLabels = [t('ЯВКА','ATTEND'),t('КЛАСС','CLASS'),'KDA','PVP','PVE'];
                 radarScores = [presScore, classScore, kdaScore, pvpScore, pveScore];
                 valueFormula = 'КМ-скор×65% + Явка×35% (vs медиана ДД на каждом КМ)';
             }
@@ -3653,7 +3654,7 @@ function getClass2IconByClass3(c3) {
                     <div class="prf-val-big" style="color:${valueColor}">${valueScore}<span style="font-size:12px;color:#475569">/100</span></div>
                     <div class="prf-val-label" style="display:flex;align-items:center;justify-content:center;gap:4px">${t('Ценность для клана','Clan value')}<span class="info-q-btn" title="${t('Подробнее о ценности','Learn more about clan value')}" onclick="showInfoModal('value')">?</span></div>
                     <div style="font-size:9px;color:${valueColor};margin-top:4px;font-weight:700">${valueScore>=70?t('Высокая','High'):valueScore>=40?t('Средняя','Medium'):t('Низкая','Low')}</div>
-                    ${playerRole ? `<div style="font-size:8px;color:#475569;margin-top:2px;text-transform:uppercase">${playerRole}</div>` : ''}
+                    ${displayRole ? `<div style="font-size:8px;color:#475569;margin-top:2px;text-transform:uppercase">${displayRole}</div>` : ''}
                 </div>
             </div>
 
@@ -3666,39 +3667,39 @@ function getClass2IconByClass3(c3) {
                     <!-- Карточки: лучший/худший/место/тренд -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                         <div class="prf-card">
-                            <div class="prf-section-title">🏆 Лучший КМ</div>
+                            <div class="prf-section-title">🏆 ${t('Лучший КМ','Best war')}</div>
                             ${bestKm ? `
                             <div style="font-size:20px;font-weight:900;color:#f59e0b;margin-bottom:6px">${fmtDate(bestKm.date)}</div>
                             <div style="display:flex;gap:16px">
-                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${bestKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">убийств</div></div>
-                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${bestKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">смертей</div></div>
-                                <div><div style="font-size:18px;font-weight:900;color:#4db88a">${fmtNum(bestKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">pvp урон</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${bestKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('убийств','kills')}</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${bestKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('смертей','deaths')}</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#4db88a">${fmtNum(bestKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('PVP урон','PvP damage')}</div></div>
                             </div>` : '<div style="color:#475569;font-size:13px">Нет данных</div>'}
                         </div>
                         <div class="prf-card">
-                            <div class="prf-section-title">📉 Худший КМ</div>
+                            <div class="prf-section-title">📉 ${t('Худший КМ','Worst war')}</div>
                             ${worstKm && worstKm.date !== bestKm?.date ? `
                             <div style="font-size:20px;font-weight:900;color:#ef4444;margin-bottom:6px">${fmtDate(worstKm.date)}</div>
                             <div style="display:flex;gap:16px">
-                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${worstKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">убийств</div></div>
-                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${worstKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">смертей</div></div>
-                                <div><div style="font-size:18px;font-weight:900;color:#4db88a">${fmtNum(worstKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">pvp урон</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#f59e0b">${worstKm.kills}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('убийств','kills')}</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#ef4444">${worstKm.deaths}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('смертей','deaths')}</div></div>
+                                <div><div style="font-size:18px;font-weight:900;color:#4db88a">${fmtNum(worstKm.pvp_dmg)}</div><div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase">${t('PVP урон','PvP damage')}</div></div>
                             </div>` : '<div style="color:#475569;font-size:13px">Нет данных</div>'}
                         </div>
                         <div class="prf-card">
-                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">📊 Место в клане<span class="info-q-btn" onclick="showInfoModal('rank')">?</span></div>
+                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">📊 ${t('Место в клане','Clan rank')}<span class="info-q-btn" onclick="showInfoModal('rank')">?</span></div>
                             ${rankNum ? `
                             <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:8px">
                                 <div>
-                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">По убийствам</div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">${t('По убийствам','By kills')}</div>
                                     <div style="display:flex;align-items:baseline;gap:4px">
                                         <span style="font-size:26px;font-weight:900;color:${rankColor}">#${rankNum}</span>
                                         <span style="font-size:11px;color:#475569">/ ${rankTotal}</span>
                                     </div>
-                                    <div style="font-size:10px;color:#64748b;margin-top:2px">avg ${avgKills} убийств/КМ</div>
+                                    <div style="font-size:10px;color:#64748b;margin-top:2px">avg ${avgKills} ${t('убийств/КМ','kills/war')}</div>
                                 </div>
                                 <div>
-                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">По KDA</div>
+                                    <div style="font-size:9px;color:#475569;font-weight:700;text-transform:uppercase;margin-bottom:3px">${t('По KDA','By KDA')}</div>
                                     <div style="display:flex;align-items:baseline;gap:4px">
                                         <span style="font-size:26px;font-weight:900;color:${kdaRankNum && kdaRankNum <= 10 ? '#f59e0b' : kdaRankNum && kdaRankNum <= 30 ? '#a78bfa' : '#64748b'}">#${kdaRankNum || '—'}</span>
                                         <span style="font-size:11px;color:#475569">/ ${rankTotal}</span>
@@ -3711,19 +3712,19 @@ function getClass2IconByClass3(c3) {
                             </div>` : '<div style="color:#475569;font-size:13px">—</div>'}
                         </div>
                         <div class="prf-card">
-                            <div class="prf-section-title">📈 Тренд формы</div>
+                            <div class="prf-section-title">📈 ${t('Тренд формы','Form trend')}</div>
                             <div style="font-size:36px;font-weight:900;color:${trendColor};line-height:1;margin-bottom:6px">${trendIcon}</div>
                             <div style="font-size:12px;color:${trendColor};font-weight:700">${trendText}</div>
-                            <div style="font-size:10px;color:#475569;margin-top:4px">сравнение последних 3 КМ</div>
+                            <div style="font-size:10px;color:#475569;margin-top:4px">${t('сравнение последних 3 КМ','comparison of last 3 wars')}</div>
                         </div>
                     </div>
 
                     <!-- История КМ -->
                     <div class="prf-card">
-                        <div class="prf-section-title">📋 История КМ (последние ${Math.min(10, dayStats.length)})</div>
+                        <div class="prf-section-title">📋 ${t('История КМ','War history')} (${t('последние','last')} ${Math.min(10, dayStats.length)})</div>
                         <!-- Заголовок таблицы -->
                         <div style="display:grid;grid-template-columns:60px 1fr 80px 52px 52px 80px 80px;align-items:center;gap:8px;padding:8px 12px;font-size:9px;font-weight:800;text-transform:uppercase;color:#475569;padding-bottom:4px;border-bottom:1px solid #1e2530;margin-bottom:4px">
-                            <div>Дата</div><div>Активность</div><div>Профа</div><div style="text-align:center">⚔️</div><div style="text-align:center">💀</div><div style="text-align:center">🗡️ PvP</div><div style="text-align:center">🐉 PvE</div>
+                            <div>${t('Дата','Date')}</div><div>${t('Активность','Activity')}</div><div>Профа</div><div style="text-align:center">⚔️</div><div style="text-align:center">💀</div><div style="text-align:center">🗡️ PvP</div><div style="text-align:center">🐉 PvE</div>
                         </div>
                         ${recentStats.map(d => {
                             const isBest = bestKm && d.date === bestKm.date;
@@ -3756,7 +3757,7 @@ function getClass2IconByClass3(c3) {
 
                         <!-- По классу -->
                         <div class="prf-card">
-                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">🎭 Среди своего класса<span class="info-q-btn" onclick="showInfoModal('classrank')">?</span></div>
+                            <div class="prf-section-title" style="display:flex;align-items:center;gap:5px">🎭 ${t('Среди своего класса','Among your class')}<span class="info-q-btn" onclick="showInfoModal('classrank')">?</span></div>
                             ${profaName ? `
                             <div style="font-size:11px;color:#6366f1;font-weight:700;background:#6366f111;border:1px solid #6366f133;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${profaName}</div>
                             ${classTotal > 1 ? `
@@ -3782,9 +3783,9 @@ function getClass2IconByClass3(c3) {
 
                         <!-- По роли -->
                         <div class="prf-card">
-                            <div class="prf-section-title">⚔️ Среди своей роли</div>
+                            <div class="prf-section-title">⚔️ ${t('Среди своей роли','Among your role')}</div>
                             ${playerRole ? `
-                            <div style="font-size:11px;color:#f59e0b;font-weight:700;background:#f59e0b11;border:1px solid #f59e0b33;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${playerRole}</div>
+                            <div style="font-size:11px;color:#f59e0b;font-weight:700;background:#f59e0b11;border:1px solid #f59e0b33;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:12px">${displayRole}</div>
                             ${roleTotal > 1 ? `
                             <div style="display:flex;gap:16px">
                                 <div>
@@ -3828,7 +3829,7 @@ function getClass2IconByClass3(c3) {
                         if (attendance < 50) {
                             issues.push({ icon:'📅', severity:'high', title:'Низкая явка', text: `Присутствовал только на ${presentDates.length} из ${allDates.length} КМ (${attendance}%). Клан теряет боеспособность когда ключевые игроки отсутствуют. Цель: 70%+` });
                         } else if (attendance >= 90) {
-                            strengths.push({ icon:'📅', title:'Отличная явка', text:`${attendance}% — один из самых надёжных игроков клана по посещаемости.` });
+                            strengths.push({ icon:'📅', title:t('Отличная явка','Excellent attendance'), text:`${attendance}% — ${t('один из самых надёжных игроков клана по посещаемости.','one of the most reliable players in the clan by attendance.')}` });
                         }
 
                         // === KDA (зависит от роли) ===
@@ -3838,7 +3839,7 @@ function getClass2IconByClass3(c3) {
                             } else if (parseFloat(kda) < 0.8 && totalKills === 0) {
                                 issues.push({ icon:'⚡', severity:'high', title:'Нет убийств', text:`0 убийств при ${totalDeaths} смертях. Нужно активнее участвовать в бою — атакуй цели на которых стоит пак, не соло.` });
                             } else if (parseFloat(kda) > 2.5) {
-                                strengths.push({ icon:'⚡', title:`KDA ${kda}`, text:`Отличный показатель для ${playerRole || 'ДД'}. Входишь в топ клана по эффективности.` });
+                                strengths.push({ icon:'⚡', title:`KDA ${kda}`, text:`${t('Отличный показатель для','Excellent result for')} ${displayRole || t('ДД','DPS')}. ${t('Входишь в топ клана по эффективности.','You are in the top of the clan by efficiency.')}` });
                             }
                         } else if (isTank) {
                             if (totalDeaths > 0 && totalKills / Math.max(totalDeaths,1) < 0.3) {
@@ -3851,7 +3852,7 @@ function getClass2IconByClass3(c3) {
                             if (attendance < 60) {
                                 issues.push({ icon:'💊', severity:'high', title:'Хилер часто отсутствует', text:`Явка ${attendance}% — хилеры/бафферы нужны на каждом КМ. Без поддержки пак теряет боеспособность.` });
                             } else if (attendance >= 80) {
-                                strengths.push({ icon:'💊', title:'Надёжная поддержка', text:`Явка ${attendance}% — пак может рассчитывать на твоё присутствие.` });
+                                strengths.push({ icon:'💊', title:t('Надёжная поддержка','Reliable support'), text:`${t('Явка','Attendance')} ${attendance}% — ${t('пак может рассчитывать на твоё присутствие.','the pack can count on your presence.')}` });
                             }
                         }
 
@@ -3861,7 +3862,7 @@ function getClass2IconByClass3(c3) {
                                 const behindCount = classTotal - classRankKills;
                                 issues.push({ icon:'🎭', severity:'medium', title:'Ниже среднего среди класса', text:`#${classRankKills} из ${classTotal} игроков с профой ${profaName ? profaName.split(' (')[0] : 'этого класса'}. Обгоняет только ${behindCount} одноклассников. Смотри на топ-игроков своего класса.` });
                             } else if (classRankKills <= Math.ceil(classTotal * 0.3)) {
-                                strengths.push({ icon:'🎭', title:`Топ класса #${classRankKills}/${classTotal}`, text:`Один из лучших ${profaName ? profaName.split(' (')[0] : ''} в клане.` });
+                                strengths.push({ icon:'🎭', title:`${t('Топ класса','Class top')} #${classRankKills}/${classTotal}`, text:`${t('Один из лучших','One of the best')} ${profaName ? profaName.split(' (')[0] : ''} ${t('в клане.','in the clan.')}` });
                             }
                         }
 
@@ -4099,7 +4100,7 @@ function getClass2IconByClass3(c3) {
                             if (isHealer) {
                                 // Хилер: смерти выше медианы хилеров = плохо
                                 if (kmAboveMedianDeaths > totalKmAnalyzed * 0.5) {
-                                    issues.push({ icon:'💀', severity:'medium', title:'Больше смертей чем у других саппортов', text:'На ' + kmAboveMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал чаще чем другие хилеры/бафферы клана. Саппорт должен выживать — попробуй стоять дальше от линии боя.' });
+                                    issues.push({ icon:'💀', severity:'medium', title:t('Больше смертей чем у других саппортов','More deaths than other supports'), text:t('На','In') + ' ' + kmAboveMedianDeaths + ' ' + t('из','of') + ' ' + totalKmAnalyzed + ' ' + t('КМ умирал чаще чем другие хилеры/бафферы клана. Саппорт должен выживать — попробуй стоять дальше от линии боя.','wars died more than other healers/buffers. A support must survive — try staying further from the front line.') });
                                 } else if (kmBelowMedianDeaths > totalKmAnalyzed * 0.5 && totalKmAnalyzed >= 2) {
                                     strengths.push({ icon:'🛡️', title:'Живучий саппорт', text:'На ' + kmBelowMedianDeaths + ' из ' + totalKmAnalyzed + ' КМ умирал реже других хилеров/бафферов. Отлично держит позицию.' });
                                 }
@@ -4143,7 +4144,7 @@ function getClass2IconByClass3(c3) {
                                 const improvement = (lastKm.kills||0) - (firstKm.kills||0);
                                 if (Math.abs(improvement) > 3) {
                                     if (improvement > 0) {
-                                        strengths.push({ icon:'📊', title:'Прогресс: +' + improvement + ' убийств', text:'(' + firstKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + firstKm.kills + '⚔️ → (' + lastKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + lastKm.kills + '⚔️' });
+                                        strengths.push({ icon:'📊', title:t('Прогресс:','Progress:') + ' +' + improvement + ' ' + t('убийств','kills'), text:'(' + firstKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + firstKm.kills + '⚔️ → (' + lastKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + lastKm.kills + '⚔️' });
                                     } else {
                                         issues.push({ icon:'📊', severity:'low', title:'Регресс: ' + improvement + ' убийств', text:'С ' + firstKm.kills + '⚔️ до ' + lastKm.kills + '⚔️.' });
                                     }
@@ -4157,7 +4158,7 @@ function getClass2IconByClass3(c3) {
                             if (_firstKm && _lastKm && _firstKm.date !== _lastKm.date) {
                                 const deathDiff = (_lastKm.deaths||0) - (_firstKm.deaths||0);
                                 if (deathDiff < -3) {
-                                    strengths.push({ icon:'📊', title:'Прогресс: ' + deathDiff + ' смертей', text:'(' + _firstKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + _firstKm.deaths + '💀 → (' + _lastKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + _lastKm.deaths + '💀. Стал умирать реже.' });
+                                    strengths.push({ icon:'📊', title:t('Прогресс:','Progress:') + ' ' + deathDiff + ' ' + t('смертей','deaths'), text:'(' + _firstKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + _firstKm.deaths + '💀 → (' + _lastKm.date.split('-').reverse().slice(0,2).join('.') + '): ' + _lastKm.deaths + '💀. ' + t('Стал умирать реже.','Dying less often.') });
                                 }
                             }
                         }
@@ -4165,7 +4166,7 @@ function getClass2IconByClass3(c3) {
                         if (issues.length === 0 && strengths.length === 0) {
                             return `<div class="prf-card" style="border-color:#22c55e44">
                                 <div class="prf-section-title">🔍 Анализ игрока</div>
-                                <div style="color:#22c55e;font-size:13px;padding:8px 0">✅ Показатели в норме для роли ${playerRole || ''}. Продолжай в том же духе.</div>
+                                <div style="color:#22c55e;font-size:13px;padding:8px 0">✅ ${t('Показатели в норме для роли','Stats are normal for role')} ${displayRole}. ${t('Продолжай в том же духе.','Keep it up.')}</div>
                             </div>`;
                         }
 
@@ -4188,7 +4189,7 @@ function getClass2IconByClass3(c3) {
                             </div>`).join('');
 
                         return `<div class="prf-card">
-                            <div class="prf-section-title">🔍 Персональный анализ</div>
+                            <div class="prf-section-title">🔍 ${t('Персональный анализ','Personal analysis')}</div>
                             <div style="display:flex;flex-direction:column;gap:8px">
                                 ${issueHtml}
                                 ${strengthHtml}
@@ -4221,8 +4222,8 @@ function getClass2IconByClass3(c3) {
                     <!-- Радар -->
                     <div class="prf-card" style="text-align:center">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                            <div class="prf-section-title" style="margin-bottom:0;display:flex;align-items:center;gap:5px">Стиль игры<span class="info-q-btn" onclick="showInfoModal('style')">?</span></div>
-                            ${playerRole ? `<div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;background:#1e2530;padding:2px 8px;border-radius:4px">${playerRole}</div>` : ''}
+                            <div class="prf-section-title" style="margin-bottom:0;display:flex;align-items:center;gap:5px">${t('Стиль игры','Playstyle')}<span class="info-q-btn" onclick="showInfoModal('style')">?</span></div>
+                            ${displayRole ? `<div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;background:#1e2530;padding:2px 8px;border-radius:4px">${displayRole}</div>` : ''}
                         </div>
                         ${radarHtml}
                         <!-- Ценность игрока -->
@@ -4253,8 +4254,8 @@ function getClass2IconByClass3(c3) {
 
                     <!-- Заметки офицера -->
                     <div class="prf-card">
-                        <div class="prf-section-title">📝 Заметки офицера</div>
-                        <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:12px;line-height:1.6" placeholder="Добавь заметку...">${note}</textarea>
+                        <div class="prf-section-title">📝 ${t('Заметки офицера','Officer notes')}</div>
+                        <textarea id="playerNoteInput" rows="4" class="input-dark" style="resize:vertical;font-size:12px;line-height:1.6" placeholder="${t('Добавь заметку...','Add a note...')}">${note}</textarea>
                         <button onclick="savePlayerNote('${normKey}')" style="background:#6366f1;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;width:100%">💾 Сохранить</button>
                         <span id="noteSaved" style="display:none;color:#22c55e;font-size:11px;margin-top:6px;text-align:center">✓ Сохранено</span>
                         ${note ? '<div style="margin-top:8px;padding:8px 12px;background:#1e2530;border-radius:8px;font-size:11px;color:#94a3b8;line-height:1.6;white-space:pre-wrap">' + note.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : ''}
