@@ -1413,6 +1413,21 @@
                 ['Статистика КМ', 'War Statistics'],
                 ['Все паки', 'All packs'],
                 ['Период:', 'Period:'],
+                ['Снять все отметки проверки', 'Clear all verification marks'],
+                ['Закрыть', 'Close'],
+                ['Точные дубли:', 'Exact duplicates:'],
+                ['Точные дубли', 'Exact duplicates'],
+                ['Похожие ники', 'Similar nicknames'],
+                ['Похожие:', 'Similar:'],
+                ['Дублей не найдено', 'No duplicates found'],
+                ['Все ники уникальны', 'All nicknames are unique'],
+                ['Объединить', 'Merge'],
+                ['Разные', 'Different'],
+                ['расст.', 'dist.'],
+                ['Удаление в архив', 'Archive player'],
+                ['В архив', 'Archive'],
+                ['Снять ✓ у всех игроков?', 'Clear ✓ for all players?'],
+                ['Все отметки верификации будут сброшены.', 'All verification marks will be removed.'],
                 ['Сбросить', 'Reset'],
                 ['⚠️ Не попали в CC подряд', '⚠️ Missing CC in a row'],
                 ['Игроки из ростера которые отсутствовали в Командном канале N+ КМ подряд', 'Roster players absent from Clan Channel for N+ consecutive wars'],
@@ -2453,7 +2468,7 @@
                     <td class="text-right">
                         <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onclick="event.stopPropagation();editPlayer(${p.id})" class="text-orange-400" title="${localStorage.getItem('cc_lang')==='en'?'Edit':'Редактировать'}">✏️</button>
-                            <button onclick="event.stopPropagation();moveToArchive(${p.id})" class="text-slate-500 hover:text-red-400" title="В архив">🗑️</button>
+                            <button onclick="event.stopPropagation();moveToArchive(${p.id})" class="text-slate-500 hover:text-red-400" title="${t('В архив','Archive')}">🗑️</button>
                         </div>
                     </td>
                 </tr>
@@ -2522,10 +2537,11 @@
                 });
 
             const confirmText = similar
-                ? `Переместить "${player.name}" в архив?\n\nПохоже на "${similar.name}" — добавить алиас чтобы AI больше не создавал дубль?`
-                : `Переместить "${player.name}" в архив?`;
+                ? t(`Переместить "${player.name}" в архив?\n\nПохоже на "${similar.name}" — добавить алиас чтобы AI больше не создавал дубль?`,
+                    `Move "${player.name}" to archive?\n\nSimilar to "${similar.name}" — add alias so AI won't create a duplicate again?`)
+                : t(`Переместить "${player.name}" в архив?`, `Move "${player.name}" to archive?`);
 
-            showConfirm("Удаление в архив", confirmText, () => {
+            showConfirm(t("Удаление в архив","Archive player"), confirmText, () => {
                 archive.push(player);
                 roster.splice(playerIndex, 1);
                 // Автоматически добавляем алиас если нашли похожий ник
@@ -2752,8 +2768,8 @@
 
         function clearAllNew() {
             const count = roster.filter(p => p.isNew).length;
-            if (!count) { showConfirm('✅ Нет игроков с NEW', 'Все уже подтверждены.', ()=>{}, false); return; }
-            showConfirm(`Снять NEW у ${count} игроков?`, 'Они перестанут отображаться как новые.', () => {
+            if (!count) { showConfirm(t('✅ Нет игроков с NEW','✅ No players with NEW'), t('Все уже подтверждены.','All already confirmed.'), ()=>{}, false); return; }
+            showConfirm(t(`Снять NEW у ${count} игроков?`,`Clear NEW for ${count} players?`), t('Они перестанут отображаться как новые.','They will no longer appear as new.'), () => {
                 roster.forEach(p => { p.isNew = false; });
                 saveToStorage();
                 renderRoster();
@@ -2777,9 +2793,15 @@
         }
 
         function unverifyAll() {
-            roster.forEach(p => { p.verified = false; });
-            saveToStorage();
-            renderRoster();
+            showConfirm(
+                t('Снять ✓ у всех игроков?', 'Clear ✓ for all players?'),
+                t('Все отметки верификации будут сброшены.', 'All verification marks will be removed.'),
+                () => {
+                    roster.forEach(p => { p.verified = false; });
+                    saveToStorage();
+                    renderRoster();
+                }
+            );
         }
 
         function removeDuplicates() {
@@ -7032,7 +7054,7 @@ function getClass2IconByClass3(c3) {
             overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 
             if (exactDupes.length === 0 && similarPairs.length === 0) {
-                overlay.innerHTML = '<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:32px;width:420px;text-align:center"><div style="font-size:36px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:800;margin-bottom:8px">Дублей не найдено</div><div style="font-size:13px;color:#64748b;margin-bottom:24px">Все ники уникальны</div><button onclick="this.closest(\'[id]\').remove()" style="background:#6366f1;color:white;border:none;border-radius:10px;padding:10px 28px;font-weight:700;cursor:pointer">Закрыть</button></div>';
+                overlay.innerHTML = '<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:32px;width:420px;text-align:center"><div style="font-size:36px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:800;margin-bottom:8px">'+t('Дублей не найдено','No duplicates found')+'</div><div style="font-size:13px;color:#64748b;margin-bottom:24px">'+t('Все ники уникальны','All nicknames are unique')+'</div><button onclick="this.closest(\'[id]\').remove()" style="background:#6366f1;color:white;border:none;border-radius:10px;padding:10px 28px;font-weight:700;cursor:pointer">'+t('Закрыть','Close')+'</button></div>';
                 document.body.appendChild(overlay);
                 return;
             }
@@ -7040,7 +7062,7 @@ function getClass2IconByClass3(c3) {
             let html2 = '';
             // Точные дубли
             if (exactDupes.length > 0) {
-                html2 += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#ef4444;margin-bottom:8px">⚠️ Точные дубли (' + exactDupes.length + ')</div>';
+                html2 += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#ef4444;margin-bottom:8px">⚠️ '+t('Точные дубли','Exact duplicates')+' (' + exactDupes.length + ')</div>';
                 exactDupes.forEach(([key, group]) => {
                     html2 += '<div style="background:#7f1d1d22;border:1px solid #ef444444;border-radius:10px;padding:12px;margin-bottom:8px">';
                     html2 += '<div style="font-weight:700;margin-bottom:6px">' + group.map(p => p.name).join(' = ') + '</div>';
@@ -7051,7 +7073,7 @@ function getClass2IconByClass3(c3) {
             // Похожие ники
             // Похожие ники
             if (similarPairs.length > 0) {
-                html2 += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#f59e0b;margin:12px 0 8px">🔍 Похожие ники (' + similarPairs.length + ')</div>';
+                html2 += '<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#f59e0b;margin:12px 0 8px">🔍 '+t('Похожие ники','Similar nicknames')+' (' + similarPairs.length + ')</div>';
                 function _findPack2(name) {
                     const nk = normalizeNick(name);
                     const dates = Object.keys(appliedStatsByDate).sort().reverse();
@@ -7078,20 +7100,20 @@ function getClass2IconByClass3(c3) {
                     html2 += '<span style="font-weight:800">' + an + '</span> ' + pkBdg(pa);
                     html2 += ' <span style="color:#f59e0b">≈</span> ';
                     html2 += '<span style="font-weight:800">' + bn + '</span> ' + pkBdg(pb);
-                    html2 += '<span style="font-size:10px;color:#64748b;margin-left:auto">расст. ' + dist + '</span></div>';
+                    html2 += '<span style="font-size:10px;color:#64748b;margin-left:auto">'+t('расст.','dist.')+' ' + dist + '</span></div>';
                     html2 += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">';
                     html2 += '<input id="dupEdit' + i + '" type="text" value="' + an + '" style="flex:1;background:#12171f;border:1px solid #2d3748;border-radius:6px;padding:5px 8px;color:#e2e8f0;font-size:12px;font-weight:700">';
-                    html2 += '<button onclick="mergeWithCustomName(\'' + esc(an) + '\',\'' + esc(bn) + '\',document.getElementById(\'dupEdit' + i + '\').value,this)" style="background:#22c55e;color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✓ Объединить</button>';
+                    html2 += '<button onclick="mergeWithCustomName(\'' + esc(an) + '\',\'' + esc(bn) + '\',document.getElementById(\'dupEdit' + i + '\').value,this)" style="background:#22c55e;color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✓ '+t('Объединить','Merge')+'</button>';
                     html2 += '</div>';
                     html2 += '<div style="display:flex;gap:6px">';
                     html2 += '<button onclick="mergeNickPair(\'' + esc(an) + '\',\'' + esc(bn) + '\',\'' + esc(an) + '\',this)" style="flex:1;background:#6366f122;border:1px solid #6366f144;color:#a5b4fc;border-radius:8px;padding:5px;font-size:10px;cursor:pointer">«' + an + '»</button>';
                     html2 += '<button onclick="mergeNickPair(\'' + esc(an) + '\',\'' + esc(bn) + '\',\'' + esc(bn) + '\',this)" style="flex:1;background:#6366f122;border:1px solid #6366f144;color:#a5b4fc;border-radius:8px;padding:5px;font-size:10px;cursor:pointer">«' + bn + '»</button>';
-                    html2 += '<button onclick="markDifferentPair(\'' + esc(an) + '\',\'' + esc(bn) + '\',this)" style="background:#1e2530;border:1px solid #2d3748;color:#64748b;border-radius:8px;padding:5px 10px;font-size:10px;cursor:pointer">Разные</button>';
+                    html2 += '<button onclick="markDifferentPair(\'' + esc(an) + '\',\'' + esc(bn) + '\',this)" style="background:#1e2530;border:1px solid #2d3748;color:#64748b;border-radius:8px;padding:5px 10px;font-size:10px;cursor:pointer">'+t('Разные','Different')+'</button>';
                     html2 += '</div></div>';
                 });
             }
 
-            overlay.innerHTML = '<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:28px;width:580px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div><div style="font-size:18px;font-weight:800">🔬 Дубли и похожие ники</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Точные дубли: '+exactDupes.length+' · Похожие: '+similarPairs.length+'</div></div><button onclick="this.closest(\'[id]\').remove()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:20px">✕</button></div><div id="dupesContent">'+html2+'</div></div>';
+            overlay.innerHTML = '<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:28px;width:580px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div><div style="font-size:18px;font-weight:800">🔬 '+t('Дубли и похожие ники','Duplicates and similar nicknames')+'</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">'+t('Точные дубли:','Exact duplicates:')+' '+exactDupes.length+' · '+t('Похожие:','Similar:')+' '+similarPairs.length+'</div></div><button onclick="this.closest(\'[id]\').remove()" style="background:none;border:none;color:#475569;cursor:pointer;font-size:20px">✕</button></div><div id="dupesContent">'+html2+'</div></div>';
             document.body.appendChild(overlay);
         }
 
