@@ -1599,7 +1599,9 @@
                 ['Перейти к КМ', 'Go to war'],
                 ['Нет данных', 'No data'],
                 ['Прошедший день', 'Past day'],
-                ['Предстоящий день', 'Upcoming day']
+                ['Предстоящий день', 'Upcoming day'],
+                ['⚠️ Сбросить всю статистику КМ?', '⚠️ Reset all war stats?'],
+                ['Вся история КМ и статистика будут удалены. Клан (игроки, паки) сохранится.', 'All war history and stats will be deleted. Clan (players, packs) will be kept.']
             ];
 
             const UI_ATTRS = {
@@ -1608,7 +1610,12 @@
                     'Выйти': 'Sign out',
                     'Проверен — ник и профа верны': 'Verified — nickname and class are correct',
                     'Введи ник чтобы найти все КМ где участвовал этот игрок': 'Enter a nickname to find all wars where this player participated',
-                    'Диагностика': 'Diagnostics'
+                    'Диагностика': 'Diagnostics',
+                    'Нажми чтобы изменить профу': 'Click to change class',
+                    'Нажми чтобы изменить пак': 'Click to change pack',
+                    'Редактировать': 'Edit',
+                    'В архив': 'Archive',
+                    'Редактировать игрока': 'Edit player'
                 },
                 placeholder: {
                     '[TAG] или название': '[TAG] or clan name',
@@ -1808,6 +1815,8 @@
                 if (packsPage && packsPage.classList.contains('active') && typeof renderPacks === 'function') renderPacks();
                 const archivePage = document.getElementById('page-archive');
                 if (archivePage && archivePage.classList.contains('active') && typeof renderArchive === 'function') renderArchive();
+                const rosterPage = document.getElementById('page-roster');
+                if (rosterPage && rosterPage.classList.contains('active') && typeof renderRoster === 'function') renderRoster();
                 const settingsPage = document.getElementById('page-settings');
                 if (settingsPage && settingsPage.classList.contains('active')) {
                     if (typeof renderValueWeightsUI === 'function') renderValueWeightsUI();
