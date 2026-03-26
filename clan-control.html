@@ -1890,6 +1890,11 @@
         // ===== ПЕРЕВОДЧИК =====
         function getLang() { return localStorage.getItem('cc_lang') || 'ru'; }
         function t(ru, en) { return getLang() === 'en' ? en : ru; }
+        function rankLabel(rank) {
+            if (getLang() !== 'en') return rank;
+            const map = { 'КЛ': 'CL', 'ПЛ': 'PL', 'ИГРОК': 'PLAYER' };
+            return map[rank] || rank;
+        }
 
         // ===== ДАННЫЕ =====
         let roster = [
@@ -2449,12 +2454,12 @@
             body.innerHTML = sorted.map(p => `
                 <tr class="cc-hover-row transition-colors group" onclick="openPlayerProfile('${p.name}')" style="cursor:pointer">
                     <td>
-                        <span class="font-bold" style="color:var(--text)">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${p.rank}</span>
+                        <span class="font-bold" style="color:var(--text)">${p.name}</span> <span class="badge badge-${p.rank.toLowerCase()}">${rankLabel(p.rank)}</span>
                     </td>
                     <td>${p.isNew ? '<span class="text-[9px] bg-emerald-500 text-black font-black px-1.5 py-0.5 rounded uppercase">NEW</span>' : '<span style="color:#475569;font-size:11px">—</span>'}</td>
                     <td onclick="event.stopPropagation();toggleVerified(${p.id})" style="cursor:pointer;text-align:center;font-size:16px" title="Нажми чтобы отметить как проверенный">${p.verified ? '✅' : '<span style="color:#2d3748;font-size:14px">○</span>'}</td>
-                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="Нажми чтобы изменить профу" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:8px;padding:2px 4px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
-                    <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="Нажми чтобы изменить пак" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
+                    <td onclick="event.stopPropagation();editPlayer(${p.id})" style="cursor:pointer" title="${t('Нажми чтобы изменить профу','Click to change class')}" class="text-slate-400 text-xs">${(p.profas && p.profas.length > 0 ? p.profas : (p.profa && p.profa !== '—' ? [p.profa] : [])).map((pf,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:#1e2530;border-radius:6px;padding:4px 9px;margin-right:4px;${i===0?'color:#a5b4fc':'color:#64748b'}">${profaIconHtml(pf, 22)}<span onclick="event.stopPropagation();showProfaInfo(this.dataset.pf)" data-pf="${pf}" style="cursor:help;color:#475569;font-size:9px;margin-left:8px;padding:2px 4px">?</span></span>`).join('') || '<span style="color:#6366f155;font-size:11px;border:1px dashed #2d3748;padding:3px 8px;border-radius:6px">+ профа</span>'}</td>
+                    <td onclick="event.stopPropagation()"><span class="pac-tag" onclick="event.stopPropagation();openPackFromRoster('${p.id}')" title="${t('Нажми чтобы изменить пак','Click to change pack')}" style="cursor:pointer" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='';this.style.color=''">${p.pac}</span></td>
                     <td class="${p.attendance < 50 ? 'text-red-400' : p.attendance < 70 ? 'text-yellow-400' : 'text-emerald-400'} font-bold">${totalDates > 0 ? p.attendance + '%' : '—'}</td>
                     <td onclick="event.stopPropagation()">
                         ${p.valueScore === null || p.valueScore === undefined
@@ -2491,16 +2496,16 @@
             modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
             modal.id = 'packChangeModal';
             modal.innerHTML = `<div style="background:#12171f;border:1px solid #1e2530;border-radius:16px;padding:28px;width:340px;max-width:94vw">
-                <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#e2e8f0">🎯 Изменить пак — <span style="color:#6366f1">${p.name}</span></div>
+                <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#e2e8f0">🎯 ${t('Изменить пак','Change pack')} — <span style="color:#6366f1">${p.name}</span></div>
                 <select id="packRosterSelect" style="width:100%;background:#0b0e14;border:1px solid #2d3748;border-radius:8px;padding:10px;color:#e2e8f0;font-size:14px;margin-bottom:16px;outline:none">${opts}</select>
                 <div style="display:flex;gap:10px;justify-content:flex-end">
-                    <button onclick="document.getElementById('packChangeModal').remove()" style="background:#1e2530;border:none;color:#64748b;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:600">Отмена</button>
+                    <button onclick="document.getElementById('packChangeModal').remove()" style="background:#1e2530;border:none;color:#64748b;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:600">${t('Отмена','Cancel')}</button>
                     <button onclick="(function(){
                         const sel = document.getElementById('packRosterSelect');
                         const pp = window._packRosterPlayer;
                         if (pp) { pp.pac = sel.value; saveToStorage(); renderRoster(); if(document.getElementById('page-packs').classList.contains('active')) renderPacks(); }
                         document.getElementById('packChangeModal').remove();
-                    })()" style="background:#6366f1;border:none;color:white;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">💾 Сохранить</button>
+                    })()" style="background:#6366f1;border:none;color:white;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700">💾 ${t('Сохранить','Save')}</button>
                 </div>
             </div>`;
             window._packRosterPlayer = p;
@@ -2867,8 +2872,9 @@
         }
 
         function resetAllStats() {
-            showConfirm("⚠️ Сбросить всю статистику КМ?",
-                "Вся история КМ и статистика будут удалены. Клан (игроки, паки) сохранится.",
+            showConfirm(t("⚠️ Сбросить всю статистику КМ?", "⚠️ Reset all war stats?"),
+                t("Вся история КМ и статистика будут удалены. Клан (игроки, паки) сохранится.",
+                  "All war history and stats will be deleted. Clan (players, packs) will be kept."),
                 () => {
                     appliedStatsByDate = {};
                     roster = roster.map(p => ({ ...p, kills: 0, deaths: 0, pvp_dmg: 0, pve_dmg: 0 }));
@@ -3550,7 +3556,7 @@ function getClass2IconByClass3(c3) {
                             ${player.isNew ? '<span style="font-size:9px;background:#22c55e;color:#000;font-weight:900;padding:2px 6px;border-radius:4px">NEW</span>' : ''}
                         </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                            <span class="badge badge-${player.rank.toLowerCase()}">${player.rank}</span>
+                            <span class="badge badge-${player.rank.toLowerCase()}">${rankLabel(player.rank)}</span>
                             ${player.pac && player.pac !== 'СОЛО' ? `<span class="pac-tag">${player.pac}</span>` : '<span style="font-size:10px;color:#475569;background:#1e2530;padding:2px 8px;border-radius:4px">СОЛО</span>'}
                             ${allProfasList.map((pf,i) => {
                                 const kmCount = allDates.filter(d => {
@@ -4545,7 +4551,7 @@ function getClass2IconByClass3(c3) {
                             <span style="font-size:18px;font-weight:900;color:${color}">${streak}</span>
                         </div>
                         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-                            <span class="badge badge-${ph.rank.toLowerCase()}">${ph.rank}</span>
+                            <span class="badge badge-${ph.rank.toLowerCase()}">${rankLabel(ph.rank)}</span>
                             ${ph.pac !== 'СОЛО' ? `<span class="pac-tag" style="font-size:9px;padding:1px 6px">${ph.pac}</span>` : ''}
                         </div>
                         <div style="margin-bottom:4px">${dotHtml}</div>
