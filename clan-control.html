@@ -117,8 +117,10 @@
             background: var(--bg);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
+            opacity: 0; transition: opacity 0.15s;
         }
         #loginScreen.hidden { display: none; }
+        #loginScreen.visible { opacity: 1; }
 
         .login-bg-art { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
         .login-bg-art::before {
@@ -2140,10 +2142,10 @@
                             _setLoginHint(t.errAlreadyExists, true);
                             break;
                         case 'confirm':
-                            _setLoginHint(t.infoEmailConfirm, true);
+                            _setLoginHint(t.infoEmailConfirm, false);
                             break;
                         case 'ambiguous':
-                            _setLoginHint(t.infoSignupAmbiguous, true);
+                            _setLoginHint(t.infoSignupAmbiguous, false);
                             break;
                         default:
                             _setLoginHint(_mapAuthError(error && error.message, t, 'signup'), true);
@@ -2225,6 +2227,7 @@
                 document.getElementById('loginDot2').classList.remove('done');
                 _authMode = 'login';
                 _renderAuthStep1();
+                _showLoginScreen();
             };
 
             window.loginFinish = async function() {
@@ -2279,6 +2282,7 @@
                 document.getElementById('topbar').classList.add('hidden');
                 document.getElementById('appLayout').classList.add('hidden');
                 document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('loginScreen').classList.add('visible');
             };
 
             function _showApp(email, clan) {
@@ -2331,6 +2335,7 @@
                     }
                 } else {
                     // Профиля нет — показать шаг ввода клана
+                    _showLoginScreen();
                     document.getElementById('loginStep1').classList.remove('active');
                     document.getElementById('loginStep2').classList.add('active');
                     document.getElementById('loginDot2').classList.add('done');
@@ -2339,12 +2344,18 @@
             }
 
             // Вернуть UI на loginStep1 из состояния загрузки (после callback timeout/error)
+            function _showLoginScreen() {
+                const ls = document.getElementById('loginScreen');
+                if (ls) { ls.classList.remove('hidden'); ls.classList.add('visible'); }
+            }
+
             function _resetToLoginStep1() {
                 _authMode = 'login';
                 const step1 = document.getElementById('loginStep1');
                 if (step1) step1.classList.add('active');
                 _renderAuthStep1();
                 _setLoginBusy(false);
+                _showLoginScreen();
             }
 
             function _resetToLoginStep1WithHint(hintText, prefillEmail) {
@@ -2353,6 +2364,7 @@
                 if (step1) step1.classList.add('active');
                 _renderAuthStep1();
                 _setLoginBusy(false);
+                _showLoginScreen();
                 if (prefillEmail) {
                     const eInp = document.getElementById('loginEmailInput');
                     if (eInp) eInp.value = prefillEmail;
@@ -2451,9 +2463,13 @@
                         const { data: { session } } = await window._supabase.auth.getSession();
                         if (session && session.user) {
                             await _safeInitUser(session.user);
+                        } else {
+                            // No session — show login screen now
+                            _showLoginScreen();
                         }
                     } catch(e) {
                         console.warn('getSession error:', e);
+                        _showLoginScreen();
                     }
                 }
             })();
