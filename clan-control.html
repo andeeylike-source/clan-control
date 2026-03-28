@@ -2022,23 +2022,37 @@
                 if (cInp && prevConfirm) cInp.value = prevConfirm;
             };
 
-            // Realtime mismatch check — called oninput on password/confirm in signup mode
+            // Realtime validation — called oninput on password/confirm in signup mode
             window._authCheckMismatch = function() {
                 const l = localStorage.getItem('cc_lang') || 'ru';
                 const t = TEXTS[l] || TEXTS.ru;
                 const pass    = (document.getElementById('loginPasswordInput') || {}).value || '';
                 const confirm = (document.getElementById('loginConfirmInput')  || {}).value || '';
                 const h = document.getElementById('loginHintText');
-                // Only show mismatch if confirm is non-empty
-                if (confirm && pass && pass !== confirm) {
-                    document.getElementById('loginPasswordInput')?.classList.add('error');
-                    document.getElementById('loginConfirmInput')?.classList.add('error');
+                const pEl = document.getElementById('loginPasswordInput');
+                const cEl = document.getElementById('loginConfirmInput');
+
+                // Priority 1: password charset/length rule (show if password non-empty and invalid)
+                if (pass && !_isValidPassword(pass)) {
+                    pEl?.classList.add('error');
+                    cEl?.classList.remove('error');
+                    if (h) { h.textContent = t.errPass; h.style.color = '#ef4444'; }
+                    return;
+                }
+
+                // Priority 2: mismatch (only when password is valid and confirm is non-empty)
+                if (pass && _isValidPassword(pass) && confirm && pass !== confirm) {
+                    pEl?.classList.add('error');
+                    cEl?.classList.add('error');
                     if (h) { h.textContent = t.errConfirm; h.style.color = '#ef4444'; }
-                } else {
-                    document.getElementById('loginPasswordInput')?.classList.remove('error');
-                    document.getElementById('loginConfirmInput')?.classList.remove('error');
-                    // Clear hint only if it was the mismatch message
-                    if (h && h.textContent === t.errConfirm) { h.textContent = ''; }
+                    return;
+                }
+
+                // All good — clear error state
+                pEl?.classList.remove('error');
+                cEl?.classList.remove('error');
+                if (h && (h.textContent === t.errPass || h.textContent === t.errConfirm)) {
+                    h.textContent = '';
                 }
             };
 
