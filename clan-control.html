@@ -2072,61 +2072,60 @@
 
             // Classify signUp response: 'success' | 'existing' | 'confirm' | 'ambiguous' | 'error'
             function _classifySignup(data, error) {
-                // 1) Explicit Supabase error object
                 if (error) {
-                    const m = (error.message || '').toLowerCase();
-                    if (m.includes('already registered') || m.includes('already exists') || m.includes('user already')) {
-                        return 'existing';
-                    }
-                    // rate limit, network, or other backend error — will be shown via _mapAuthError
+                    var m = (error.message || '').toLowerCase();
+                    if (m.includes('already registered') || m.includes('already exists') || m.includes('user already')) return 'existing';
                     return 'error';
                 }
-                // 2) Got a session + user — real successful signup (autoconfirm on)
-                if (data && data.session && data.user) {
-                    return 'success';
-                }
-                // 3) No session, user object returned — email-confirm or obfuscated existing
+                if (data && data.session && data.user) return 'success';
                 if (data && data.user) {
-                    const u = data.user;
-                    const identities = u.identities;
+                    var identities = data.user.identities;
                     // Supabase obfuscated existing-email: returns user with empty identities []
-                    if (Array.isArray(identities) && identities.length === 0) {
-                        return 'existing';
-                    }
-                    // Has identities with email provider + freshly created → genuine new account
+                    if (Array.isArray(identities) && identities.length === 0) return 'existing';
+                    // Has identities + freshly created → genuine new account pending confirm
                     if (Array.isArray(identities) && identities.length > 0) {
-                        const hasEmail = identities.some(function(id) { return id.provider === 'email'; });
-                        var createdMs = u.created_at ? new Date(u.created_at).getTime() : 0;
-                        var fresh = createdMs > 0 && (Date.now() - createdMs) < 120000; // 2 min
-                        if (hasEmail && fresh) {
-                            return 'confirm';
-                        }
+                        var hasEmail = identities.some(function(id) { return id.provider === 'email'; });
+                        var ct = data.user.created_at ? new Date(data.user.created_at).getTime() : 0;
+                        if (hasEmail && ct > 0 && (Date.now() - ct) < 120000) return 'confirm';
                     }
-                    // identities present but can't confirm freshness — ambiguous
                     return 'ambiguous';
                 }
-                // 4) No data at all
                 return 'error';
             }
 
+            // Client-side signup cooldown to prevent Supabase rate limit (60s)
+            var _signupCooldownUntil = 0;
+
             window.loginSubmitAuth = async function() {
-                const l = localStorage.getItem('cc_lang') || 'ru';
-                const t = TEXTS[l] || TEXTS.ru;
-                const email    = (document.getElementById('loginEmailInput')   || {}).value?.trim() || '';
-                const password = (document.getElementById('loginPasswordInput')|| {}).value || '';
-                const confirm  = (document.getElementById('loginConfirmInput') || {}).value || '';
-                // Client-side validation — no Supabase call if invalid
+                var l = localStorage.getItem('cc_lang') || 'ru';
+                var t = TEXTS[l] || TEXTS.ru;
+                var email    = (document.getElementById('loginEmailInput')   || {}).value?.trim() || '';
+                var password = (document.getElementById('loginPasswordInput')|| {}).value || '';
+                var confirm  = (document.getElementById('loginConfirmInput') || {}).value || '';
                 if (!email || !email.includes('@')) { _fieldError('loginEmailInput'); _setLoginHint(t.errEmail, true); return; }
                 if (!_isValidPassword(password)) { _fieldError('loginPasswordInput'); _setLoginHint(t.errPass, true); return; }
                 if (!confirm) { _fieldError('loginConfirmInput'); _setLoginHint(t.errConfirmEmpty, true); return; }
                 if (password !== confirm) { _fieldError('loginConfirmInput'); _setLoginHint(t.errConfirm, true); return; }
+                // Client-side cooldown check
+                var now = Date.now();
+                if (now < _signupCooldownUntil) {
+                    var secsLeft = Math.ceil((_signupCooldownUntil - now) / 1000);
+                    _setLoginHint(t.errRateLimit + ' (' + secsLeft + 's)', true);
+                    return;
+                }
                 _setLoginBusy(true);
                 try {
-                    const { data, error } = await window._supabase.auth.signUp({ email, password });
+                    var resp = await window._supabase.auth.signUp({ email: email, password: password });
+                    var data = resp.data, error = resp.error;
+                    // Start cooldown after any signUp call (Supabase enforces ~60s per email)
+                    _signupCooldownUntil = Date.now() + 62000;
                     var result = _classifySignup(data, error);
-                    console.log('[ClanControl] signUp classify:', result, 'error:', error, 'user:', data && data.user && { id: data.user.id, identities: (data.user.identities||[]).length, created: data.user.created_at }, 'session:', !!( data && data.session));
+                    console.log('[CC] signUp →', result, error ? error.message : 'no error',
+                        data && data.user ? {id: data.user.id, identities: (data.user.identities||[]).length, created: data.user.created_at} : 'no user',
+                        'session:', !!(data && data.session));
                     switch (result) {
                         case 'success':
+                            _signupCooldownUntil = 0; // clear on success
                             await _initWithSupabaseUser(data.user);
                             break;
                         case 'existing':
@@ -2138,12 +2137,14 @@
                         case 'ambiguous':
                             _setLoginHint(t.infoSignupAmbiguous, true);
                             break;
-                        default: // 'error'
+                        default:
                             _setLoginHint(_mapAuthError(error && error.message, t, 'signup'), true);
                             break;
                     }
                 } catch(err) {
-                    console.warn('[ClanControl] signUp exception:', err && err.message);
+                    // Thrown errors (network, rate limit from SDK)
+                    _signupCooldownUntil = Date.now() + 62000;
+                    console.warn('[CC] signUp exception:', err && err.message);
                     _setLoginHint(_mapAuthError(err && err.message, t, 'signup'), true);
                 } finally { _setLoginBusy(false); }
             };
