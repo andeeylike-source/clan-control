@@ -2065,6 +2065,37 @@
                 return p.length >= 8 && /^[\x21-\x7E]+$/.test(p);
             }
 
+            // Classify signUp result: 'success' | 'existing' | 'confirm' | 'error'
+            function _classifySignup(data, error) {
+                // 1) Explicit Supabase error
+                if (error) {
+                    const m = (error.message || '').toLowerCase();
+                    if (m.includes('already registered') || m.includes('already exists') || m.includes('user already')) {
+                        return 'existing';
+                    }
+                    return 'error';
+                }
+                // 2) Got a session + user — real successful signup
+                if (data && data.session && data.user) {
+                    return 'success';
+                }
+                // 3) No session, but user object returned — either email-confirm or obfuscated existing
+                if (data && data.user) {
+                    const u = data.user;
+                    // Supabase obfuscated existing-email response: user has empty identities array
+                    // A genuinely new user always gets at least one identity entry for "email" provider
+                    const identities = u.identities || (u.user_metadata && u.user_metadata.identities);
+                    if (Array.isArray(identities) && identities.length === 0) {
+                        return 'existing';
+                    }
+                    // Some Supabase versions: fake user has same created_at / updated_at or very old created_at
+                    // but identities check is the most reliable — fall through to confirm
+                    return 'confirm';
+                }
+                // 4) No data at all — unexpected
+                return 'error';
+            }
+
             window.loginSubmitAuth = async function() {
                 const l = localStorage.getItem('cc_lang') || 'ru';
                 const t = TEXTS[l] || TEXTS.ru;
@@ -2079,13 +2110,20 @@
                 _setLoginBusy(true);
                 try {
                     const { data, error } = await window._supabase.auth.signUp({ email, password });
-                    if (error) throw error;
-                    if (data.session && data.user) {
-                        // Success — proceed to app/clan step
-                        await _initWithSupabaseUser(data.user);
-                    } else {
-                        // Email confirmation required in Supabase — stay on step 1, show info
-                        _setLoginHint(t.infoEmailConfirm, true);
+                    const result = _classifySignup(data, error);
+                    switch (result) {
+                        case 'success':
+                            await _initWithSupabaseUser(data.user);
+                            break;
+                        case 'existing':
+                            _setLoginHint(t.errAlreadyExists, true);
+                            break;
+                        case 'confirm':
+                            _setLoginHint(t.infoEmailConfirm, true);
+                            break;
+                        default:
+                            _setLoginHint(_mapAuthError(error && error.message, t, 'signup'), true);
+                            break;
                     }
                 } catch(err) {
                     _setLoginHint(_mapAuthError(err && err.message, t, 'signup'), true);
