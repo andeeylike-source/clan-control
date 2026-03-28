@@ -1399,7 +1399,7 @@
                     authSwitchToSignup: 'Регистрация', authSwitchToLogin: '← Войти',
                     authGoogle: 'Войти через Google', authOr: '— или —',
                     authShowPass: 'Показать', authHidePass: 'Скрыть',
-                    errEmail: 'Введи корректный email', errPass: 'Пароль минимум 8 символов',
+                    errEmail: 'Введи корректный email', errPass: 'Пароль: минимум 8 символов, только латиница/цифры/символы, без пробелов',
                     errConfirm: 'Пароли не совпадают', errEmpty: 'Введи пароль',
                     errConfirmEmpty: 'Повторите пароль',
                     errLogin: 'Неверный email или пароль',
@@ -1407,7 +1407,7 @@
                     errAlreadyExists: 'Аккаунт с этим email уже существует. Войди через кнопку «Войти».',
                     errGoogle: 'Не удалось войти через Google. Проверь настройки и попробуй снова.',
                     errGoogleProvider: 'Вход через Google недоступен. Используй email и пароль.',
-                    infoEmailConfirm: 'Подтверждение email включено в Supabase. Отключи «Confirm email» в Authentication → Providers, чтобы вход завершался сразу после регистрации.'
+                    infoEmailConfirm: 'Аккаунт создан, но в Supabase включено подтверждение email — вход сразу не завершится, пока это не отключено.'
                 },
                 en: {
                     sub: 'Clan officer toolkit for tracking war statistics',
@@ -1420,7 +1420,7 @@
                     authSwitchToSignup: 'Sign Up', authSwitchToLogin: '← Sign In',
                     authGoogle: 'Continue with Google', authOr: '— or —',
                     authShowPass: 'Show', authHidePass: 'Hide',
-                    errEmail: 'Enter a valid email', errPass: 'Password must be at least 8 characters',
+                    errEmail: 'Enter a valid email', errPass: 'Password: at least 8 characters, ASCII only, no spaces',
                     errConfirm: 'Passwords do not match', errEmpty: 'Enter your password',
                     errConfirmEmpty: 'Please confirm your password',
                     errLogin: 'Invalid email or password',
@@ -1428,7 +1428,7 @@
                     errAlreadyExists: 'An account with this email already exists. Use Sign In instead.',
                     errGoogle: 'Google sign in failed. Please check your settings and try again.',
                     errGoogleProvider: 'Google sign in is not available. Use email and password.',
-                    infoEmailConfirm: 'Email confirmation is enabled in Supabase. Disable "Confirm email" in Authentication → Providers so sign-in completes immediately after registration.'
+                    infoEmailConfirm: 'Account created, but Supabase email confirmation is enabled — sign-in won\'t complete until that is disabled.'
                 }
             };
 
@@ -2046,6 +2046,11 @@
             window.loginSwitchToLogin  = function() { _authMode = 'login';  _renderAuthStep1(); };
 
             // Signup submit with strict client-side validation
+            // Password charset rule: min 8 chars, ASCII only (no spaces, no non-ASCII)
+            function _isValidPassword(p) {
+                return p.length >= 8 && /^[\x21-\x7E]+$/.test(p);
+            }
+
             window.loginSubmitAuth = async function() {
                 const l = localStorage.getItem('cc_lang') || 'ru';
                 const t = TEXTS[l] || TEXTS.ru;
@@ -2054,7 +2059,7 @@
                 const confirm  = (document.getElementById('loginConfirmInput') || {}).value || '';
                 // Client-side validation — no Supabase call if invalid
                 if (!email || !email.includes('@')) { _fieldError('loginEmailInput'); _setLoginHint(t.errEmail, true); return; }
-                if (password.length < 8) { _fieldError('loginPasswordInput'); _setLoginHint(t.errPass, true); return; }
+                if (!_isValidPassword(password)) { _fieldError('loginPasswordInput'); _setLoginHint(t.errPass, true); return; }
                 if (!confirm) { _fieldError('loginConfirmInput'); _setLoginHint(t.errConfirmEmpty, true); return; }
                 if (password !== confirm) { _fieldError('loginConfirmInput'); _setLoginHint(t.errConfirm, true); return; }
                 _setLoginBusy(true);
