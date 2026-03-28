@@ -1417,7 +1417,10 @@
                     resetSent: 'Письмо для сброса пароля отправлено. Проверь почту.',
                     resetTitle: 'Новый пароль', resetPassPh: 'Новый пароль', resetConfirmPh: 'Повторите пароль',
                     resetBtn: 'Сохранить пароль', resetSuccess: 'Пароль успешно изменён. Теперь войди.',
-                    errResetEmail: 'Введи email выше, чтобы сбросить пароль.',
+                    forgotTitle: 'Восстановление пароля', forgotEmailPh: 'Email для восстановления',
+                    forgotSendBtn: 'Отправить письмо', forgotBack: '← Назад ко входу',
+                    forgotSentPrefix: 'Письмо отправлено на ',
+                    errResetEmail: 'Введи корректный email для сброса пароля.',
                     errResetSend: 'Не удалось отправить письмо для сброса. Попробуй ещё раз.'
                 },
                 en: {
@@ -1447,7 +1450,10 @@
                     resetSent: 'Password reset email sent. Check your inbox.',
                     resetTitle: 'New Password', resetPassPh: 'New password', resetConfirmPh: 'Confirm new password',
                     resetBtn: 'Save Password', resetSuccess: 'Password updated successfully. Please sign in.',
-                    errResetEmail: 'Enter your email above to reset your password.',
+                    forgotTitle: 'Password Recovery', forgotEmailPh: 'Email for recovery',
+                    forgotSendBtn: 'Send Reset Email', forgotBack: '← Back to Sign In',
+                    forgotSentPrefix: 'Email sent to ',
+                    errResetEmail: 'Enter a valid email to reset your password.',
                     errResetSend: 'Failed to send reset email. Please try again.'
                 }
             };
@@ -1995,8 +2001,9 @@
                 const t = TEXTS[l] || TEXTS.ru;
                 const isSignup = _authMode === 'signup';
                 const isReset  = _authMode === 'reset';
+                const isForgot = _authMode === 'forgot';
 
-                // -- RESET PASSWORD MODE --
+                // -- RESET PASSWORD MODE (after recovery link click) --
                 if (isReset) {
                     step1.innerHTML =
                         `<div class="login-step-label"><span class="login-step-num">1</span><span>${t.resetTitle}</span></div>` +
@@ -2009,6 +2016,18 @@
                         `<button type="button" onclick="_togglePassVis('loginNewConfirmInput','loginNewConfirmToggleBtn')" id="loginNewConfirmToggleBtn" aria-label="${t.authShowPass}" title="${t.authShowPass}" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;padding:2px;line-height:0;opacity:0.6" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">${_EYE_ON}</button>` +
                         `</div>` +
                         `<button class="login-btn" id="loginBtnPrimary" onclick="loginResetSubmit()" style="margin-top:8px"><span>${t.resetBtn}</span></button>` +
+                        `<p class="login-hint" id="loginHintText" style="margin-top:10px"></p>`;
+                    return;
+                }
+
+                // -- FORGOT PASSWORD MODE --
+                if (isForgot) {
+                    const prevEmail = (document.getElementById('loginEmailInput') || {}).value || '';
+                    step1.innerHTML =
+                        `<div class="login-step-label"><span class="login-step-num">1</span><span>${t.forgotTitle}</span></div>` +
+                        `<input type="email" class="login-input" id="loginForgotEmailInput" placeholder="${t.forgotEmailPh}" autocomplete="email" value="${prevEmail.replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter')loginForgotSend()">` +
+                        `<button class="login-btn" id="loginBtnPrimary" onclick="loginForgotSend()" style="margin-top:8px"><span>${t.forgotSendBtn}</span></button>` +
+                        `<div style="margin-top:8px"><button type="button" onclick="loginSwitchToLogin()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:0;text-decoration:underline">${t.forgotBack}</button></div>` +
                         `<p class="login-hint" id="loginHintText" style="margin-top:10px"></p>`;
                     return;
                 }
@@ -2106,10 +2125,23 @@
             window.loginSwitchToLogin  = function() { _authMode = 'login';  _renderAuthStep1(); };
 
             // Forgot password — send reset email via Supabase
-            window.loginForgotPassword = async function() {
+            // Forgot password — switch to forgot mode (shows email input form)
+            window.loginForgotPassword = function() {
+                const prevEmail = (document.getElementById('loginEmailInput') || {}).value?.trim() || '';
+                _authMode = 'forgot';
+                _renderAuthStep1();
+                // Prefill email if available from login form
+                if (prevEmail) {
+                    const fi = document.getElementById('loginForgotEmailInput');
+                    if (fi) fi.value = prevEmail;
+                }
+            };
+
+            // Actually send the reset email
+            window.loginForgotSend = async function() {
                 const l = localStorage.getItem('cc_lang') || 'ru';
                 const t = TEXTS[l] || TEXTS.ru;
-                const email = (document.getElementById('loginEmailInput') || {}).value?.trim() || '';
+                const email = ((document.getElementById('loginForgotEmailInput') || {}).value || '').trim();
                 if (!email || !email.includes('@')) { _setLoginHint(t.errResetEmail, true); return; }
                 const btn = document.getElementById('loginBtnPrimary');
                 if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
@@ -2118,7 +2150,7 @@
                         redirectTo: _AUTH_REDIRECT_URL + '?type=recovery'
                     });
                     if (error) throw error;
-                    _setLoginSuccess(t.resetSent);
+                    _setLoginSuccess((t.forgotSentPrefix || '') + email);
                 } catch(err) {
                     _setLoginHint(t.errResetSend, true);
                 } finally {
@@ -2379,6 +2411,10 @@
                 const av = document.getElementById('topbarAvatar'); if(av) av.textContent = (email[0]||'?').toUpperCase();
                 const em = document.getElementById('topbarEmail'); if(em) em.textContent = email;
                 const cb = document.getElementById('topbarClan'); if(cb){ if(clan){cb.textContent=clan;cb.style.display='';cb.dataset.ccOriginalStyle='';/* don't let normalize hide it */}else cb.style.display='none'; }
+                // Load account-scoped data for this user
+                if (window._currentUserId && typeof reloadDataForUser === 'function') {
+                    reloadDataForUser(window._currentUserId);
+                }
             }
 
             // INIT — Supabase auth
@@ -2399,6 +2435,7 @@
             // Функция входа по профилю из Supabase
             async function _initWithSupabaseUser(user) {
                 window._loginEmail = user.email || '';
+                window._currentUserId = user.id || '';
                 let profile = null;
                 try {
                     // Читаем профиль пользователя из таблицы profiles
@@ -3700,10 +3737,10 @@
         function logAction(action, detail) {
             actionLog.push({ ts: new Date().toISOString(), action, detail: detail || '' });
             if (actionLog.length > 200) actionLog = actionLog.slice(-200);
-            try { localStorage.setItem('cc_action_log', JSON.stringify(actionLog)); } catch(e) {}
+            try { localStorage.setItem('cc_action_log_' + (window._currentUserId || 'anon'), JSON.stringify(actionLog)); } catch(e) {}
         }
         function loadActionLog() {
-            try { const r = localStorage.getItem('cc_action_log'); if (r) actionLog = JSON.parse(r); } catch(e) {}
+            try { const r = localStorage.getItem('cc_action_log_' + (window._currentUserId || 'anon')); if (r) actionLog = JSON.parse(r); } catch(e) {}
         }
 
 const PROFA_ICONS = {
@@ -8684,7 +8721,37 @@ function getClass2IconByClass3(c3) {
         });
 
         // ===== LOCAL STORAGE =====
-        const LS_KEY = 'clanControl_v1';
+        // Storage key is scoped to authenticated user to prevent data bleeding between accounts
+        let LS_KEY = 'clanControl_v1'; // will be updated per-user on login
+        function _lsKeyForUser(userId) {
+            return userId ? ('clanControl_v1_' + userId) : 'clanControl_v1';
+        }
+
+        // Reset all in-memory app state to empty defaults
+        function resetAppState() {
+            roster = [];
+            archive = [];
+            packs = [];
+            manualEvents = [];
+            eventStatuses = {};
+            eventOverrides = {};
+            kmStats = {};
+            nickAliases = {};
+            exhaustedKeys = {};
+            appliedStatsByDate = {};
+            playerNotes = {};
+            playerProfaByDate = {};
+            valueWeights = {};
+        }
+
+        // Re-initialize app data for a specific user
+        function reloadDataForUser(userId) {
+            LS_KEY = _lsKeyForUser(userId);
+            resetAppState();
+            loadFromStorage();
+            loadNotifySettings();
+            loadActionLog();
+        }
 
         function saveToStorage() {
             // Показываем индикатор сохранения
@@ -8863,18 +8930,18 @@ function getClass2IconByClass3(c3) {
                 body.style.opacity = '1';
                 if (btn) btn.textContent = '▲ ' + t('Свернуть','Collapse');
                 if (badge) badge.textContent = '';
-                localStorage.setItem('aliases_expanded', 'true');
+                localStorage.setItem('aliases_expanded_' + (window._currentUserId || 'anon'), 'true');
             } else {
                 body.style.maxHeight = '0px';
                 body.style.opacity = '0';
                 if (btn) btn.textContent = '▼ ' + t('Развернуть','Expand') + ' (' + count + ')';
                 if (badge) badge.textContent = count + ' ' + t(count === 1 ? 'алиас' : count < 5 ? 'алиаса' : 'алиасов', 'alias' + (count === 1 ? '' : 'es'));
-                localStorage.setItem('aliases_expanded', 'false');
+                localStorage.setItem('aliases_expanded_' + (window._currentUserId || 'anon'), 'false');
             }
         }
 
         function initAliasesToggle() {
-            const expanded = localStorage.getItem('aliases_expanded') === 'true';
+            const expanded = localStorage.getItem('aliases_expanded_' + (window._currentUserId || 'anon')) === 'true';
             toggleAliasesSection(expanded);
         }
 
@@ -9510,7 +9577,7 @@ function getClass2IconByClass3(c3) {
 
         function loadNotifySettings() {
             try {
-                const s = localStorage.getItem('cc_notify');
+                const s = localStorage.getItem('cc_notify_' + (window._currentUserId || 'anon'));
                 if (s) notifySettings = JSON.parse(s);
             } catch(e) {}
             const popup = document.getElementById('settingNotifyPopup');
@@ -9524,7 +9591,7 @@ function getClass2IconByClass3(c3) {
             const sound = document.getElementById('settingNotifySound');
             notifySettings.popup = popup ? popup.checked : true;
             notifySettings.sound = sound ? sound.checked : true;
-            localStorage.setItem('cc_notify', JSON.stringify(notifySettings));
+            localStorage.setItem('cc_notify_' + (window._currentUserId || 'anon'), JSON.stringify(notifySettings));
         }
 
         function notifyAnalysisComplete(count) {
@@ -10223,16 +10290,16 @@ function getClass2IconByClass3(c3) {
         function closeOnboarding() {
             const el = document.getElementById('onboardingOverlay');
             if (el) el.style.display = 'none';
-            localStorage.setItem('cc_onboarded', '1');
+            localStorage.setItem('cc_onboarded_' + (window._currentUserId || 'anon'), '1');
         }
 
         function showOnboardingIfNeeded() {
             // Показываем только если localStorage совсем пустой (первый запуск)
-            const seen = localStorage.getItem('cc_onboarded');
+            const seen = localStorage.getItem('cc_onboarded_' + (window._currentUserId || 'anon'));
             if (seen) return;
             // Если данные только из preload (не из реального localStorage) — показываем
-            const hasRealData = localStorage.getItem('clanControl_v1') !== null;
-            if (hasRealData) { localStorage.setItem('cc_onboarded', '1'); return; }
+            const hasRealData = localStorage.getItem(LS_KEY) !== null;
+            if (hasRealData) { localStorage.setItem('cc_onboarded_' + (window._currentUserId || 'anon'), '1'); return; }
             const el = document.getElementById('onboardingOverlay');
             if (el) el.style.display = 'flex';
         }
@@ -10242,9 +10309,9 @@ function getClass2IconByClass3(c3) {
         }
 
         window.onload = () => {
-            loadFromStorage();
-            loadNotifySettings();
-            loadActionLog();
+            // Data loading is now deferred to reloadDataForUser() which is called from _showApp()
+            // after authentication, so each user gets their own scoped data.
+            // loadFromStorage() is NOT called here to prevent cross-account data bleed.
 
             // ===== ВСТРОЕННЫЕ АЛИАСЫ — известные проблемные ники =====
             // Добавляем только если ещё нет пользовательского алиаса
