@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clan Control v12</title>
+    <!-- Supabase JS SDK for auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
@@ -819,8 +821,18 @@
             <div class="login-step active" id="loginStep1">
                 <div class="login-step-label"><span class="login-step-num">1</span><span id="loginEmailLabel">Введи email</span></div>
                 <input type="email" class="login-input" id="loginEmailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter') loginGoStep2()">
-                <button class="login-btn" onclick="loginGoStep2()"><span id="loginBtnText1">Продолжить →</span></button>
-                <p class="login-hint" id="loginHintText">MVP — введи любой email</p>
+                <button class="login-btn" id="loginBtn1" onclick="loginGoStep2()"><span id="loginBtnText1">Продолжить →</span></button>
+                <p class="login-hint" id="loginHintText">Получишь письмо со ссылкой для входа</p>
+            </div>
+            <!-- Шаг 1b — Magic link отправлен -->
+            <div class="login-step" id="loginStepSent">
+                <div style="text-align:center;padding:12px 0">
+                    <div style="font-size:40px;margin-bottom:12px">📧</div>
+                    <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px" id="loginSentTitle">Письмо отправлено!</div>
+                    <div style="font-size:13px;color:var(--text3);line-height:1.6" id="loginSentDesc">Проверь почту и кликни по ссылке в письме. После этого ты автоматически войдёшь в систему.</div>
+                    <div style="font-size:11px;color:var(--text4);margin-top:16px" id="loginSentEmail"></div>
+                </div>
+                <button class="login-back" style="margin-top:16px" onclick="loginGoStep1()">← Другой email</button>
             </div>
             <!-- Шаг 2 — Клан -->
             <div class="login-step" id="loginStep2">
@@ -1873,33 +1885,65 @@
                 setLang(current === 'ru' ? 'en' : 'ru');
             };
 
-            window.loginGoStep2 = function() {
+            window.loginGoStep2 = async function() {
                 const inp = document.getElementById('loginEmailInput');
                 const v = inp ? inp.value.trim() : '';
                 if (!v || !v.includes('@')) { if(inp){inp.classList.add('error');setTimeout(()=>inp.classList.remove('error'),1400);inp.focus();} return; }
                 window._loginEmail = v;
-                document.getElementById('loginStep1').classList.remove('active');
-                document.getElementById('loginStep2').classList.add('active');
-                document.getElementById('loginDot2').classList.add('done');
-                const c = document.getElementById('loginClanInput'); if(c) c.focus();
+
+                // Supabase: отправить magic link
+                const btn = document.getElementById('loginBtn1');
+                if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+                try {
+                    const { error } = await window._supabase.auth.signInWithOtp({
+                        email: v,
+                        options: { emailRedirectTo: 'https://andeeylike-source.github.io/clan-control/clan-control.html' }
+                    });
+                    if (error) throw error;
+                    // Показать экран "письмо отправлено"
+                    document.getElementById('loginStep1').classList.remove('active');
+                    document.getElementById('loginStepSent').classList.add('active');
+                    document.getElementById('loginDot2').classList.add('done');
+                    const sentEl = document.getElementById('loginSentEmail');
+                    if (sentEl) sentEl.textContent = v;
+                } catch(err) {
+                    console.error('Magic link error:', err);
+                    alert((err && err.message) || 'Ошибка отправки письма. Попробуй ещё раз.');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+                }
             };
 
             window.loginGoStep1 = function() {
                 document.getElementById('loginStep2').classList.remove('active');
+                document.getElementById('loginStepSent').classList.remove('active');
                 document.getElementById('loginStep1').classList.add('active');
                 document.getElementById('loginDot2').classList.remove('done');
             };
 
-            window.loginFinish = function() {
+            window.loginFinish = async function() {
                 const clan = (document.getElementById('loginClanInput')||{}).value || '';
-                sessionStorage.setItem('cc_user', window._loginEmail);
-                sessionStorage.setItem('cc_clan', clan);
-                localStorage.setItem('cc_user', window._loginEmail);
-                localStorage.setItem('cc_clan', clan);
-                _showApp(window._loginEmail, clan);
+                if (!clan.trim()) {
+                    const c = document.getElementById('loginClanInput');
+                    if(c){c.classList.add('error');setTimeout(()=>c.classList.remove('error'),1400);c.focus();}
+                    return;
+                }
+                // Supabase: upsert профиля с именем клана
+                const { data: { user } } = await window._supabase.auth.getUser();
+                if (user) {
+                    await window._supabase.from('profiles').upsert({
+                        id: user.id,
+                        email: user.email,
+                        clan_name: clan.trim(),
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'id' });
+                }
+                _showApp(user ? user.email : window._loginEmail, clan.trim());
             };
 
-            window.loginLogout = function() {
+            window.loginLogout = async function() {
+                // Supabase: выйти из аккаунта
+                await window._supabase.auth.signOut();
                 ['cc_user','cc_clan'].forEach(k=>{sessionStorage.removeItem(k);localStorage.removeItem(k);});
                 const e = document.getElementById('loginEmailInput'); if(e) e.value = '';
                 const c = document.getElementById('loginClanInput'); if(c) c.value = '';
@@ -1920,22 +1964,66 @@
                 const cb = document.getElementById('topbarClan'); if(cb){ if(clan){cb.textContent=clan;cb.style.display='';cb.dataset.ccOriginalStyle='';/* don't let normalize hide it */}else cb.style.display='none'; }
             }
 
-            // INIT
+            // INIT — Supabase auth
             const theme = localStorage.getItem('cc_theme') || 'dark';
             const lang  = localStorage.getItem('cc_lang')  || 'ru';
             setTheme(theme);
             setLang(lang);
             ensureTranslationObserver();
-            const savedUser = sessionStorage.getItem('cc_user') || localStorage.getItem('cc_user');
-            if (savedUser) {
-                window._loginEmail = savedUser;
-                const savedClan = sessionStorage.getItem('cc_clan') || localStorage.getItem('cc_clan') || '';
-                _showApp(savedUser, savedClan);
-                const initialPage = (location.hash || '').replace('#', '');
-                if (initialPage && typeof window.showPage === 'function') {
-                    setTimeout(() => window.showPage(initialPage), 0);
+
+            // Инициализация Supabase клиента
+            window._supabase = supabase.createClient(
+                'https://sluqteqisrkdsmcsydlv.supabase.co',
+                'sb_publishable_zCt0JfMRJBW8ao4lNO6mPw_o0ntK-Se'
+            );
+
+            // Функция входа по профилю из Supabase
+            async function _initWithSupabaseUser(user) {
+                window._loginEmail = user.email || '';
+                // Читаем профиль пользователя из таблицы profiles
+                const { data: profile } = await window._supabase
+                    .from('profiles')
+                    .select('clan_name')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile && profile.clan_name) {
+                    // Профиль есть — сразу в приложение
+                    _showApp(user.email, profile.clan_name);
+                    const initialPage = (location.hash || '').replace('#', '');
+                    if (initialPage && typeof window.showPage === 'function') {
+                        setTimeout(() => window.showPage(initialPage), 0);
+                    }
+                } else {
+                    // Профиля нет — показать шаг ввода клана
+                    document.getElementById('loginStep1').classList.remove('active');
+                    document.getElementById('loginStepSent').classList.remove('active');
+                    document.getElementById('loginStep2').classList.add('active');
+                    document.getElementById('loginDot2').classList.add('done');
+                    const c = document.getElementById('loginClanInput'); if(c) c.focus();
                 }
             }
+
+            // Слушаем изменения сессии (возврат после magic link)
+            window._supabase.auth.onAuthStateChange(async (event, session) => {
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && session.user) {
+                    // Убираем hash из URL после auth redirect
+                    if (window.location.hash && window.location.hash.includes('access_token')) {
+                        history.replaceState(null, '', window.location.pathname + window.location.search);
+                    }
+                    await _initWithSupabaseUser(session.user);
+                } else if (event === 'SIGNED_OUT') {
+                    // Logout уже обработан в loginLogout
+                }
+            });
+
+            // Проверяем существующую сессию при загрузке
+            (async () => {
+                const { data: { session } } = await window._supabase.auth.getSession();
+                if (session && session.user) {
+                    await _initWithSupabaseUser(session.user);
+                }
+            })();
         })();
 
         // ===== ПЕРЕВОДЧИК =====
@@ -9769,6 +9857,38 @@ function getClass2IconByClass3(c3) {
             </div>
         </div>
     </div>
+
+<!-- =============================================
+     SUPABASE SQL — выполнить вручную в Supabase SQL Editor
+     =============================================
+
+const SUPABASE_SETUP_SQL = `
+-- Создать таблицу профилей пользователей
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  clan_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Row Level Security
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Политика: пользователь видит только свой профиль
+CREATE POLICY "profiles_select_own" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+-- Политика: пользователь может создать свой профиль
+CREATE POLICY "profiles_insert_own" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Политика: пользователь может обновить свой профиль
+CREATE POLICY "profiles_update_own" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+`;
+
+============================================= -->
 
 </body>
 </html>
