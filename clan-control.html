@@ -2166,14 +2166,22 @@
                 if (!email || !email.includes('@')) { _fieldError('loginEmailInput'); _setLoginHint(t.errEmail, true); return; }
                 if (!password) { _fieldError('loginPasswordInput'); _setLoginHint(t.errEmpty, true); return; }
                 _setLoginBusy(true);
+                // Mark that this sign-in is handled here — suppress onAuthStateChange double-call
+                _authInitSource = 'signin';
                 try {
                     const { data, error } = await window._supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    if (data.user) await _initWithSupabaseUser(data.user);
-                    // If no user returned without error, stay on step 1 (should not happen)
+                    if (data && data.user) {
+                        await _initWithSupabaseUser(data.user);
+                    } else {
+                        _setLoginHint(t.errLogin, true);
+                    }
                 } catch(err) {
                     _setLoginHint(_mapAuthError(err && err.message, t, 'login'), true);
-                } finally { _setLoginBusy(false); }
+                } finally {
+                    _authInitSource = null;
+                    _setLoginBusy(false);
+                }
             };
 
             // Legacy route for signup button in old HTML
@@ -2222,23 +2230,39 @@
             };
 
             window.loginFinish = async function() {
-                const clan = (document.getElementById('loginClanInput')||{}).value || '';
-                if (!clan.trim()) {
+                const l = localStorage.getItem('cc_lang') || 'ru';
+                const t = TEXTS[l] || TEXTS.ru;
+                const clan = ((document.getElementById('loginClanInput')||{}).value || '').trim();
+                if (!clan) {
                     const c = document.getElementById('loginClanInput');
                     if(c){c.classList.add('error');setTimeout(()=>c.classList.remove('error'),1400);c.focus();}
                     return;
                 }
-                // Supabase: upsert профиля с именем клана
-                const { data: { user } } = await window._supabase.auth.getUser();
-                if (user) {
-                    await window._supabase.from('profiles').upsert({
+                // Busy state on step2 button
+                const finBtn = document.querySelector('#loginStep2 .login-btn');
+                if (finBtn) { finBtn.disabled = true; finBtn.style.opacity = '0.6'; }
+                try {
+                    // Get current authenticated user reliably
+                    const { data: { user }, error: userErr } = await window._supabase.auth.getUser();
+                    if (userErr || !user) throw new Error(userErr ? userErr.message : 'No session');
+                    // Upsert clan profile
+                    const { error: upsertErr } = await window._supabase.from('profiles').upsert({
                         id: user.id,
                         email: user.email,
-                        clan_name: clan.trim(),
+                        clan_name: clan,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'id' });
+                    if (upsertErr) throw upsertErr;
+                    // Success — open app
+                    _showApp(user.email, clan);
+                } catch(err) {
+                    // Show error inline on step2 hint or alert fallback
+                    const h = document.getElementById('loginHintText');
+                    const msg = (err && err.message) || (t.errSignup || 'Ошибка сохранения');
+                    if (h) { h.textContent = msg; h.style.color = '#ef4444'; }
+                } finally {
+                    if (finBtn) { finBtn.disabled = false; finBtn.style.opacity = ''; }
                 }
-                _showApp(user ? user.email : window._loginEmail, clan.trim());
             };
 
             window.loginLogout = async function() {
@@ -2335,21 +2359,30 @@
                 if (hintText) _setLoginHint(hintText, false);
             }
 
-            // Слушаем изменения сессии (hash-flow fallback)
-            // Flag prevents double-handling between onAuthStateChange and the IIFE
+            // Auth init source tracking:
+            // 'callback' = being handled by IIFE bootstrap (email confirm / Google OAuth redirect)
+            // 'signin'   = being handled inline by loginSignIn
+            // null       = not yet initiated
+            let _authInitSource = null;
             let _callbackHandled = false;
 
             window._supabase.auth.onAuthStateChange(async (event, session) => {
+                // Only handle SIGNED_IN/TOKEN_REFRESHED when:
+                // - a callback is in progress (from IIFE), OR
+                // - no source is set yet (e.g. existing session restored on page load)
+                // Skip if loginSignIn already handling this inline (_authInitSource === 'signin')
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && session.user) {
-                    const url = new URL(window.location.href);
-                    if (url.searchParams.has('code') || url.searchParams.has('access_token') ||
-                        (window.location.hash && window.location.hash.includes('access_token'))) {
-                        history.replaceState(null, '', window.location.pathname);
-                    }
-                    if (!_callbackHandled) {
+                    if (_authInitSource === 'signin') return; // loginSignIn handles this inline
+                    if (_authInitSource === 'callback' && !_callbackHandled) {
                         _callbackHandled = true;
+                        const url = new URL(window.location.href);
+                        if (url.searchParams.has('code') || url.searchParams.has('access_token') ||
+                            (window.location.hash && window.location.hash.includes('access_token'))) {
+                            history.replaceState(null, '', window.location.pathname);
+                        }
                         await _initWithSupabaseUser(session.user);
                     }
+                    // If _authInitSource is null (no active flow), ignore — IIFE will handle via getSession
                 }
             });
 
@@ -2360,6 +2393,7 @@
                 const hasHashTokens = window.location.hash && window.location.hash.includes('access_token');
 
                 if (code || hasHashTokens) {
+                    _authInitSource = 'callback'; // mark that callback flow is active
                     // Auth callback (Google OAuth / email confirm) — показать промежуточное состояние
                     const step1 = document.getElementById('loginStep1');
                     if (step1) {
@@ -2440,11 +2474,10 @@
                         }
                     }
                 } else {
-                    // Нет callback — проверяем существующую сессию
+                    // Нет callback — проверяем существующую сессию (обычная загрузка страницы)
                     try {
                         const { data: { session } } = await window._supabase.auth.getSession();
                         if (session && session.user) {
-                            _callbackHandled = true;
                             await _initWithSupabaseUser(session.user);
                         }
                     } catch(e) {
