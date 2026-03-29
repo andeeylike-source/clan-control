@@ -2269,6 +2269,8 @@
         </section>
 
     </main>
+</div><!-- /appLayout -->
+
 
 
     <!-- МОДАЛКА ИГРОКА -->
@@ -2442,7 +2444,7 @@
                 <button onclick="saveEditEvent()" class="btn-primary text-sm px-5 py-2">Сохранить</button>
             </div>
         
-</div><!-- /appLayout -->
+
 </div>
     </div>
 
@@ -12009,15 +12011,10 @@ function getClass2IconByClass3(c3) {
             showOnboardingIfNeeded();
         }
         
-        // Original window.onload now just calls initApp
+        // window.onload: only init theme/lang, let auth IIFE handle the rest
         window.onload = () => {
-            initApp();
+            // initApp will be called by _showApp after successful auth
         };
-        
-        // Hook into _showApp from auth to trigger initApp
-        const _origShowApp = window._showAppHook;
-        window.addEventListener('load', () => {
-        });
     </script>
     <!-- DATE PICKER POPUP -->
     <div id="dpPopup" class="dp-popup">
@@ -13123,6 +13120,7 @@ function getClass2IconByClass3(c3) {
 
             function _showApp(email, clan) {
                 if (typeof initApp === "function") initApp();
+                if (typeof initApp === "function") initApp();
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('topbar').classList.remove('hidden');
                 document.getElementById('appLayout').classList.remove('hidden');
@@ -13327,6 +13325,18 @@ function getClass2IconByClass3(c3) {
                 }
             })();
         })();
+    </script>
 
+
+    <script>
+    // Safety: if after 4s login screen is still invisible and app not shown, force show login
+    setTimeout(function() {
+        var ls = document.getElementById('loginScreen');
+        var app = document.getElementById('appLayout');
+        if (ls && !ls.classList.contains('hidden') && !ls.classList.contains('visible') && app && app.classList.contains('hidden')) {
+            ls.classList.add('visible');
+        }
+    }, 4000);
+    </script>
 </body>
 </html>
