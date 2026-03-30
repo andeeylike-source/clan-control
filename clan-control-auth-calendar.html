@@ -445,6 +445,9 @@
             padding: 12px;
         }
         .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
             border-radius: 20px;
             overflow: hidden;
             background: var(--border);
@@ -462,6 +465,8 @@
             padding: 9px 9px 22px;
             background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent), var(--bg2);
             transition: background .16s ease, filter .16s ease;
+            cursor: pointer;
+            position: relative;
         }
         .calendar-day:hover {
             background: linear-gradient(180deg, rgba(201,168,76,0.05), transparent), var(--bg3);
@@ -1237,13 +1242,15 @@
 
 <!-- КАЛЕНДАРЬ -->
         <section id="page-calendar" class="page-section">
-                    <div class="calendar-hero" style="--calendar-hero-image:url('REPLACE_WITH_HERO_IMAGE_OR_KEEP_EMPTY')">
-                        <div class="calendar-hero-shell">
-                        <div class="calendar-hero-top">
-                            <div class="calendar-hero-content">
+
+            <!-- HERO -->
+            <div class="calendar-hero" style="--calendar-hero-image:url('')">
+                <div class="calendar-hero-shell">
+                    <div class="calendar-hero-top">
+                        <div class="calendar-hero-content">
                             <div class="calendar-hero-eyebrow" id="calendarHeroEyebrow">WAR CALENDAR</div>
                             <h1 class="calendar-hero-title" id="calendarHeroTitle">War Table Calendar</h1>
-                            <p class="calendar-hero-text" id="calendarHeroText">Календарь стал компактнее: арт работает как обложка раздела, а не как шумный фон под таблицы.</p>
+                            <p class="calendar-hero-text" id="calendarHeroText">Календарь стал компактнее: арт работает как обложка раздела, а рабочий слой ниже остаётся читаемым.</p>
                             <div class="calendar-hero-chips" id="calendarHeroChips"></div>
                         </div>
                         <div class="calendar-hero-meta">
@@ -1269,32 +1276,34 @@
                 </div>
             </div>
 
-                    <div class="calendar-workbench">
-                        <div class="calendar-main-stack">
-                            <div class="calendar-grid-card">
-                                <div class="calendar-grid" id="calendarGrid"></div>
-                            </div>
-                        </div>
-
-                        <aside class="calendar-sidebar">
-                            <div class="calendar-side-card">
-                                <div class="calendar-side-head">
-                                    <div class="calendar-side-title" id="calendarUpcomingTitle">Ближайшие события</div>
-                                    <button class="calendar-side-link" type="button" onclick="openDayModal(todayStr())" id="calendarTodayShortcut">Открыть сегодня</button>
-                                </div>
-                                <div id="calendarUpcoming"></div>
-                            </div>
-
-                            <div class="calendar-side-card">
-                                <div class="calendar-side-head">
-                                    <div class="calendar-side-title" id="calendarRecurringTitle">Шаблоны недели</div>
-                                    <div class="calendar-side-caption" id="calendarRecurringCaption">preview only</div>
-                                </div>
-                                <div id="calendarRecurringPreview"></div>
-                            </div>
-                        </aside>
+            <!-- WORKBENCH: grid + sidebar -->
+            <div class="calendar-workbench">
+                <div class="calendar-main-stack">
+                    <div class="calendar-grid-card">
+                        <div class="calendar-grid" id="calendarGrid"></div>
                     </div>
-                </section>
+                </div>
+
+                <aside class="calendar-sidebar">
+                    <div class="calendar-side-card">
+                        <div class="calendar-side-head">
+                            <div class="calendar-side-title" id="calendarUpcomingTitle">Ближайшие события</div>
+                            <button class="calendar-side-link" type="button" onclick="openDayModal(todayStr())" id="calendarTodayShortcut">Открыть сегодня</button>
+                        </div>
+                        <div id="calendarUpcoming"></div>
+                    </div>
+
+                    <div class="calendar-side-card">
+                        <div class="calendar-side-head">
+                            <div class="calendar-side-title" id="calendarRecurringTitle">Шаблоны недели</div>
+                            <div class="calendar-side-caption" id="calendarRecurringCaption">preview only</div>
+                        </div>
+                        <div id="calendarRecurringPreview"></div>
+                    </div>
+                </aside>
+            </div>
+
+        </section>
 
         <!-- РОСТЕР -->
         <section id="page-roster" class="page-section">
