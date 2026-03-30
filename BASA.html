@@ -2405,13 +2405,13 @@
             <div class="calendar-hero" style="--calendar-hero-image:url('')">
                 <div class="calendar-hero-shell">
                     <div class="calendar-hero-top">
-                        <div class="calendar-hero-content">
+                        <div class="calendar-hero-content" id="cveBlockHeroContent">
                             <div class="calendar-hero-eyebrow" id="calendarHeroEyebrow">WAR CALENDAR</div>
                             <h1 class="calendar-hero-title" id="calendarHeroTitle">War Table Calendar</h1>
                             <p class="calendar-hero-text" id="calendarHeroText">Календарь стал компактнее: арт работает как обложка раздела, а рабочий слой ниже остаётся читаемым.</p>
                             <div class="calendar-hero-chips" id="calendarHeroChips"></div>
                         </div>
-                        <div class="calendar-hero-meta">
+                        <div class="calendar-hero-meta" id="cveBlockHeroMeta">
                             <div class="calendar-toolbar-copy">
                                 <div class="calendar-section-label" id="calendarSectionLabel">Календарь КМ</div>
                                 <div id="calendarMonthLabel" class="calendar-month-label"></div>
@@ -2443,7 +2443,7 @@
                 </div>
 
                 <aside class="calendar-sidebar">
-                    <div class="calendar-side-card">
+                    <div class="calendar-side-card" id="cveBlockUpcoming">
                         <div class="calendar-side-head">
                             <div class="calendar-side-title" id="calendarUpcomingTitle">Ближайшие события</div>
                             <button class="calendar-side-link" type="button" onclick="openDayModal(todayStr())" id="calendarTodayShortcut">Открыть сегодня</button>
@@ -2451,7 +2451,7 @@
                         <div id="calendarUpcoming"></div>
                     </div>
 
-                    <div class="calendar-side-card">
+                    <div class="calendar-side-card" id="cveBlockRecurring">
                         <div class="calendar-side-head">
                             <div class="calendar-side-title" id="calendarRecurringTitle">Шаблоны недели</div>
                             <div class="calendar-side-caption" id="calendarRecurringCaption">preview only</div>
@@ -11429,618 +11429,611 @@ function getClass2IconByClass3(c3) {
 
 
 <!-- ═══════════════════════════════════════════════
-     CALENDAR VISUAL EDITOR v1
+     CALENDAR VISUAL EDITOR v2
 ═══════════════════════════════════════════════ -->
 
-<!-- Floating toolbar -->
-<div id="cveToolbar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:8900;background:#0a0e0c;border:1px solid rgba(201,168,76,0.4);border-radius:14px;padding:8px 14px;display:none;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
-  <span style="font-size:11px;font-weight:800;color:#e8c97a;letter-spacing:.08em;white-space:nowrap">✏️ РЕДАКТОР</span>
-  <div style="width:1px;height:18px;background:rgba(201,168,76,0.25)"></div>
-  <!-- BG image upload -->
-  <label id="cveBgLabel" title="Фоновое изображение" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid rgba(201,168,76,0.25);background:rgba(201,168,76,0.06);color:#c9a84c;font-size:14px;transition:all .15s" onmouseover="this.style.background='rgba(201,168,76,0.16)'" onmouseout="this.style.background='rgba(201,168,76,0.06)'">🖼
-    <input type="file" accept="image/*" id="cveBgInput" style="display:none" onchange="cveBgUpload(this)">
-  </label>
-  <button onclick="cveBgRemove()" title="Убрать фото" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid rgba(201,168,76,0.25);background:rgba(201,168,76,0.06);color:#c9a84c;font-size:14px;transition:all .15s" onmouseover="this.style.background='rgba(201,168,76,0.16)'" onmouseout="this.style.background='rgba(201,168,76,0.06)'">🗑</button>
-  <div style="width:1px;height:18px;background:rgba(201,168,76,0.25)"></div>
-  <!-- BG scale -->
-  <div style="display:flex;align-items:center;gap:5px">
-    <span style="font-size:9px;color:#7aaa88;white-space:nowrap">Масштаб</span>
-    <input type="range" id="cveBgScale" min="50" max="250" step="2" value="104" oninput="cveBgScaleChange(+this.value)" style="width:70px;accent-color:#c9a84c;cursor:pointer">
-    <span id="cveBgScaleVal" style="font-size:10px;color:#c9a84c;min-width:32px">104%</span>
-  </div>
-  <div style="width:1px;height:18px;background:rgba(201,168,80,0.25)"></div>
-  <button onclick="cveSave()" id="cveSaveBtn" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.4);color:#e8c97a;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='rgba(201,168,76,0.25)'" onmouseout="this.style.background='rgba(201,168,76,0.12)'">💾 Сохранить</button>
-  <button onclick="cveReset()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#7aaa88;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">↺ Сброс</button>
-  <button onclick="cveClose()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">✓ Готово</button>
+<!-- Compact floating toolbar -->
+<div id="cveToolbar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:8900;background:rgba(8,12,10,0.96);border:1px solid rgba(201,168,76,0.45);border-radius:12px;padding:7px 12px;align-items:center;gap:8px;box-shadow:0 6px 28px rgba(0,0,0,0.8);backdrop-filter:blur(10px);white-space:nowrap">
+  <span style="font-size:11px;font-weight:800;color:#e8c97a;letter-spacing:.06em">✏️ РЕДАКТОР</span>
+  <span id="cveSelInfo" style="font-size:10px;color:#4a6845;min-width:80px"></span>
+  <div style="width:1px;height:16px;background:rgba(201,168,76,0.2)"></div>
+  <label title="Загрузить фон hero" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.06);color:#c9a84c;font-size:13px" onmouseover="this.style.background='rgba(201,168,76,0.15)'" onmouseout="this.style.background='rgba(201,168,76,0.06)'">🖼<input type="file" accept="image/*" id="cveBgInput" style="display:none" onchange="cveBgUpload(this)"></label>
+  <button onclick="cveBgRemove()" title="Убрать фон" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:1px solid rgba(201,168,76,0.2);background:rgba(201,168,76,0.04);color:#7aaa88;font-size:13px;cursor:pointer" onmouseover="this.style.background='rgba(239,68,68,0.1)';this.style.color='#fca5a5'" onmouseout="this.style.background='rgba(201,168,76,0.04)';this.style.color='#7aaa88'">🗑</button>
+  <div style="width:1px;height:16px;background:rgba(201,168,76,0.2)"></div>
+  <button onclick="cveSave()" id="cveSaveBtn" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.4);color:#e8c97a;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" onmouseover="this.style.background='rgba(201,168,76,0.22)'" onmouseout="this.style.background='rgba(201,168,76,0.1)'">💾 Сохранить</button>
+  <button onclick="cveReset()" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#7aaa88;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">↺ Сброс</button>
+  <button onclick="cveClose()" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">✓ Готово</button>
 </div>
 
-<!-- BG drag hint -->
-<div id="cveBgHint" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:8901;background:#0a0e0c;border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:5px 12px;font-size:11px;color:#7aaa88;pointer-events:none">🖱 Тяни hero для смещения фона · Колесо = масштаб</div>
+<!-- Per-block resize panel (shown when block selected) -->
+<div id="cveResizePanel" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:8901;background:rgba(8,12,10,0.94);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:6px 12px;align-items:center;gap:10px;box-shadow:0 4px 18px rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+  <span style="font-size:10px;color:#4a6845;font-weight:700;white-space:nowrap">Размер:</span>
+  <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#7aaa88">W<input type="number" id="cvePanelW" min="60" max="1200" step="4" style="width:54px;background:#060c08;border:1px solid #2a4025;border-radius:5px;padding:3px 5px;color:#c0d8c8;font-size:11px;outline:none" oninput="cvePanelApply()"></label>
+  <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#7aaa88">H<input type="number" id="cvePanelH" min="40" max="1200" step="4" style="width:54px;background:#060c08;border:1px solid #2a4025;border-radius:5px;padding:3px 5px;color:#c0d8c8;font-size:11px;outline:none" oninput="cvePanelApply()"></label>
+  <div style="width:1px;height:14px;background:rgba(201,168,76,0.2)"></div>
+  <span style="font-size:10px;color:#4a6845;font-weight:700;white-space:nowrap">BG масштаб:</span>
+  <input type="range" id="cveBgScale" min="50" max="250" step="2" value="104" oninput="cveBgScaleChange(+this.value)" style="width:70px;accent-color:#c9a84c;cursor:pointer">
+  <span id="cveBgScaleVal" style="font-size:10px;color:#c9a84c;min-width:32px">104%</span>
+</div>
 
-<style>
-/* Edit mode styles */
-body.cve-active [data-cve-text] {
-  cursor: text;
-  transition: outline .15s;
-}
-body.cve-active [data-cve-text]:hover {
-  outline: 1px dashed rgba(201,168,76,0.5);
-  outline-offset: 2px;
-  border-radius: 3px;
+<style id="cveStyles">
+/* ── CVE Edit Mode ── */
+body.cve-active [data-cve-text]:not([contenteditable="true"]) { cursor:text; }
+body.cve-active [data-cve-text]:not([contenteditable="true"]):hover {
+  outline:1px dashed rgba(201,168,76,0.6); outline-offset:2px; border-radius:3px;
 }
 [data-cve-text][contenteditable="true"] {
-  outline: 2px solid rgba(201,168,76,0.8) !important;
-  outline-offset: 2px;
-  border-radius: 3px;
-  cursor: text;
-  min-width: 20px;
+  outline:2px solid #c9a84c !important; outline-offset:2px; border-radius:3px; cursor:text;
 }
-/* Block selection */
-body.cve-active .cve-block {
-  position: relative;
+/* Block wrappers */
+body.cve-active .cve-wrap {
+  position:relative; box-sizing:border-box;
 }
-body.cve-active .cve-block:hover > .cve-sel-ring {
-  opacity: 1;
+body.cve-active .cve-wrap:not(.cve-sel):hover { outline:1px dashed rgba(201,168,76,0.35); }
+.cve-wrap.cve-sel { outline:2px solid rgba(201,168,76,0.85) !important; }
+/* Move cursor for block header */
+body.cve-active .cve-drag-handle {
+  cursor:grab; user-select:none;
 }
-.cve-sel-ring {
-  display: none;
-  position: absolute;
-  inset: -3px;
-  border: 1.5px dashed rgba(201,168,76,0.5);
-  border-radius: 10px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  z-index: 10;
-}
-body.cve-active .cve-block > .cve-sel-ring { display: block; }
-.cve-block.cve-selected > .cve-sel-ring {
-  opacity: 1 !important;
-  border-style: solid;
-  border-color: rgba(201,168,76,0.9);
-}
-/* Resize handle */
+body.cve-active .cve-drag-handle:active { cursor:grabbing; }
+/* Resize handle (bottom-right corner) */
 .cve-rh {
-  display: none;
-  position: absolute;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #c9a84c;
-  border: 1.5px solid #0a0e0c;
-  z-index: 20;
-  cursor: se-resize;
+  display:none; position:absolute; right:0; bottom:0;
+  width:14px; height:14px; cursor:se-resize; z-index:20;
 }
-.cve-block.cve-selected .cve-rh { display: block; }
-.cve-rh-se { bottom: -5px; right: -5px; }
-.cve-rh-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
-/* Hero drag cursor in edit mode */
-body.cve-active .calendar-hero { cursor: grab; }
-body.cve-active .calendar-hero.cve-dragging { cursor: grabbing; }
-/* Chip editing */
-body.cve-active .calendar-hero-chip[data-cve-text][contenteditable="true"] {
-  min-width: 30px;
-  display: inline-block;
+.cve-rh::after {
+  content:''; position:absolute; right:2px; bottom:2px;
+  width:8px; height:8px; border-right:2px solid #c9a84c; border-bottom:2px solid #c9a84c;
+  border-radius:1px;
 }
+.cve-wrap.cve-sel .cve-rh { display:block; }
+/* Hero grab cursor for BG drag */
+body.cve-active .calendar-hero.cve-hero-active { cursor:grab; }
+body.cve-active .calendar-hero.cve-hero-active.cve-hero-drag { cursor:grabbing; }
 </style>
 
 <script>
 (function(){
 'use strict';
-
 var CVE_KEY   = 'clan_control_calendar_visual_editor_v1';
 var CVE_EMAIL = 'pivo.news@gmail.com';
-
 var CVE_DEF = {
-  texts: {
-    calendarHeroEyebrow:   'WAR CALENDAR',
-    calendarHeroTitle:     'War Table Calendar',
-    calendarHeroText:      'Календарь стал компактнее: арт работает как обложка раздела, а рабочий слой ниже остаётся читаемым.',
-    calendarToolbarNote:   'Тестовый premium-layout без поломки логики событий.',
-    calendarUpcomingTitle: 'Ближайшие события',
+  heroImage:'', bgScale:104, bgX:82, bgY:50,
+  blocks:{},
+  texts:{
+    calendarHeroEyebrow:'WAR CALENDAR',
+    calendarHeroTitle:'War Table Calendar',
+    calendarHeroText:'Календарь стал компактнее: арт работает как обложка раздела, а рабочий слой ниже остаётся читаемым.',
+    calendarToolbarNote:'Тестовый premium-layout без поломки логики событий.',
+    calendarSectionLabel:'Календарь КМ',
+    calendarUpcomingTitle:'Ближайшие события',
     calendarRecurringTitle:'Шаблоны недели',
-    calendarRecurringCaption:'preview only',
-    chip0: '', chip1: '', chip2: ''
-  },
-  heroImage: '',
-  bgScale: 104,
-  bgX: 82,
-  bgY: 50,
-  heroHeight: 228,
-  blocks: {}
+    calendarRecurringCaption:'preview only'
+  }
 };
 
 var _cfg = null;
 var _active = false;
+var _selBlock = null; // currently selected block wrapper
 
-// ── Utils ──────────────────────────────────────────────────────
 function _g(id){ return document.getElementById(id); }
 function _isAdm(){ return (window._loginEmail||'').trim().toLowerCase()===CVE_EMAIL.toLowerCase(); }
-function _load(){ try{ var r=localStorage.getItem(CVE_KEY); return r?JSON.parse(r):null; }catch(e){return null;} }
-function _save(c){ try{ localStorage.setItem(CVE_KEY,JSON.stringify(c)); }catch(e){} }
-function _deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+function _ld(){ try{ var r=localStorage.getItem(CVE_KEY); return r?JSON.parse(r):null; }catch(e){return null;} }
+function _sv(c){ try{ localStorage.setItem(CVE_KEY,JSON.stringify(c)); }catch(e){} }
+function _clone(o){ return JSON.parse(JSON.stringify(o)); }
+function _merge(a,b){ return Object.assign(_clone(a),b); }
 
-// ── Apply config to DOM ────────────────────────────────────────
+// ── Apply saved config to calendar DOM ─────────────────────────
 function cveApply(cfg){
   if(!cfg) return;
-  var pg = _g('page-calendar'); if(!pg) return;
+  var pg=_g('page-calendar'); if(!pg) return;
 
-  // Hero CSS vars
-  pg.style.setProperty('--calendar-hero-height', cfg.heroHeight+'px');
+  // hero CSS vars
   pg.style.setProperty('--calendar-hero-bg-size', cfg.bgScale+'%');
-  pg.style.setProperty('--calendar-hero-pos-x',  cfg.bgX+'%');
-  pg.style.setProperty('--calendar-hero-pos-y',  cfg.bgY+'%');
+  pg.style.setProperty('--calendar-hero-pos-x', cfg.bgX+'%');
+  pg.style.setProperty('--calendar-hero-pos-y', cfg.bgY+'%');
 
-  // Hero image
-  var hero = pg.querySelector('.calendar-hero');
+  // hero image
+  var hero=pg.querySelector('.calendar-hero');
   if(hero){
-    hero.style.setProperty('--calendar-hero-image',
-      cfg.heroImage ? "url('"+cfg.heroImage+"')" : 'none');
-  }
-
-  // Texts
-  var T = cfg.texts || {};
-  ['calendarHeroEyebrow','calendarHeroTitle','calendarHeroText',
-   'calendarToolbarNote','calendarUpcomingTitle','calendarRecurringTitle','calendarRecurringCaption'
-  ].forEach(function(id){
-    var el = _g(id);
-    if(el && T[id] !== undefined && T[id] !== null && !el.isContentEditable) el.textContent = T[id];
-  });
-
-  // Chips
-  var chipsEl = _g('calendarHeroChips');
-  if(chipsEl){
-    var chips = [T.chip0, T.chip1, T.chip2];
-    var classes = ['calendar-hero-chip--gold','calendar-hero-chip--crimson','calendar-hero-chip--blue'];
-    var existing = chipsEl.querySelectorAll('.calendar-hero-chip[data-chip-idx]');
-    // update existing or rebuild
-    var filtered = chips.filter(function(c){ return c; });
-    if(filtered.length === 0){
-      // keep chips from renderer
+    if(cfg.heroImage){
+      hero.style.setProperty('--calendar-hero-image',"url('"+cfg.heroImage+"')");
     } else {
-      existing.forEach(function(ch, i){
-        if(chips[i] !== undefined) ch.textContent = chips[i];
-      });
+      hero.style.setProperty('--calendar-hero-image','none');
     }
   }
 
-  // Block positions/sizes
-  var B = cfg.blocks || {};
-  Object.keys(B).forEach(function(id){
-    var el = _g(id);
-    if(!el) return;
-    var b = B[id];
-    if(b.top  !== undefined) el.style.marginTop    = b.top+'px';
-    if(b.left !== undefined) el.style.marginLeft   = b.left+'px';
-    if(b.w    !== undefined) el.style.width        = b.w+'px';
-    if(b.h    !== undefined) el.style.minHeight    = b.h+'px';
+  // texts
+  var T=cfg.texts||{};
+  Object.keys(T).forEach(function(id){
+    var el=_g(id);
+    if(el && !el.isContentEditable){ el.textContent=T[id]; }
   });
 
-  // Sync scale slider if toolbar visible
-  var sl = _g('cveBgScale');
-  var sv = _g('cveBgScaleVal');
-  if(sl){ sl.value = cfg.bgScale; }
-  if(sv){ sv.textContent = cfg.bgScale+'%'; }
+  // block positions/sizes stored per blockId
+  var B=cfg.blocks||{};
+  Object.keys(B).forEach(function(bid){
+    var wrap=_g('cveWrap_'+bid);
+    if(!wrap) return;
+    var b=B[bid];
+    if(b.x!==undefined) wrap.style.left=b.x+'px';
+    if(b.y!==undefined) wrap.style.top=b.y+'px';
+    if(b.w!==undefined) wrap.style.width=b.w+'px';
+    if(b.h!==undefined) wrap.style.minHeight=b.h+'px';
+  });
+
+  // sync scale slider
+  var sl=_g('cveBgScale'), sv=_g('cveBgScaleVal');
+  if(sl){ sl.value=cfg.bgScale; }
+  if(sv){ sv.textContent=(cfg.bgScale||104)+'%'; }
 }
 
-// ── Enable / Disable edit mode ────────────────────────────────
-function _enableEditMode(){
-  var pg = _g('page-calendar'); if(!pg) return;
-  _active = true;
-  document.body.classList.add('cve-active');
-
-  // Show toolbar
-  var tb = _g('cveToolbar');
-  if(tb){ tb.style.display='flex'; }
-
-  // Show BG hint briefly
-  var hint = _g('cveBgHint');
-  if(hint){ hint.style.display='block'; setTimeout(function(){ hint.style.display='none'; }, 3000); }
-
-  // Make text nodes editable
-  _setupTextEditing(pg);
-
-  // Setup block dragging/resizing
-  _setupBlocks(pg);
-
-  // Setup hero BG drag
-  _setupHeroBgDrag(pg);
-}
-
-function _disableEditMode(){
-  _active = false;
-  document.body.classList.remove('cve-active');
-
-  var tb = _g('cveToolbar');
-  if(tb) tb.style.display = 'none';
-
-  var pg = _g('page-calendar');
-  if(pg){
-    // Collect text changes before disabling
-    _collectTextChanges(pg);
-    // Remove contenteditable
-    pg.querySelectorAll('[data-cve-text]').forEach(function(el){
-      el.removeAttribute('contenteditable');
-    });
-    // Deselect blocks
-    pg.querySelectorAll('.cve-selected').forEach(function(el){
-      el.classList.remove('cve-selected');
-    });
-  }
-}
-
-// ── Text editing ─────────────────────────────────────────────
-var TEXT_IDS = [
-  'calendarHeroEyebrow','calendarHeroTitle','calendarHeroText',
-  'calendarToolbarNote','calendarUpcomingTitle','calendarRecurringTitle','calendarRecurringCaption'
+// ── Wrap a DOM element for per-block editing ───────────────────
+// Blocks are wrapped in a positioned div so we can drag them
+// We use a data attribute to identify which element is wrapped
+var BLOCKS = [
+  { id:'cveBlockHeroContent',  label:'Hero: Контент' },
+  { id:'cveBlockHeroMeta',     label:'Hero: Мета-карта' },
+  { id:'calendarSummary',      label:'Summary' },
+  { id:'cveBlockUpcoming',     label:'Upcoming' },
+  { id:'cveBlockRecurring',    label:'Recurring' },
 ];
+
+var _blocksSetup = false;
+
+function _setupBlocks(pg){
+  if(_blocksSetup) return;
+  _blocksSetup = true;
+
+  var B = (_cfg && _cfg.blocks) ? _cfg.blocks : {};
+
+  BLOCKS.forEach(function(def){
+    var el = _g(def.id); if(!el) return;
+    // Don't double-wrap
+    if(el.parentElement && el.parentElement.classList.contains('cve-wrap')) return;
+
+    // Create wrapper
+    var wrap = document.createElement('div');
+    wrap.id = 'cveWrap_'+def.id;
+    wrap.className = 'cve-wrap';
+    wrap.dataset.cveBlock = def.id;
+    wrap.dataset.cveLabel = def.label;
+
+    // Inline positioning
+    var saved = B[def.id] || {};
+    if(saved.x!==undefined) wrap.style.left = saved.x+'px';
+    if(saved.y!==undefined) wrap.style.top  = saved.y+'px';
+    if(saved.w!==undefined) wrap.style.width = saved.w+'px';
+    if(saved.h!==undefined) wrap.style.minHeight = saved.h+'px';
+
+    // Drag handle (top strip, 8px tall, invisible)
+    var dh = document.createElement('div');
+    dh.className='cve-drag-handle';
+    dh.style.cssText='position:absolute;top:0;left:0;right:0;height:16px;z-index:5';
+    dh.title='Тяни для перемещения: '+def.label;
+    wrap.appendChild(dh);
+
+    // Resize handle
+    var rh = document.createElement('div');
+    rh.className='cve-rh';
+    rh.title='Resize';
+    wrap.appendChild(rh);
+
+    // Inject wrapper around element
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+
+    // ── Events ──
+    // Select on click
+    wrap.addEventListener('mousedown', function(e){
+      if(!_active) return;
+      // Don't intercept text editing or buttons
+      if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='TEXTAREA') return;
+      if(e.target.closest('[contenteditable="true"]')) return;
+      if(e.target.classList.contains('cve-rh')) return; // handled below
+      _selectBlock(wrap, def);
+    }, true);
+
+    // Drag via handle
+    dh.addEventListener('mousedown', function(e){
+      if(!_active) return;
+      e.preventDefault(); e.stopPropagation();
+      _selectBlock(wrap, def);
+      _startBlockDrag(e, wrap, def.id);
+    });
+
+    // Resize via handle
+    rh.addEventListener('mousedown', function(e){
+      if(!_active) return;
+      e.preventDefault(); e.stopPropagation();
+      _selectBlock(wrap, def);
+      _startBlockResize(e, wrap, def.id);
+    });
+  });
+
+  // Click on page bg = deselect
+  pg.addEventListener('click', function(e){
+    if(!_active) return;
+    if(!e.target.closest('.cve-wrap') && !e.target.closest('#cveToolbar') && !e.target.closest('#cveResizePanel')){
+      _deselect();
+    }
+  });
+}
+
+function _selectBlock(wrap, def){
+  _deselect();
+  _selBlock = { wrap:wrap, def:def };
+  wrap.classList.add('cve-sel');
+  // Update toolbar info
+  var info=_g('cveSelInfo');
+  if(info) info.textContent=def.label;
+  // Update resize panel inputs
+  _showResizePanel(wrap);
+}
+
+function _deselect(){
+  if(_selBlock) _selBlock.wrap.classList.remove('cve-sel');
+  _selBlock = null;
+  var info=_g('cveSelInfo');
+  if(info) info.textContent='';
+  var rp=_g('cveResizePanel');
+  if(rp) rp.style.display='none';
+}
+
+function _showResizePanel(wrap){
+  var rp=_g('cveResizePanel');
+  if(!rp) return;
+  rp.style.display='flex';
+  var pw=_g('cvePanelW'), ph=_g('cvePanelH');
+  if(pw) pw.value=wrap.offsetWidth||'';
+  if(ph) ph.value=wrap.offsetHeight||'';
+}
+
+window.cvePanelApply = function(){
+  if(!_selBlock) return;
+  var wrap=_selBlock.wrap;
+  var pw=+(_g('cvePanelW')||{}).value;
+  var ph=+(_g('cvePanelH')||{}).value;
+  if(pw>0) wrap.style.width=pw+'px';
+  if(ph>0) wrap.style.minHeight=ph+'px';
+  _saveBlock(_selBlock.wrap, _selBlock.def.id);
+};
+
+// ── Block drag ────────────────────────────────────────────────
+function _startBlockDrag(e, wrap, bid){
+  var rect=wrap.getBoundingClientRect();
+  var sx=e.clientX, sy=e.clientY;
+  // Get current CSS left/top (may be 0 if not set)
+  var origX=parseInt(wrap.style.left)||0;
+  var origY=parseInt(wrap.style.top)||0;
+
+  function onMove(ev){
+    var dx=ev.clientX-sx, dy=ev.clientY-sy;
+    wrap.style.left=(origX+dx)+'px';
+    wrap.style.top=(origY+dy)+'px';
+  }
+  function onUp(){
+    _saveBlock(wrap,bid);
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// ── Block resize ──────────────────────────────────────────────
+function _startBlockResize(e, wrap, bid){
+  var sx=e.clientX, sy=e.clientY;
+  var origW=wrap.offsetWidth, origH=wrap.offsetHeight;
+
+  function onMove(ev){
+    var nw=Math.max(60, origW+(ev.clientX-sx));
+    var nh=Math.max(40, origH+(ev.clientY-sy));
+    wrap.style.width=nw+'px';
+    wrap.style.minHeight=nh+'px';
+    var pw=_g('cvePanelW'),ph=_g('cvePanelH');
+    if(pw) pw.value=Math.round(nw);
+    if(ph) ph.value=Math.round(nh);
+  }
+  function onUp(){
+    _saveBlock(wrap,bid);
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+function _saveBlock(wrap, bid){
+  if(!_cfg) return;
+  if(!_cfg.blocks) _cfg.blocks={};
+  _cfg.blocks[bid]={
+    x:parseInt(wrap.style.left)||0,
+    y:parseInt(wrap.style.top)||0,
+    w:wrap.offsetWidth||undefined,
+    h:wrap.offsetHeight||undefined
+  };
+}
+
+// ── Text editing ──────────────────────────────────────────────
+var TEXT_IDS = Object.keys(CVE_DEF.texts);
 
 function _setupTextEditing(pg){
   TEXT_IDS.forEach(function(id){
-    var el = _g(id); if(!el) return;
-    el.setAttribute('data-cve-text', id);
-    el.addEventListener('click', _onTextClick);
+    var el=_g(id); if(!el) return;
+    if(el.dataset.cveText) return; // already set up
+    el.dataset.cveText=id;
+    el.addEventListener('click',function(e){
+      if(!_active) return;
+      e.stopPropagation();
+      _activateText(el,id);
+    });
   });
-  // Chips
-  pg.querySelectorAll('.calendar-hero-chip').forEach(function(ch, i){
-    ch.setAttribute('data-cve-text', 'chip'+i);
-    ch.setAttribute('data-chip-idx', i);
-    ch.addEventListener('click', _onTextClick);
+  // chips by index
+  pg.querySelectorAll('.calendar-hero-chip').forEach(function(ch,i){
+    if(ch.dataset.cveChip) return;
+    ch.dataset.cveChip=i;
+    ch.dataset.cveText='chip'+i;
+    ch.addEventListener('click',function(e){
+      if(!_active) return;
+      e.stopPropagation();
+      _activateText(ch,'chip'+i);
+    });
   });
 }
 
-function _onTextClick(e){
-  if(!_active) return;
-  e.stopPropagation();
-  var el = this;
-  el.setAttribute('contenteditable','true');
+function _activateText(el,key){
+  el.contentEditable='true';
   el.focus();
-  // Place caret at end
-  var range = document.createRange();
-  var sel = window.getSelection();
-  range.selectNodeContents(el);
-  range.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(range);
+  try{
+    var r=document.createRange(), s=window.getSelection();
+    r.selectNodeContents(el); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
+  }catch(e){}
 
-  var blurH = function(){
+  function onBlur(){
+    el.contentEditable='false';
     el.removeAttribute('contenteditable');
-    _collectTextChanges(_g('page-calendar'));
-    el.removeEventListener('blur', blurH);
-  };
-  el.addEventListener('blur', blurH);
-
-  var keyH = function(e2){
-    if(e2.key === 'Enter' && !e2.shiftKey){
-      e2.preventDefault();
-      el.blur();
-      el.removeEventListener('keydown', keyH);
-    }
-  };
-  el.addEventListener('keydown', keyH);
+    _collectText(el,key);
+    el.removeEventListener('blur',onBlur);
+    el.removeEventListener('keydown',onKey);
+  }
+  function onKey(e){
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); el.blur(); }
+  }
+  el.addEventListener('blur',onBlur);
+  el.addEventListener('keydown',onKey);
 }
 
-function _collectTextChanges(pg){
+function _collectText(el,key){
   if(!_cfg) return;
-  if(!_cfg.texts) _cfg.texts = {};
+  if(!_cfg.texts) _cfg.texts={};
+  _cfg.texts[key]=el.textContent;
+}
+
+function _collectAllTexts(){
+  var pg=_g('page-calendar'); if(!pg) return;
   TEXT_IDS.forEach(function(id){
-    var el = _g(id); if(!el) return;
-    _cfg.texts[id] = el.textContent;
+    var el=_g(id); if(el){ _collectText(el,id); }
   });
-  pg.querySelectorAll('.calendar-hero-chip[data-chip-idx]').forEach(function(ch){
-    var i = ch.getAttribute('data-chip-idx');
-    _cfg.texts['chip'+i] = ch.textContent;
+  pg.querySelectorAll('.calendar-hero-chip[data-cve-chip]').forEach(function(ch){
+    _collectText(ch,'chip'+ch.dataset.cveChip);
   });
 }
 
-// ── Block selection + drag + resize ──────────────────────────
-var BLOCK_IDS = [
-  'calendarHeroChips',   // chips block
-  'calendarSummary',     // summary
-  'calendarUpcoming',    // upcoming content
-  'calendarRecurringPreview' // recurring content
-];
+// ── Hero background drag ──────────────────────────────────────
+var _heroDragState = null;
 
-function _setupBlocks(pg){
-  BLOCK_IDS.forEach(function(id){
-    var el = _g(id); if(!el) return;
-    if(el.classList.contains('cve-block')) return; // already set up
-    el.classList.add('cve-block');
-
-    // Inject selection ring + resize handle
-    var ring = document.createElement('div');
-    ring.className = 'cve-sel-ring';
-    el.appendChild(ring);
-
-    var rh = document.createElement('div');
-    rh.className = 'cve-rh cve-rh-se';
-    el.appendChild(rh);
-
-    // Click to select
-    el.addEventListener('mousedown', function(e){
-      if(!_active) return;
-      if(e.target.classList.contains('cve-rh')) return; // handled separately
-      e.stopPropagation();
-      _selectBlock(el);
-      _startDrag(e, el);
-    });
-
-    // Resize handle
-    rh.addEventListener('mousedown', function(e){
-      if(!_active) return;
-      e.stopPropagation();
-      e.preventDefault();
-      _selectBlock(el);
-      _startResize(e, el);
-    });
-  });
-
-  // Click on page background deselects
-  pg.addEventListener('click', function(e){
-    if(!_active) return;
-    if(!e.target.closest('.cve-block')){
-      pg.querySelectorAll('.cve-selected').forEach(function(b){ b.classList.remove('cve-selected'); });
-    }
-  });
-}
-
-function _selectBlock(el){
-  var pg = _g('page-calendar');
-  if(pg) pg.querySelectorAll('.cve-selected').forEach(function(b){ b.classList.remove('cve-selected'); });
-  el.classList.add('cve-selected');
-}
-
-// Drag
-var _dragState = null;
-function _startDrag(e, el){
-  e.preventDefault();
-  var startX = e.clientX, startY = e.clientY;
-  var origML = parseInt(el.style.marginLeft)||0;
-  var origMT = parseInt(el.style.marginTop)||0;
-
-  _dragState = { el: el, startX: startX, startY: startY, origML: origML, origMT: origMT };
-
-  function onMove(ev){
-    if(!_dragState) return;
-    var dx = ev.clientX - startX;
-    var dy = ev.clientY - startY;
-    el.style.marginLeft = (origML + dx)+'px';
-    el.style.marginTop  = (origMT + dy)+'px';
-  }
-  function onUp(){
-    if(_dragState) _saveBl(_dragState.el);
-    _dragState = null;
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  }
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
-}
-
-// Resize
-function _startResize(e, el){
-  e.preventDefault();
-  var startX = e.clientX, startY = e.clientY;
-  var origW = el.offsetWidth, origH = el.offsetHeight;
-
-  function onMove(ev){
-    var nw = Math.max(80, origW + (ev.clientX - startX));
-    var nh = Math.max(40, origH + (ev.clientY - startY));
-    el.style.width    = nw+'px';
-    el.style.minHeight = nh+'px';
-  }
-  function onUp(){
-    _saveBl(el);
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-  }
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
-}
-
-function _saveBl(el){
-  if(!_cfg || !el.id) return;
-  if(!_cfg.blocks) _cfg.blocks = {};
-  _cfg.blocks[el.id] = {
-    top:  parseInt(el.style.marginTop)||0,
-    left: parseInt(el.style.marginLeft)||0,
-    w:    el.offsetWidth||undefined,
-    h:    el.offsetHeight||undefined
-  };
-}
-
-// ── Hero background drag ───────────────────────────────────────
 function _setupHeroBgDrag(pg){
-  var hero = pg.querySelector('.calendar-hero');
-  if(!hero) return;
+  var hero=pg.querySelector('.calendar-hero'); if(!hero) return;
+  if(hero.dataset.cveBgSetup) return;
+  hero.dataset.cveBgSetup='1';
 
-  var _bgDrag = null;
-
-  hero.addEventListener('mousedown', function(e){
+  hero.addEventListener('mousedown',function(e){
     if(!_active) return;
-    // Only drag if clicking on hero background, not on content
-    if(e.target.closest('.calendar-hero-shell')) return;
-    if(e.target.closest('[data-cve-text]')) return;
+    // Only trigger drag on the hero background itself (not on content children)
+    var isContent = e.target.closest('.calendar-hero-shell');
+    if(isContent) return;
     e.preventDefault();
-    hero.classList.add('cve-dragging');
-    _bgDrag = { startX: e.clientX, startY: e.clientY, origX: _cfg?_cfg.bgX:82, origY: _cfg?_cfg.bgY:50 };
+    hero.classList.add('cve-hero-drag');
+    _heroDragState={sx:e.clientX,sy:e.clientY,ox:_cfg?_cfg.bgX:82,oy:_cfg?_cfg.bgY:50};
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!_heroDragState||!_active) return;
+    var dx=(e.clientX-_heroDragState.sx)/5;
+    var dy=(e.clientY-_heroDragState.sy)/5;
+    var nx=Math.max(0,Math.min(100,_heroDragState.ox-dx));
+    var ny=Math.max(0,Math.min(100,_heroDragState.oy-dy));
+    if(_cfg){_cfg.bgX=Math.round(nx*10)/10;_cfg.bgY=Math.round(ny*10)/10;}
+    var pg2=_g('page-calendar');
+    if(pg2){pg2.style.setProperty('--calendar-hero-pos-x',nx+'%');pg2.style.setProperty('--calendar-hero-pos-y',ny+'%');}
+  });
+  document.addEventListener('mouseup',function(){
+    if(_heroDragState){ _g('page-calendar')&&_g('page-calendar').querySelector('.calendar-hero')&&_g('page-calendar').querySelector('.calendar-hero').classList.remove('cve-hero-drag'); _heroDragState=null; }
   });
 
-  document.addEventListener('mousemove', function(e){
-    if(!_bgDrag || !_active) return;
-    var dx = (e.clientX - _bgDrag.startX) / 4;
-    var dy = (e.clientY - _bgDrag.startY) / 4;
-    var nx = Math.max(0, Math.min(100, _bgDrag.origX - dx));
-    var ny = Math.max(0, Math.min(100, _bgDrag.origY - dy));
-    if(_cfg){ _cfg.bgX = Math.round(nx); _cfg.bgY = Math.round(ny); }
-    var pg2 = _g('page-calendar');
-    if(pg2){
-      pg2.style.setProperty('--calendar-hero-pos-x', nx+'%');
-      pg2.style.setProperty('--calendar-hero-pos-y', ny+'%');
-    }
-  });
-
-  document.addEventListener('mouseup', function(){
-    if(_bgDrag){ hero.classList.remove('cve-dragging'); _bgDrag = null; }
-  });
-
-  // Wheel = scale
-  hero.addEventListener('wheel', function(e){
+  // Wheel = scale BG
+  hero.addEventListener('wheel',function(e){
     if(!_active) return;
     e.preventDefault();
-    var delta = e.deltaY > 0 ? -2 : 2;
-    var ns = Math.max(50, Math.min(250, (_cfg?_cfg.bgScale:104) + delta));
-    if(_cfg) _cfg.bgScale = ns;
-    var pg2 = _g('page-calendar');
-    if(pg2) pg2.style.setProperty('--calendar-hero-bg-size', ns+'%');
-    var sl = _g('cveBgScale'), sv = _g('cveBgScaleVal');
-    if(sl) sl.value = ns;
-    if(sv) sv.textContent = ns+'%';
-  }, { passive: false });
+    var delta=e.deltaY>0?-3:3;
+    var ns=Math.max(50,Math.min(250,(_cfg?_cfg.bgScale:104)+delta));
+    if(_cfg)_cfg.bgScale=ns;
+    var pg2=_g('page-calendar');
+    if(pg2)pg2.style.setProperty('--calendar-hero-bg-size',ns+'%');
+    var sl=_g('cveBgScale'),sv=_g('cveBgScaleVal');
+    if(sl)sl.value=ns; if(sv)sv.textContent=ns+'%';
+  },{passive:false});
 }
 
-// ── BG image handlers ──────────────────────────────────────────
-window.cveBgUpload = function(inp){
-  var f = inp && inp.files && inp.files[0]; if(!f) return;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    if(!_cfg) return;
-    _cfg.heroImage = e.target.result;
-    var pg = _g('page-calendar');
-    var hero = pg && pg.querySelector('.calendar-hero');
-    if(hero) hero.style.setProperty('--calendar-hero-image', "url('"+e.target.result+"')");
+// ── BG image public handlers ──────────────────────────────────
+window.cveBgUpload=function(inp){
+  var f=inp&&inp.files&&inp.files[0]; if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    if(!_cfg)return;
+    _cfg.heroImage=e.target.result;
+    var hero=(_g('page-calendar')||{querySelector:function(){}}).querySelector('.calendar-hero');
+    if(hero) hero.style.setProperty('--calendar-hero-image',"url('"+e.target.result+"')");
   };
-  reader.readAsDataURL(f);
+  r.readAsDataURL(f);
 };
-window.cveBgRemove = function(){
-  if(!_cfg) return;
-  _cfg.heroImage = '';
-  var pg = _g('page-calendar');
-  var hero = pg && pg.querySelector('.calendar-hero');
-  if(hero) hero.style.setProperty('--calendar-hero-image', 'none');
-  var inp = _g('cveBgInput'); if(inp) inp.value = '';
+window.cveBgRemove=function(){
+  if(!_cfg)return;
+  _cfg.heroImage='';
+  var hero=(_g('page-calendar')||{querySelector:function(){}}).querySelector('.calendar-hero');
+  if(hero) hero.style.setProperty('--calendar-hero-image','none');
+  var inp=_g('cveBgInput'); if(inp)inp.value='';
 };
-window.cveBgScaleChange = function(v){
-  if(!_cfg) return;
-  _cfg.bgScale = v;
-  var sv = _g('cveBgScaleVal'); if(sv) sv.textContent = v+'%';
-  var pg = _g('page-calendar');
-  if(pg) pg.style.setProperty('--calendar-hero-bg-size', v+'%');
-};
-
-// ── Save / Reset ───────────────────────────────────────────────
-window.cveSave = function(){
-  if(!_cfg) return;
-  _collectTextChanges(_g('page-calendar'));
-  _save(_cfg);
-  var btn = _g('cveSaveBtn');
-  if(btn){ var ot=btn.textContent; btn.textContent='✅ Сохранено'; btn.disabled=true;
-    setTimeout(function(){ btn.textContent=ot; btn.disabled=false; }, 1500); }
-};
-window.cveReset = function(){
-  if(!confirm('Сбросить все изменения визуального редактора?')) return;
-  _cfg = _deepClone(CVE_DEF);
-  _save(_cfg);
-  cveApply(_cfg);
-  // Reset block styles
-  var pg = _g('page-calendar');
-  if(pg){
-    pg.querySelectorAll('.cve-block').forEach(function(el){
-      el.style.marginTop=''; el.style.marginLeft=''; el.style.width=''; el.style.minHeight='';
-    });
-  }
-  var sl=_g('cveBgScale'), sv=_g('cveBgScaleVal');
-  if(sl) sl.value=CVE_DEF.bgScale;
-  if(sv) sv.textContent=CVE_DEF.bgScale+'%';
+window.cveBgScaleChange=function(v){
+  if(!_cfg)return;
+  _cfg.bgScale=v;
+  var sv=_g('cveBgScaleVal'); if(sv)sv.textContent=v+'%';
+  var pg=_g('page-calendar');
+  if(pg)pg.style.setProperty('--calendar-hero-bg-size',v+'%');
 };
 
-// ── Open / Close ───────────────────────────────────────────────
-window.cveToggle = function(){
-  if(!_isAdm()) return;
-  if(_active) cveClose(); else cveOpen();
-};
-window.cveOpen = function(){
-  if(!_isAdm()) return;
-  var saved = _load();
-  _cfg = saved ? Object.assign(_deepClone(CVE_DEF), saved) : _deepClone(CVE_DEF);
-  cveApply(_cfg);
-  _enableEditMode();
-};
-window.cveClose = function(){
-  if(_active) _disableEditMode();
-};
+// ── Enable / Disable ──────────────────────────────────────────
+function _enable(){
+  var pg=_g('page-calendar'); if(!pg) return;
+  _active=true;
+  document.body.classList.add('cve-active');
 
-// ESC to close
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape' && _active) cveClose();
-});
+  // Hero: show grab cursor
+  var hero=pg.querySelector('.calendar-hero');
+  if(hero) hero.classList.add('cve-hero-active');
 
-// ── Show/hide edit button based on email ───────────────────────
-function _updateBtn(email){
-  var btn = _g('ccAdminBtn');
-  if(!btn) return;
-  var isAdm = (email||'').trim().toLowerCase() === CVE_EMAIL.toLowerCase();
-  btn.style.display = isAdm ? '' : 'none';
-  if(isAdm){
-    btn.title = 'Редактировать календарь (визуальный режим)';
-    btn.textContent = '✏️';
-  }
+  var tb=_g('cveToolbar');
+  if(tb){tb.style.display='flex';}
+
+  _setupTextEditing(pg);
+  _setupBlocks(pg);
+  _setupHeroBgDrag(pg);
 }
 
-// ── Apply saved config on page load (all users see saved layout) ─
+function _disable(){
+  _active=false;
+  document.body.classList.remove('cve-active');
+
+  _collectAllTexts();
+  _deselect();
+
+  var pg=_g('page-calendar');
+  if(pg){
+    var hero=pg.querySelector('.calendar-hero');
+    if(hero) hero.classList.remove('cve-hero-active');
+    pg.querySelectorAll('[contenteditable]').forEach(function(el){ el.removeAttribute('contenteditable'); });
+  }
+
+  var tb=_g('cveToolbar');
+  if(tb)tb.style.display='none';
+  var rp=_g('cveResizePanel');
+  if(rp)rp.style.display='none';
+}
+
+// ── Save / Reset ──────────────────────────────────────────────
+window.cveSave=function(){
+  if(!_cfg)return;
+  _collectAllTexts();
+  _sv(_cfg);
+  var btn=_g('cveSaveBtn');
+  if(btn){ var ot=btn.textContent; btn.textContent='✅ Сохранено!'; btn.disabled=true;
+    setTimeout(function(){ btn.textContent=ot; btn.disabled=false; },1500); }
+};
+window.cveReset=function(){
+  if(!confirm('Сбросить все изменения?'))return;
+  // Remove block wrappers so they can be re-created fresh
+  BLOCKS.forEach(function(def){
+    var wrap=_g('cveWrap_'+def.id);
+    if(wrap){ var child=wrap.firstElementChild; if(child){ wrap.parentNode.insertBefore(child,wrap); } wrap.remove(); }
+  });
+  _blocksSetup=false;
+  _cfg=_clone(CVE_DEF);
+  _sv(_cfg);
+  cveApply(_cfg);
+  if(_active){
+    var pg=_g('page-calendar');
+    if(pg){ _setupBlocks(pg); _setupTextEditing(pg); }
+  }
+};
+window.cveClose=function(){
+  if(_active) _disable();
+};
+window.cveOpen=function(){
+  if(!_isAdm())return;
+  var saved=_ld();
+  _cfg=saved?_merge(CVE_DEF,saved):_clone(CVE_DEF);
+  cveApply(_cfg);
+  _enable();
+};
+window.cveToggle=function(){
+  if(!_isAdm())return;
+  if(_active)cveClose();else cveOpen();
+};
+
+// ESC
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&_active)cveClose(); });
+
+// ── Show/hide edit button ─────────────────────────────────────
+function _updateBtn(email){
+  var btn=_g('ccAdminBtn'); if(!btn)return;
+  var isAdm=(email||'').trim().toLowerCase()===CVE_EMAIL.toLowerCase();
+  btn.style.display=isAdm?'':'none';
+}
+
+// ── Auto-apply saved config on page load ─────────────────────
 (function(){
-  var saved = _load();
-  if(!saved) return;
-  _cfg = Object.assign(_deepClone(CVE_DEF), saved);
+  var saved=_ld(); if(!saved)return;
+  _cfg=_merge(CVE_DEF,saved);
   function _try(n){
-    var pg = _g('page-calendar');
-    if(pg){ cveApply(_cfg); }
-    else if(n>0){ setTimeout(function(){_try(n-1);}, 400); }
+    if(_g('page-calendar')){ cveApply(_cfg); }
+    else if(n>0){ setTimeout(function(){_try(n-1);},400); }
   }
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){_try(15);}, 500); });
-  } else { setTimeout(function(){_try(15);}, 500); }
+    document.addEventListener('DOMContentLoaded',function(){ setTimeout(function(){_try(20);},500); });
+  } else { setTimeout(function(){_try(20);},400); }
 })();
 
-// ── Re-apply when calendar page shown ─────────────────────────
+// ── Patch showPage to re-apply on calendar page show ─────────
 (function(){
   function _patch(){
-    if(typeof window.showPage !== 'function') return;
-    var orig = window.showPage;
-    window.showPage = function(pid){
-      orig.apply(this, arguments);
+    if(typeof window.showPage!=='function')return;
+    var orig=window.showPage;
+    window.showPage=function(pid){
+      orig.apply(this,arguments);
       if(pid==='calendar'){
         setTimeout(function(){
-          var saved=_load();
-          if(saved){ _cfg=Object.assign(_deepClone(CVE_DEF),saved); cveApply(_cfg); }
-        }, 100);
+          var saved=_ld();
+          if(saved&&!_active){_cfg=_merge(CVE_DEF,saved);cveApply(_cfg);}
+        },120);
       }
     };
   }
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(_patch, 800); });
-  } else { setTimeout(_patch, 800); }
+    document.addEventListener('DOMContentLoaded',function(){ setTimeout(_patch,900); });
+  } else { setTimeout(_patch,900); }
 })();
 
 // ── Watch topbar for login/logout ─────────────────────────────
 (function(){
   function _watch(){
-    var tb = _g('topbar'); if(!tb) return;
+    var tb=_g('topbar'); if(!tb)return;
     new MutationObserver(function(muts){
       muts.forEach(function(m){
         if(m.attributeName==='class'){
-          var isVis = !tb.classList.contains('hidden');
-          if(isVis){ setTimeout(function(){ _updateBtn(window._loginEmail||''); }, 100); }
-          else { _updateBtn(''); if(_active) cveClose(); }
+          var isVis=!tb.classList.contains('hidden');
+          if(isVis){ setTimeout(function(){ _updateBtn(window._loginEmail||''); },100); }
+          else { _updateBtn(''); if(_active)cveClose(); }
         }
       });
-    }).observe(tb, { attributes: true });
+    }).observe(tb,{attributes:true});
   }
   if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded', _watch);
+    document.addEventListener('DOMContentLoaded',_watch);
   } else { _watch(); }
 })();
 
-})(); // end CVE IIFE
+})(); // end CVE v2 IIFE
 </script>
 </body>
 </html>
