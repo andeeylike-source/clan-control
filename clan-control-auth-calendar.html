@@ -2260,6 +2260,18 @@
     <div class="login-line login-line-3"></div>
     <div class="login-wrap">
         <div class="login-top-bar">
+            <button class="flip-toggle" id="loginThemeToggle" type="button" onclick="toggleTheme()" aria-label="Theme" data-state="left">
+                <span class="flip-toggle-track"></span>
+                <span class="flip-toggle-thumb"></span>
+                <span class="flip-toggle-option">🌙</span>
+                <span class="flip-toggle-option">☀️</span>
+            </button>
+            <button class="flip-toggle" id="loginLangToggle" type="button" onclick="toggleLang()" aria-label="Language" data-state="left">
+                <span class="flip-toggle-track"></span>
+                <span class="flip-toggle-thumb"></span>
+                <span class="flip-toggle-option">RU</span>
+                <span class="flip-toggle-option">EN</span>
+            </button>
         </div>
         <div class="login-card">
             <div class="login-card-top-line"></div>
@@ -2295,6 +2307,18 @@
     <div class="topbar-logo">⚔️ Clan<span>Control</span></div>
     <div class="topbar-right">
         <div class="topbar-clan" id="topbarClan" style="display:none"></div>
+        <button class="flip-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Theme" data-state="left">
+            <span class="flip-toggle-track"></span>
+            <span class="flip-toggle-thumb"></span>
+            <span class="flip-toggle-option">🌙</span>
+            <span class="flip-toggle-option">☀️</span>
+        </button>
+        <button class="flip-toggle" id="langToggle" type="button" onclick="toggleLang()" aria-label="Language" data-state="left">
+            <span class="flip-toggle-track"></span>
+            <span class="flip-toggle-thumb"></span>
+            <span class="flip-toggle-option">RU</span>
+            <span class="flip-toggle-option">EN</span>
+        </button>
         <div class="topbar-divider"></div>
         <div class="topbar-icon-btn" onclick="if(typeof showPage==='function')showPage('settings')" title="Настройки">⚙️</div>
         <div class="topbar-user">
@@ -10728,6 +10752,115 @@ function getClass2IconByClass3(c3) {
         if (typeof loadNotifySettings === 'function') loadNotifySettings();
         if (typeof loadActionLog === 'function') loadActionLog();
     }
+    </script>
+
+    <script>
+    // =============================================
+    // THEME + LANG TOGGLE
+    // =============================================
+
+    function syncFlipToggle(ids, isRight) {
+        ids.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.dataset.state = isRight ? 'right' : 'left';
+        });
+    }
+
+    window.setTheme = function(t) {
+        localStorage.setItem('cc_theme', t);
+        document.body.classList.toggle('light', t === 'light');
+        syncFlipToggle(['themeToggle', 'loginThemeToggle'], t === 'light');
+    };
+
+    window.toggleTheme = function() {
+        var cur = localStorage.getItem('cc_theme') || 'dark';
+        window.setTheme(cur === 'dark' ? 'light' : 'dark');
+    };
+
+    // Simple translation map for static UI labels
+    var _UI_LABELS = {
+        ru: {
+            'Analytics':    'Аналитика',
+            'Dashboard':    'Дашборд',
+            'Statistics':   'Статистика',
+            'War Calendar': 'Календарь КМ',
+            'War History':  'История КМ',
+            'Management':   'Управление',
+            'Clan':         'Клан',
+            'Profile':      'Профиль',
+            'Raid Packs':   'Рейд Паки',
+            'Archive':      'Архив',
+            'System':       'Система',
+            'Settings':     'Настройки',
+            'Data Backup':  'Бэкап данных',
+            'Saved':        'Сохранено',
+        },
+        en: {
+            'Аналитика':    'Analytics',
+            'Дашборд':      'Dashboard',
+            'Статистика':   'Statistics',
+            'Календарь КМ': 'War Calendar',
+            'История КМ':   'War History',
+            'Управление':   'Management',
+            'Клан':         'Clan',
+            'Профиль':      'Profile',
+            'Рейд Паки':    'Raid Packs',
+            'Архив':        'Archive',
+            'Система':      'System',
+            'Настройки':    'Settings',
+            'Бэкап данных': 'Data Backup',
+            'Сохранено':    'Saved',
+        }
+    };
+
+    function _applyLangLabels(lang) {
+        var map = _UI_LABELS[lang] || {};
+        var navItems = document.querySelectorAll('.nav-item, .sidebar-section-label');
+        navItems.forEach(function(el) {
+            var cur = el.textContent.trim();
+            if (map[cur]) el.textContent = map[cur];
+        });
+        // Update login subtitle
+        var sub = document.getElementById('loginSubtitle');
+        if (sub) sub.textContent = lang === 'en'
+            ? 'Clan officer toolkit for tracking war statistics'
+            : 'Инструмент офицера клана для отслеживания КМ-статистики';
+        // Re-render calendar if visible (uses cc_lang from localStorage)
+        var calPage = document.getElementById('page-calendar');
+        if (calPage && calPage.classList.contains('active') && typeof renderCalendar === 'function') {
+            renderCalendar();
+        }
+        // Re-render auth step 1 to update language
+        if (typeof _renderAuthStep1 === 'function') _renderAuthStep1();
+    }
+
+    window.setLang = function(l) {
+        localStorage.setItem('cc_lang', l);
+        syncFlipToggle(['langToggle', 'loginLangToggle'], l === 'en');
+        _applyLangLabels(l);
+    };
+
+    window.toggleLang = function() {
+        var cur = localStorage.getItem('cc_lang') || 'ru';
+        window.setLang(cur === 'ru' ? 'en' : 'ru');
+    };
+
+    // Init on DOMContentLoaded
+    (function() {
+        function _initToggles() {
+            var theme = localStorage.getItem('cc_theme') || 'dark';
+            var lang  = localStorage.getItem('cc_lang')  || 'ru';
+            document.body.classList.toggle('light', theme === 'light');
+            syncFlipToggle(['themeToggle', 'loginThemeToggle'], theme === 'light');
+            syncFlipToggle(['langToggle',  'loginLangToggle'],  lang === 'en');
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', _initToggles);
+        } else {
+            _initToggles();
+        }
+    })();
     </script>
 
     <script>
