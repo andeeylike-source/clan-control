@@ -11504,6 +11504,14 @@ var CVE_DEF={
 var _cfg=null, _active=false, _sel=null;
 var _blocksReady=false;
 
+// Synchronously init _cfg from localStorage so renderCalendarHero gets saved texts immediately
+(function(){
+  try{
+    var r=localStorage.getItem('clan_control_calendar_visual_editor_v1');
+    if(r){var parsed=JSON.parse(r);if(parsed)_cfg=JSON.parse(JSON.stringify(CVE_DEF));if(parsed){Object.keys(parsed).forEach(function(k){if(typeof parsed[k]==='object'&&parsed[k]!==null&&!Array.isArray(parsed[k])&&typeof _cfg[k]==='object'){Object.keys(parsed[k]).forEach(function(k2){_cfg[k][k2]=parsed[k][k2];});}else{_cfg[k]=parsed[k];}});}}
+  }catch(e){}
+})();
+
 function _g(id){return document.getElementById(id);}
 function _isAdm(){return(window._loginEmail||'').trim().toLowerCase()===CVE_EMAIL.toLowerCase();}
 
@@ -11731,9 +11739,9 @@ window._cveRewrapSummary=function(){
 
 // Called after renderCalendarHero re-renders chips
 window._cveRewrapChips=function(){
-  if(!_active)return;
-  _setupTextEditing(_g('page-calendar'));
-  cveApply(_cfg);
+  // Always re-apply styles after hero re-render (chips are new DOM nodes)
+  if(_cfg) cveApply(_cfg);
+  if(_active) _setupTextEditing(_g('page-calendar'));
 };
 
 // ── Block selection ───────────────────────────────────────────
@@ -12049,7 +12057,7 @@ function _updBtn(email){
 // ── Patch showPage ────────────────────────────────────────────
 (function(){
   function _patch(){
-    if(typeof window.showPage!=='function')return;
+    if(typeof window.showPage!=='function')return false;
     var orig=window.showPage;
     window.showPage=function(pid){
       orig.apply(this,arguments);
@@ -12070,10 +12078,15 @@ function _updBtn(email){
         },150);
       }
     };
+    return true;
   }
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){setTimeout(_patch,900);});
-  }else{setTimeout(_patch,900);}
+  // Try immediately (showPage is in an earlier script block)
+  if(!_patch()){
+    // Fallback: retry after DOM ready
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',function(){setTimeout(_patch,50);});
+    }else{setTimeout(_patch,50);}
+  }
 })();
 
 // ── Watch topbar ──────────────────────────────────────────────
