@@ -3159,14 +3159,14 @@
                     var _cveTx=(window._cveGetTexts&&window._cveGetTexts())||{};
                     if(eyebrow)eyebrow.textContent=_cveTx.calendarHeroEyebrow||(lang==='en'?'WAR CALENDAR':'КАЛЕНДАРЬ КМ');
                     if(title)title.textContent=_cveTx.calendarHeroTitle||(lang==='en'?'War Table Calendar':'War Table календарь');
-                    if(sectionLabel)sectionLabel.textContent=lang==='en'?'War calendar':'Календарь КМ';
-                    if(legendPast)legendPast.textContent=lang==='en'?'past':'прошло';
-                    if(legendDone)legendDone.textContent=lang==='en'?'done':'выполнено';
-                    if(legendFuture)legendFuture.textContent=lang==='en'?'upcoming':'впереди';
+                    if(sectionLabel)sectionLabel.textContent=_cveTx.calendarSectionLabel||(lang==='en'?'War calendar':'Календарь КМ');
+                    if(legendPast)legendPast.textContent=_cveTx.calendarLegendPast||(lang==='en'?'past':'прошло');
+                    if(legendDone)legendDone.textContent=_cveTx.calendarLegendDone||(lang==='en'?'done':'выполнено');
+                    if(legendFuture)legendFuture.textContent=_cveTx.calendarLegendFuture||(lang==='en'?'upcoming':'впереди');
                     if(upcomingTitle)upcomingTitle.textContent=_cveTx.calendarUpcomingTitle||(lang==='en'?'Upcoming events':'Ближайшие события');
                     if(recurringTitle)recurringTitle.textContent=_cveTx.calendarRecurringTitle||(lang==='en'?'Weekly templates':'Шаблоны недели');
                     if(recurringCaption)recurringCaption.textContent=_cveTx.calendarRecurringCaption||(lang==='en'?'preview only':'preview only');
-                    if(todayShortcut)todayShortcut.textContent=lang==='en'?'Open today':'Открыть сегодня';
+                    if(todayShortcut)todayShortcut.textContent=_cveTx.calendarTodayShortcut||(lang==='en'?'Open today':'Открыть сегодня');
 
                     const next = upcoming[0];
                     if(text){
@@ -11498,6 +11498,11 @@ var CVE_DEF={
     calendarUpcomingTitle:'Ближайшие события',
     calendarRecurringTitle:'Шаблоны недели',
     calendarRecurringCaption:'preview only',
+    calendarSectionLabel:'Календарь КМ',
+    calendarLegendPast:'прошло',
+    calendarLegendDone:'выполнено',
+    calendarLegendFuture:'впереди',
+    calendarTodayShortcut:'Открыть сегодня',
     chip0:'',chip1:'',chip2:''
   },
   styles:{},
@@ -11610,9 +11615,7 @@ function cveApply(cfg){
   }
 
   var T=cfg.texts||{};
-  var textIds=['calendarHeroEyebrow','calendarHeroTitle','calendarHeroText','calendarToolbarNote',
-    'calendarSummaryLabel1','calendarSummaryLabel2','calendarSummaryLabel3',
-    'calendarUpcomingTitle','calendarRecurringTitle','calendarRecurringCaption'];
+  var textIds=TEXT_EL_IDS||[];
   textIds.forEach(function(id){
     var el=_g(id);
     if(el&&T[id]!==undefined&&!el.isContentEditable)el.textContent=T[id];
@@ -11808,13 +11811,14 @@ function _saveBlock(w,bid){
 // ── Text editing ──────────────────────────────────────────────
 var TEXT_EL_IDS=['calendarHeroEyebrow','calendarHeroTitle','calendarHeroText','calendarToolbarNote',
   'calendarSummaryLabel1','calendarSummaryLabel2','calendarSummaryLabel3',
-  'calendarUpcomingTitle','calendarRecurringTitle','calendarRecurringCaption'];
+  'calendarUpcomingTitle','calendarRecurringTitle','calendarRecurringCaption',
+  'calendarSectionLabel','calendarLegendPast','calendarLegendDone','calendarLegendFuture','calendarTodayShortcut'];
 
 function _setupTextEditing(pg){
   TEXT_EL_IDS.forEach(function(id){
     var el=_g(id);if(!el||el.dataset.cveText)return;
     el.dataset.cveText=id;
-    el.addEventListener('click',function(e){if(!_active)return;e.stopPropagation();_activTxt(el,id);});
+    el.addEventListener('click',function(e){if(!_active)return;e.stopPropagation();e.preventDefault();_activTxt(el,id);});
   });
   // chips by data attribute
   if(pg){
@@ -11832,7 +11836,23 @@ function _activTxt(el,key){
   try{var r=document.createRange(),s=window.getSelection();r.selectNodeContents(el);r.collapse(false);s.removeAllRanges();s.addRange(r);}catch(e){}
   // Show style panel
   _showStylePanel(el,key);
-  function bl(){el.contentEditable='false';el.removeAttribute('contenteditable');_coll(el,key);_collStyle(el,key);el.removeEventListener('blur',bl);el.removeEventListener('keydown',kd);_hideStylePanel();}
+  function bl(){
+    // Delay to check if focus moved to style panel controls
+    setTimeout(function(){
+      var sp=_g('cveStylePanel');
+      var ae=document.activeElement;
+      if(sp&&sp.contains(ae)){
+        // Focus is in style panel — keep panel open, re-listen for blur
+        el.contentEditable='false';el.removeAttribute('contenteditable');
+        _coll(el,key);_collStyle(el,key);
+        return;
+      }
+      el.contentEditable='false';el.removeAttribute('contenteditable');
+      _coll(el,key);_collStyle(el,key);
+      _hideStylePanel();
+    },30);
+    el.removeEventListener('blur',bl);el.removeEventListener('keydown',kd);
+  }
   function kd(e2){if(e2.key==='Enter'&&!e2.shiftKey){e2.preventDefault();el.blur();}}
   el.addEventListener('blur',bl);el.addEventListener('keydown',kd);
 }
@@ -11843,8 +11863,11 @@ function _showStylePanel(el,key){
   _styleTgt=el;_styleKey=key;
   var sp=_g('cveStylePanel');if(!sp)return;
   sp.style.display='flex';
-  // Prevent clicks on panel from blurring the text element
-  if(!sp.dataset.cveMd){sp.dataset.cveMd='1';sp.addEventListener('mousedown',function(e){e.preventDefault();});}
+  // Prevent clicks on panel from blurring the text element, but allow interaction with controls
+  if(!sp.dataset.cveMd){sp.dataset.cveMd='1';sp.addEventListener('mousedown',function(e){
+    var t=e.target;if(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='OPTION')return;
+    e.preventDefault();
+  });}
   var lbl=_g('cveStyleLabel');if(lbl)lbl.textContent=key.length>16?key.slice(0,14)+'…':key;
   var cs=window.getComputedStyle(el);
   var fs=_g('cveStyleFs');if(fs)fs.value=parseInt(cs.fontSize)||14;
