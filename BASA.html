@@ -11464,10 +11464,13 @@ function getClass2IconByClass3(c3) {
 body.cve-active [data-cve-text]:not([contenteditable="true"]) { cursor:text; }
 body.cve-active [data-cve-text]:not([contenteditable="true"]):hover { outline:1px dashed rgba(201,168,76,0.6);outline-offset:2px;border-radius:3px; }
 [data-cve-text][contenteditable="true"] { outline:2px solid #c9a84c !important;outline-offset:2px;border-radius:3px;cursor:text; }
-body.cve-active .cve-wrap { position:relative;box-sizing:border-box; }
+/* Layout always active so saved positions render without editor */
+.cve-wrap { position:relative;box-sizing:border-box; }
+/* Editor-only UI chrome */
 body.cve-active .cve-wrap:not(.cve-sel):hover { outline:1px dashed rgba(201,168,76,0.35); }
 .cve-wrap.cve-sel { outline:2px solid rgba(201,168,76,0.9) !important; }
-body.cve-active .cve-dh { cursor:grab;user-select:none;position:absolute;top:0;left:0;right:0;height:14px;z-index:5; }
+.cve-dh { display:none; cursor:grab;user-select:none;position:absolute;top:0;left:0;right:0;height:14px;z-index:5; }
+body.cve-active .cve-dh { display:block; }
 body.cve-active .cve-dh:active { cursor:grabbing; }
 .cve-rh { display:none;position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:se-resize;z-index:20; }
 .cve-rh::after { content:'';position:absolute;right:2px;bottom:2px;width:8px;height:8px;border-right:2px solid #c9a84c;border-bottom:2px solid #c9a84c;border-radius:1px; }
@@ -11621,7 +11624,10 @@ function cveApply(cfg){
     if(el&&T['chip'+i]!==undefined&&!el.isContentEditable)el.textContent=T['chip'+i];
   });
 
-  // Block positions
+  // Block positions — ensure wrappers exist first
+  if(!_blocksReady && pg.querySelector('.calendar-hero')){
+    _setupBlocks();
+  }
   var B=cfg.blocks||{};
   Object.keys(B).forEach(function(bid){
     var w=_g('cveW_'+bid);if(!w)return;
@@ -11724,7 +11730,7 @@ function _setupBlocks(){
 
 // Called after renderCalendarSummary re-renders summary cards
 window._cveRewrapSummary=function(){
-  if(!_blocksReady||!_active)return;
+  if(!_cfg)return;
   var B=(_cfg&&_cfg.blocks)||{};
   ['cveBlockSummary1','cveBlockSummary2','cveBlockSummary3'].forEach(function(bid){
     var def=BLOCK_DEFS.find(function(d){return d.id===bid;});
