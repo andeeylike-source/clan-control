@@ -2132,11 +2132,11 @@
     <style id="v1-shell-override">
 
     /* =============================================
-       1. ROOT VARIABLE OVERRIDE — dark neutral palette
+       1. ROOT VARIABLE OVERRIDE
     ============================================= */
     :root {
         --bg:        #0c0c10;
-        --bg2:       rgba(15, 15, 20, 0.35);
+        --bg2:       rgba(10, 12, 16, 0.48);
         --bg3:       rgba(255, 255, 255, 0.05);
         --bg4:       rgba(255, 255, 255, 0.08);
         --border:    rgba(255, 255, 255, 0.1);
@@ -2154,19 +2154,18 @@
         --glow:      rgba(201,168,76,0.1);
         --input-bg:  rgba(0, 0, 0, 0.35);
 
-        /* Glass shell tokens */
-        --glass-bg:            rgba(15, 15, 20, 0.35);
+        --glass-bg:            rgba(10, 12, 16, 0.48);
         --glass-border:        rgba(255, 255, 255, 0.1);
-        --glass-border-bright: rgba(255, 255, 255, 0.2);
+        --glass-border-bright: rgba(255, 255, 255, 0.18);
         --glass-radius:        24px;
         --glass-radius-sm:     12px;
         --glass-shadow:        0 16px 40px rgba(0,0,0,0.25);
-        --shell-padding:       3.5vh 3.5vw;
-        --shell-gap:           20px;
+        --shell-padding:       4vh 4.5vw;
+        --shell-gap:           24px;
     }
 
     /* =============================================
-       2. BODY — full-page background + atmospheric overlay
+       2. BODY — full-page background
     ============================================= */
     body {
         background-color: #0c0c10 !important;
@@ -2178,45 +2177,42 @@
         position: relative;
     }
 
-    /* Atmospheric overlay */
     body::before {
         content: '';
         position: fixed;
         inset: 0;
         background:
-            radial-gradient(ellipse at 25% 20%, rgba(201,168,76,0.04) 0%, transparent 50%),
-            radial-gradient(circle at center 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+            radial-gradient(ellipse at 25% 20%, rgba(201,168,76,0.03) 0%, transparent 50%),
+            radial-gradient(circle at center 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%);
         z-index: 0;
         pointer-events: none;
     }
 
-    /* Ensure everything above the overlay */
     body > * {
         position: relative;
         z-index: 1;
     }
 
     /* =============================================
-       3. LOGIN SCREEN — glass treatment
+       3. LOGIN
     ============================================= */
     #loginScreen {
-        background: rgba(12, 12, 16, 0.7) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(12, 12, 16, 0.75) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-
     .login-card {
-        background: var(--glass-bg) !important;
+        background: rgba(10, 12, 16, 0.82) !important;
         border: 1px solid var(--glass-border) !important;
         border-top-color: var(--glass-border-bright) !important;
         border-radius: var(--glass-radius) !important;
-        box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     /* =============================================
-       4. TOPBAR — transparent glass, floating
+       4. TOPBAR — transparent
     ============================================= */
     #topbar {
         background: transparent !important;
@@ -2225,47 +2221,42 @@
         padding: 0 8px !important;
         z-index: 300;
     }
-
     .topbar-icon-btn {
         border-radius: 10px !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        background: rgba(30, 30, 35, 0.35) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        background: rgba(10, 12, 16, 0.5) !important;
         color: rgba(255,255,255,0.6) !important;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     .topbar-icon-btn:hover {
         border-color: var(--accent) !important;
         color: var(--accent) !important;
         background: rgba(201,168,76,0.12) !important;
     }
-
     .topbar-user {
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        background: rgba(30, 30, 35, 0.35) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        background: rgba(10, 12, 16, 0.5) !important;
         border-radius: 12px !important;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-
     .topbar-clan {
         background: rgba(201,168,76,0.1) !important;
         border: 1px solid rgba(201,168,76,0.3) !important;
         border-radius: 10px !important;
     }
-
     .flip-toggle {
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        background: rgba(30, 30, 35, 0.35) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        background: rgba(10, 12, 16, 0.5) !important;
         border-radius: 10px !important;
     }
-
     .topbar-divider {
-        background: rgba(255,255,255,0.12) !important;
+        background: rgba(255,255,255,0.1) !important;
     }
 
     /* =============================================
-       5. APP LAYOUT — outer padding for glass shell breathing room
+       5. APP LAYOUT — BASAv1-like outer padding
     ============================================= */
     #appLayout {
         padding: var(--shell-padding) !important;
@@ -2274,7 +2265,7 @@
     }
 
     /* =============================================
-       6. SIDEBAR — glass panel
+       6. SIDEBAR — transparent panel
     ============================================= */
     .sidebar {
         background: var(--glass-bg) !important;
@@ -2284,22 +2275,14 @@
         border-radius: var(--glass-radius) !important;
         box-shadow: var(--glass-shadow) !important;
         padding: 20px 12px !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-
-    /* Sidebar brand text — softer */
-    .sidebar h2 {
-        color: #fff !important;
-    }
-
-    /* Sidebar section labels */
+    .sidebar h2 { color: #fff !important; }
     .sidebar-section-label,
     .sidebar [style*="font-size:9px"][style*="font-weight:800"] {
         color: rgba(255,255,255,0.3) !important;
     }
-
-    /* Nav items glass treatment */
     .nav-item {
         border-radius: var(--glass-radius-sm) !important;
         color: rgba(255,255,255,0.6) !important;
@@ -2315,14 +2298,12 @@
         border-left: 2px solid var(--accent) !important;
         font-weight: 600 !important;
     }
-
-    /* Sidebar footer border */
     .sidebar [style*="border-top:1px solid #1e2530"] {
         border-top-color: rgba(255,255,255,0.08) !important;
     }
 
     /* =============================================
-       7. MAIN CONTENT — glass panel
+       7. MAIN CONTENT — transparent panel
     ============================================= */
     .main-content {
         background: var(--glass-bg) !important;
@@ -2330,62 +2311,49 @@
         border-top-color: var(--glass-border-bright) !important;
         border-radius: var(--glass-radius) !important;
         box-shadow: var(--glass-shadow) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         padding: 28px 32px !important;
     }
 
     /* =============================================
-       8. CARDS — glass surface treatment
+       8. CARDS — transparent surfaces
     ============================================= */
-    .card,
-    .dash-card,
-    .pack-card,
-    .prf-card,
-    .profile-stat-card {
+    .card, .dash-card, .pack-card, .prf-card, .profile-stat-card {
         background: rgba(255, 255, 255, 0.03) !important;
         border: 1px solid var(--glass-border) !important;
-        border-top-color: rgba(255,255,255,0.15) !important;
+        border-top-color: rgba(255,255,255,0.13) !important;
         border-radius: 16px !important;
         box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-    .card:hover,
-    .dash-card:hover,
-    .pack-card:hover {
+    .card:hover, .dash-card:hover, .pack-card:hover {
         border-color: rgba(255,255,255,0.2) !important;
     }
-
-    /* Event modal card */
-    .event-modal-card,
-    .day-modal-card {
-        background: rgba(15, 15, 20, 0.85) !important;
+    .event-modal-card, .day-modal-card {
+        background: rgba(10, 12, 16, 0.92) !important;
         border: 1px solid var(--glass-border) !important;
         border-top-color: var(--glass-border-bright) !important;
         border-radius: 20px !important;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.5) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 24px 60px rgba(0,0,0,0.6) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-
-    /* Info modal */
     .info-modal-box {
-        background: rgba(15, 15, 20, 0.88) !important;
+        background: rgba(10, 12, 16, 0.92) !important;
         border: 1px solid var(--glass-border) !important;
         border-top-color: var(--glass-border-bright) !important;
         border-radius: 20px !important;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.5) !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 24px 60px rgba(0,0,0,0.6) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-
-    /* Event item rows */
     .event-item-row {
         background: rgba(255, 255, 255, 0.04) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 12px !important;
     }
-
-    /* Member list item */
     .member-list-item {
         background: rgba(255, 255, 255, 0.04) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
@@ -2393,10 +2361,47 @@
     }
 
     /* =============================================
-       9. CALENDAR — glass surface
+       9. CALENDAR HERO — NO internal image, transparent
+    ============================================= */
+    .calendar-hero {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 20px !important;
+        overflow: visible !important;
+    }
+    .calendar-hero::before {
+        display: none !important;
+        background-image: none !important;
+        opacity: 0 !important;
+    }
+    .calendar-hero::after {
+        display: none !important;
+        background: none !important;
+        opacity: 0 !important;
+    }
+    .calendar-hero-meta {
+        background: rgba(10, 12, 16, 0.45) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .calendar-hero-title {
+        color: #f0f0f0 !important;
+        text-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+    .calendar-hero-text {
+        color: rgba(255,255,255,0.7) !important;
+    }
+    .calendar-hero-eyebrow {
+        background: rgba(10, 12, 16, 0.5) !important;
+        border: 1px solid rgba(201,168,76,0.3) !important;
+    }
+
+    /* =============================================
+       10. CALENDAR GRID
     ============================================= */
     .calendar-grid {
-        background: rgba(255,255,255,0.06) !important;
+        background: rgba(255,255,255,0.04) !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 16px !important;
         overflow: hidden;
@@ -2407,46 +2412,33 @@
         color: rgba(255,255,255,0.5) !important;
     }
     .calendar-day {
-        background: rgba(0,0,0,0.1) !important;
+        background: rgba(0,0,0,0.08) !important;
         border-bottom: none !important;
     }
     .calendar-day:hover {
-        background: rgba(255,255,255,0.06) !important;
+        background: rgba(255,255,255,0.05) !important;
     }
     .calendar-day.today {
         background: rgba(201,168,76,0.06) !important;
         outline: 1px solid rgba(201,168,76,0.3) !important;
     }
-
-    /* Calendar premium cards */
-    .calendar-grid-card,
-    .calendar-side-card,
-    .calendar-summary-card {
+    .calendar-grid-card, .calendar-side-card, .calendar-summary-card {
         background: rgba(255, 255, 255, 0.03) !important;
         border: 1px solid var(--glass-border) !important;
-        border-top-color: rgba(255,255,255,0.15) !important;
+        border-top-color: rgba(255,255,255,0.13) !important;
         border-radius: 20px !important;
         box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-    .calendar-grid-card:hover,
-    .calendar-side-card:hover,
-    .calendar-summary-card:hover {
+    .calendar-grid-card:hover, .calendar-side-card:hover, .calendar-summary-card:hover {
         border-color: rgba(201,168,76,0.25) !important;
         box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
     }
 
-    /* Calendar hero — keep but ensure it blends with glass shell */
-    .calendar-hero {
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 24px !important;
-    }
-
     /* =============================================
-       10. TABLES — glass treatment
+       11. TABLES
     ============================================= */
-    table {
-        border-collapse: collapse;
-    }
     th {
         color: rgba(255,255,255,0.4) !important;
         border-bottom: 1px solid rgba(255,255,255,0.08) !important;
@@ -2460,33 +2452,30 @@
     }
 
     /* =============================================
-       11. INPUTS — glass treatment
+       12. INPUTS
     ============================================= */
-    .input-dark,
-    .login-input {
-        background: rgba(0, 0, 0, 0.3) !important;
+    .input-dark, .login-input {
+        background: rgba(0, 0, 0, 0.35) !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         border-radius: var(--glass-radius-sm) !important;
         color: var(--text) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-    .input-dark:focus,
-    .login-input:focus {
+    .input-dark:focus, .login-input:focus {
         border-color: var(--accent) !important;
         box-shadow: 0 0 0 3px rgba(201,168,76,0.12) !important;
     }
-
     select.input-dark {
-        background: rgba(0, 0, 0, 0.3) !important;
+        background: rgba(0, 0, 0, 0.35) !important;
     }
-
-    /* Autocomplete suggestions */
     .autocomplete-suggestions {
-        background: rgba(15, 15, 20, 0.92) !important;
+        background: rgba(10, 12, 16, 0.95) !important;
         border: 1px solid var(--accent) !important;
         border-radius: 12px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     .suggestion-item {
         border-bottom-color: rgba(255,255,255,0.06) !important;
@@ -2498,28 +2487,29 @@
     }
 
     /* =============================================
-       12. MODALS — glass overlay
+       13. MODALS
     ============================================= */
     .modal-overlay {
-        background: rgba(0,0,0,0.7) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
+        background: rgba(0,0,0,0.75) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     .info-modal-bg {
-        background: rgba(0,0,0,0.6) !important;
-        backdrop-filter: blur(6px) !important;
+        background: rgba(0,0,0,0.7) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     /* =============================================
-       13. DATEPICKER — glass
+       14. DATEPICKER
     ============================================= */
     .dp-popup {
-        background: rgba(15, 15, 20, 0.92) !important;
+        background: rgba(10, 12, 16, 0.95) !important;
         border: 1px solid rgba(255,255,255,0.12) !important;
         border-radius: 16px !important;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.4) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     .dp-btn {
         background: rgba(255,255,255,0.04) !important;
@@ -2527,8 +2517,7 @@
         border-radius: 10px !important;
         color: rgba(255,255,255,0.7) !important;
     }
-    .dp-btn:hover,
-    .dp-btn.active {
+    .dp-btn:hover, .dp-btn.active {
         border-color: var(--accent) !important;
         color: var(--accent-s) !important;
     }
@@ -2540,80 +2529,38 @@
         background: rgba(255,255,255,0.08) !important;
         color: #fff !important;
     }
-    .dp-day.today {
-        color: var(--accent) !important;
-        font-weight: 700 !important;
-    }
-    .dp-day.selected {
-        background: var(--accent) !important;
-        color: #080e0c !important;
-    }
-    .dp-month-btn,
-    .dp-year-btn {
+    .dp-day.today { color: var(--accent) !important; font-weight: 700 !important; }
+    .dp-day.selected { background: var(--accent) !important; color: #080e0c !important; }
+    .dp-month-btn, .dp-year-btn {
         background: rgba(255,255,255,0.04) !important;
         border-radius: 10px !important;
         color: rgba(255,255,255,0.5) !important;
     }
-    .dp-month-btn:hover,
-    .dp-year-btn:hover {
+    .dp-month-btn:hover, .dp-year-btn:hover {
         background: rgba(255,255,255,0.08) !important;
         color: #fff !important;
     }
 
     /* =============================================
-       14. DASHBOARD — glass cards
+       15-19. MISC
     ============================================= */
-    .dash-alert {
-        background: rgba(0,0,0,0.2) !important;
-        border-radius: 12px !important;
-    }
-    .dash-alert:hover {
-        background: rgba(255,255,255,0.04) !important;
-    }
-
-    /* =============================================
-       15. BADGES — glass-compatible
-    ============================================= */
-    .badge {
-        border-radius: 6px !important;
-    }
+    .dash-alert { background: rgba(0,0,0,0.2) !important; border-radius: 12px !important; }
+    .dash-alert:hover { background: rgba(255,255,255,0.04) !important; }
+    .badge { border-radius: 6px !important; }
     .pac-tag {
         background: rgba(255,255,255,0.06) !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
         border-radius: 8px !important;
         color: rgba(255,255,255,0.5) !important;
     }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
+    .btn-primary { border-radius: 12px !important; }
+    .pack-card::after { background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent) !important; }
 
     /* =============================================
-       16. SCROLLBAR — subtle
-    ============================================= */
-    ::-webkit-scrollbar {
-        width: 5px;
-    }
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.12);
-        border-radius: 10px;
-    }
-
-    /* =============================================
-       17. BTN PRIMARY — glass-compatible
-    ============================================= */
-    .btn-primary {
-        border-radius: 12px !important;
-    }
-
-    /* =============================================
-       18. PACK CARDS — glass accent line
-    ============================================= */
-    .pack-card::after {
-        background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent) !important;
-    }
-
-    /* =============================================
-       19. STATS PAGE — override hardcoded dark backgrounds
+       20. STATS PAGE hardcoded overrides
     ============================================= */
     #page-stats [style*="background:#12171f"],
     #statsContent [style*="background:#12171f"],
@@ -2623,118 +2570,52 @@
         border-color: rgba(255,255,255,0.1) !important;
     }
     #statsContent [style*="background:#0b0e14"],
-    #page-stats [style*="background:#0b0e14"] {
-        background: rgba(0,0,0,0.15) !important;
-    }
+    #page-stats [style*="background:#0b0e14"] { background: rgba(0,0,0,0.15) !important; }
     #statsContent [style*="border-bottom:1px solid #1e2530"],
-    #page-stats [style*="border-bottom:1px solid #1e2530"] {
-        border-bottom-color: rgba(255,255,255,0.08) !important;
-    }
+    #page-stats [style*="border-bottom:1px solid #1e2530"] { border-bottom-color: rgba(255,255,255,0.08) !important; }
     #statsContent [style*="border:1px solid #1e2530"],
     #page-stats [style*="border:1px solid #1e2530"],
     #statsContent [style*="border: 1px solid #1e2530"],
-    #page-stats [style*="border: 1px solid #1e2530"] {
-        border-color: rgba(255,255,255,0.1) !important;
-    }
+    #page-stats [style*="border: 1px solid #1e2530"] { border-color: rgba(255,255,255,0.1) !important; }
 
     /* =============================================
-       20. CURSOR GLOW — enhanced for glass shell
+       21. CURSOR GLOW
     ============================================= */
     body:not(.light) #cc-cursor-glow {
         background: radial-gradient(circle, rgba(201,168,76,0.04) 0%, transparent 70%) !important;
     }
 
     /* =============================================
-       21. MOBILE — preserve glass shell
+       22. MOBILE
     ============================================= */
     @media (max-width: 768px) {
-        #appLayout {
-            padding: 12px !important;
-            gap: 12px !important;
-        }
-        .sidebar {
-            border-radius: 0 !important;
-            border-left: none !important;
-            border-right: none !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-        }
-        .main-content {
-            border-radius: 16px !important;
-            padding: 16px !important;
-        }
-        #topbar {
-            padding: 0 12px !important;
-            background: rgba(12,12,16,0.6) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-        }
+        #appLayout { padding: 12px !important; gap: 12px !important; }
+        .sidebar { border-radius: 0 !important; border-left: none !important; border-right: none !important; box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
+        .main-content { border-radius: 16px !important; padding: 16px !important; }
+        #topbar { padding: 0 12px !important; background: rgba(10,12,16,0.6) !important; }
     }
 
     /* =============================================
-       22. LIGHT THEME — override for glass shell compatibility
-       (keep background image, use lighter glass surfaces)
+       23. LIGHT THEME
     ============================================= */
     body.light {
-        --bg:        #0c0c10;
-        --bg2:       rgba(255, 255, 255, 0.12);
-        --bg3:       rgba(255, 255, 255, 0.08);
-        --bg4:       rgba(255, 255, 255, 0.15);
-        --border:    rgba(255, 255, 255, 0.18);
-        --border2:   rgba(255, 255, 255, 0.25);
-        --text:      #fff;
-        --text2:     rgba(255, 255, 255, 0.9);
-        --text3:     rgba(255, 255, 255, 0.7);
-        --text4:     rgba(255, 255, 255, 0.5);
-        --text5:     rgba(255, 255, 255, 0.3);
-        --input-bg:  rgba(0, 0, 0, 0.25);
-        --shadow:    rgba(0,0,0,0.4);
+        --bg: #0c0c10; --bg2: rgba(255,255,255,0.12); --bg3: rgba(255,255,255,0.08);
+        --bg4: rgba(255,255,255,0.15); --border: rgba(255,255,255,0.18); --border2: rgba(255,255,255,0.25);
+        --text: #fff; --text2: rgba(255,255,255,0.9); --text3: rgba(255,255,255,0.7);
+        --text4: rgba(255,255,255,0.5); --text5: rgba(255,255,255,0.3);
+        --input-bg: rgba(0,0,0,0.25); --shadow: rgba(0,0,0,0.4);
     }
-
-    /* In light mode, keep glass shell but with warmer tint */
-    body.light .sidebar {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255,255,255,0.15) !important;
-    }
-    body.light .main-content {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255,255,255,0.15) !important;
-    }
-    body.light #topbar {
-        background: transparent !important;
-        border-bottom: none !important;
-    }
-    body.light .card,
-    body.light .dash-card,
-    body.light .pack-card {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border-color: rgba(255,255,255,0.12) !important;
-    }
-    body.light .calendar-grid {
-        background: rgba(255,255,255,0.08) !important;
-        border-color: rgba(255,255,255,0.12) !important;
-    }
-    body.light .calendar-header-cell {
-        background: rgba(255,255,255,0.05) !important;
-        color: rgba(255,255,255,0.6) !important;
-    }
-    body.light .calendar-day {
-        background: rgba(0,0,0,0.08) !important;
-    }
-    body.light .nav-item {
-        color: rgba(255,255,255,0.65) !important;
-    }
-    body.light .nav-item:hover {
-        background: rgba(255,255,255,0.08) !important;
-        color: #fff !important;
-    }
-    body.light .nav-item.active {
-        background: rgba(201,168,76,0.12) !important;
-        color: var(--accent-s) !important;
-    }
-    body.light h1, body.light h2, body.light h3,
-    body.light h4, body.light h5, body.light h6, body.light label {
-        color: #fff !important;
-    }
+    body.light .sidebar { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.15) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    body.light .main-content { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.15) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    body.light #topbar { background: transparent !important; border-bottom: none !important; }
+    body.light .card, body.light .dash-card, body.light .pack-card { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; }
+    body.light .calendar-grid { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; }
+    body.light .calendar-header-cell { background: rgba(255,255,255,0.05) !important; color: rgba(255,255,255,0.6) !important; }
+    body.light .calendar-day { background: rgba(0,0,0,0.06) !important; }
+    body.light .nav-item { color: rgba(255,255,255,0.65) !important; }
+    body.light .nav-item:hover { background: rgba(255,255,255,0.08) !important; color: #fff !important; }
+    body.light .nav-item.active { background: rgba(201,168,76,0.12) !important; color: var(--accent-s) !important; }
+    body.light h1, body.light h2, body.light h3, body.light h4, body.light h5, body.light h6, body.light label { color: #fff !important; }
     body.light p { color: rgba(255,255,255,0.8) !important; }
     body.light td { color: rgba(255,255,255,0.75) !important; }
     body.light th { color: rgba(255,255,255,0.45) !important; }
@@ -2742,29 +2623,14 @@
     body.light .topbar-logo { color: #fff !important; }
     body.light .topbar-user-email { color: rgba(255,255,255,0.75) !important; }
     body.light .topbar-clan { color: var(--accent-s) !important; }
-    body.light input, body.light textarea, body.light select {
-        color: #fff !important;
-        background: rgba(0,0,0,0.25) !important;
-        border-color: rgba(255,255,255,0.15) !important;
-    }
-    body.light .flip-toggle {
-        background: rgba(255,255,255,0.08) !important;
-        border-color: rgba(255,255,255,0.15) !important;
-    }
+    body.light input, body.light textarea, body.light select { color: #fff !important; background: rgba(0,0,0,0.25) !important; border-color: rgba(255,255,255,0.15) !important; }
+    body.light .flip-toggle { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.15) !important; }
     body.light .flip-toggle[data-state="left"] .flip-toggle-option:first-child,
-    body.light .flip-toggle[data-state="right"] .flip-toggle-option:last-child {
-        color: #0c0c10 !important;
-    }
+    body.light .flip-toggle[data-state="right"] .flip-toggle-option:last-child { color: #0c0c10 !important; }
     body.light .flip-toggle[data-state="left"] .flip-toggle-option:last-child,
-    body.light .flip-toggle[data-state="right"] .flip-toggle-option:first-child {
-        color: rgba(255,255,255,0.4) !important;
-    }
-    body.light .login-card {
-        background: rgba(255,255,255,0.08) !important;
-        border-color: rgba(255,255,255,0.15) !important;
-    }
-    body.light .login-subtitle,
-    body.light .login-hint { color: rgba(255,255,255,0.5) !important; }
+    body.light .flip-toggle[data-state="right"] .flip-toggle-option:first-child { color: rgba(255,255,255,0.4) !important; }
+    body.light .login-card { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.15) !important; }
+    body.light .login-subtitle, body.light .login-hint { color: rgba(255,255,255,0.5) !important; }
     body.light .login-logo-name { color: #fff !important; }
     body.light .dash-big-num { color: #fff !important; }
     body.light .dash-card-title { color: rgba(255,255,255,0.45) !important; }
@@ -2775,25 +2641,21 @@
     body.light .event-tv     { background: rgba(59,130,246,0.12) !important; color: #93c5fd !important; border-color: rgba(59,130,246,0.25) !important; }
     body.light .event-manual { background: rgba(29,185,84,0.15) !important; color: #4ade80 !important; border-color: rgba(29,185,84,0.35) !important; }
     body.light .badge-кл { background: rgba(201,168,76,0.15) !important; color: var(--accent-s) !important; border-color: rgba(201,168,76,0.3) !important; }
-    body.light .dot-past   { background: #ef4444 !important; }
-    body.light .dot-done   { background: #22c55e !important; }
+    body.light .dot-past { background: #ef4444 !important; }
+    body.light .dot-done { background: #22c55e !important; }
     body.light .dot-future { background: #3b82f6 !important; }
-    body.light .trend-up   { color: #22c55e !important; }
+    body.light .trend-up { color: #22c55e !important; }
     body.light .trend-down { color: #ef4444 !important; }
     body.light .toggle-done-btn.done { background: #22c55e !important; border-color: #22c55e !important; }
-    /* Light theme stats page */
     body.light #page-stats [style*="background:#12171f"],
-    body.light #statsContent [style*="background:#12171f"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border-color: rgba(255,255,255,0.12) !important;
-    }
+    body.light #statsContent [style*="background:#12171f"] { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; }
     body.light [style*="background:#1e2530"] { background: rgba(255,255,255,0.06) !important; }
     body.light [style*="background:#1a1f29"] { background: rgba(255,255,255,0.04) !important; }
     body.light [style*="background:#0b0e14"] { background: rgba(0,0,0,0.1) !important; }
     body.light [style*="background:#0f1a0c"] { background: rgba(255,255,255,0.06) !important; }
-    body.light .dp-popup { background: rgba(15,15,20,0.92) !important; }
+    body.light .dp-popup { background: rgba(10,12,16,0.95) !important; }
     body.light .event-modal-card { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.18) !important; }
-    body.light .info-modal-box { background: rgba(15,15,20,0.92) !important; }
+    body.light .info-modal-box { background: rgba(10,12,16,0.95) !important; }
     body.light .info-modal-title { color: #fff !important; }
     body.light .info-modal-body { color: rgba(255,255,255,0.6) !important; }
     body.light .player-nick-link { color: #fff !important; border-bottom-color: rgba(255,255,255,0.2) !important; }
@@ -2804,19 +2666,15 @@
     body.light .member-list-item { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; }
     body.light .pack-card:hover { border-color: rgba(255,255,255,0.25) !important; }
     body.light #dashNextEvent { background: rgba(201,168,76,0.12) !important; border-color: rgba(201,168,76,0.3) !important; color: var(--accent-s) !important; }
-    body.light .autocomplete-suggestions { background: rgba(15,15,20,0.92) !important; }
-    body.light .calendar-grid-card,
-    body.light .calendar-side-card,
-    body.light .calendar-summary-card {
-        background: rgba(255,255,255,0.06) !important;
-        border-color: rgba(255,255,255,0.12) !important;
+    body.light .autocomplete-suggestions { background: rgba(10,12,16,0.95) !important; }
+    body.light .calendar-grid-card, body.light .calendar-side-card, body.light .calendar-summary-card {
+        background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important;
     }
-    body.light .calendar-hero {
-        border-color: rgba(255,255,255,0.12) !important;
-    }
+    body.light .calendar-hero { border: none !important; background: transparent !important; }
+    body.light .calendar-hero::before, body.light .calendar-hero::after { display: none !important; }
 
     /* =============================================
-       23. INLINE STYLE OVERRIDES — for elements with hardcoded colors
+       24. INLINE STYLE OVERRIDES
     ============================================= */
     [style*="color:#475569"] { color: rgba(255,255,255,0.45) !important; }
     [style*="color:#64748b"] { color: rgba(255,255,255,0.5) !important; }
@@ -2830,14 +2688,14 @@
     [style*="border-bottom:1px solid #1e2530"] { border-bottom-color: rgba(255,255,255,0.08) !important; }
 
     /* =============================================
-       24. GLASS HOVER GLOW — subtle border glow on hover for key panels
+       25. GLASS HOVER GLOW
     ============================================= */
-    .sidebar:hover,
-    .main-content:hover {
-        border-color: rgba(255,255,255,0.18);
+    .sidebar:hover, .main-content:hover {
+        border-color: rgba(255,255,255,0.16);
         transition: border-color 0.3s ease;
     }
 
+    </style>
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
@@ -12219,20 +12077,23 @@ function cveApply(cfg){
   if(!cfg)return;
   var pg=_g('page-calendar');if(!pg)return;
 
+  // Legacy hero vars — keep for non-breaking but also apply to body
   pg.style.setProperty('--calendar-hero-bg-size',cfg.bgScale+'%');
   pg.style.setProperty('--calendar-hero-pos-x',cfg.bgX+'%');
   pg.style.setProperty('--calendar-hero-pos-y',cfg.bgY+'%');
-
-  var hero=pg.querySelector('.calendar-hero');
-  if(hero){
-    if(typeof _applyHeroBg==='function'){
-      _applyHeroBg(cfg.heroImage||'');
-    } else if(cfg.heroImage){
-      hero.style.setProperty('--calendar-hero-image',"url('"+cfg.heroImage+"')");
-    } else {
-      hero.style.setProperty('--calendar-hero-image','none');
-    }
+  // Apply to body global background
+  if(cfg.heroImage){
+    document.body.style.backgroundSize=cfg.bgScale+'%';
+    document.body.style.backgroundPosition=cfg.bgX+'% '+cfg.bgY+'%';
   }
+
+  // Apply global body background (not hero)
+  if(typeof _applyHeroBg==='function'){
+    _applyHeroBg(cfg.heroImage||'');
+  }
+  // Clear legacy hero image
+  var hero=pg.querySelector('.calendar-hero');
+  if(hero)hero.style.setProperty('--calendar-hero-image','none');
 
   var T=cfg.texts||{};
   var textIds=TEXT_EL_IDS||[];
@@ -12562,6 +12423,7 @@ function _setupHeroBgDrag(pg){
     if(_cfg){_cfg.bgX=Math.round(nx*10)/10;_cfg.bgY=Math.round(ny*10)/10;}
     var pg2=_g('page-calendar');
     if(pg2){pg2.style.setProperty('--calendar-hero-pos-x',nx+'%');pg2.style.setProperty('--calendar-hero-pos-y',ny+'%');}
+    document.body.style.backgroundPosition=nx+'% '+ny+'%';
   });
   document.addEventListener('mouseup',function(){if(_bgds){hero.classList.remove('cve-hdrag');_bgds=null;}});
   hero.addEventListener('wheel',function(e){
@@ -12569,25 +12431,28 @@ function _setupHeroBgDrag(pg){
     var ns=Math.max(50,Math.min(250,(_cfg?_cfg.bgScale:104)+(e.deltaY>0?-3:3)));
     if(_cfg)_cfg.bgScale=ns;
     var pg2=_g('page-calendar');if(pg2)pg2.style.setProperty('--calendar-hero-bg-size',ns+'%');
+    document.body.style.backgroundSize=ns+'%';
     var sl=_g('cveBgScale'),sv=_g('cveBgScaleVal');if(sl)sl.value=ns;if(sv)sv.textContent=ns+'%';
   },{passive:false});
 }
 
 // ── BG handlers ───────────────────────────────────────────────
 function _applyHeroBg(dataUrl){
-  // Use dynamic <style> tag for ::before because large data-URL CSS vars
-  // can silently fail in some browsers; also set CSS var as fallback
-  var hero=document.querySelector('#page-calendar .calendar-hero');
-  var tag=document.getElementById('cveHeroBgStyle');
+  // V2: Write to BODY global background instead of calendar hero
+  var tag=document.getElementById('cveGlobalBgStyle');
   if(dataUrl){
-    var css='.calendar-hero::before{background-image:url("'+dataUrl+'") !important;}';
-    if(!tag){tag=document.createElement('style');tag.id='cveHeroBgStyle';document.head.appendChild(tag);}
+    var css='body{background-image:url("'+dataUrl+'") !important;background-size:cover !important;background-position:center center !important;background-attachment:fixed !important;}';
+    if(!tag){tag=document.createElement('style');tag.id='cveGlobalBgStyle';document.head.appendChild(tag);}
     tag.textContent=css;
-    if(hero)hero.style.setProperty('--calendar-hero-image',"url('"+dataUrl+"')");
   } else {
-    if(tag)tag.textContent='.calendar-hero::before{background-image:none !important;}';
-    if(hero)hero.style.setProperty('--calendar-hero-image','none');
+    // Reset to default shell background
+    if(tag)tag.textContent='';
   }
+  // Also clear any legacy hero refs
+  var heroTag=document.getElementById('cveHeroBgStyle');
+  if(heroTag)heroTag.textContent='';
+  var hero=document.querySelector('#page-calendar .calendar-hero');
+  if(hero)hero.style.setProperty('--calendar-hero-image','none');
 }
 window.cveBgUpload=function(inp){
   var f=inp&&inp.files&&inp.files[0];if(!f)return;
@@ -12612,7 +12477,8 @@ window.cveBgRemove=function(){
 window.cveBgScaleChange=function(v){
   if(!_cfg)return;_cfg.bgScale=v;
   var sv=_g('cveBgScaleVal');if(sv)sv.textContent=v+'%';
-  var pg=_g('page-calendar');if(pg)pg.style.setProperty('--calendar-hero-bg-size',v+'%');
+  // Apply scale to body background
+  document.body.style.backgroundSize=v+'%';
 };
 
 // ── Save / Reset / Open / Close ───────────────────────────────
