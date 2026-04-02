@@ -2696,6 +2696,238 @@
     }
 
     </style>
+
+    <style id="readability-layer">
+    /* =============================================
+       READABILITY LAYER — text clarity over transparent glass
+       No layout changes. No opacity changes to panels.
+       Only: brighter text + subtle text-shadow + slightly denser text containers
+    ============================================= */
+
+    /* ── HERO ──────────────────────────────────── */
+    .calendar-hero-title {
+        color: #ffffff !important;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5) !important;
+        font-weight: 700 !important;
+    }
+    .calendar-hero-text {
+        color: rgba(255,255,255,0.82) !important;
+        text-shadow: 0 1px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-hero-eyebrow {
+        color: var(--accent-s) !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.5) !important;
+    }
+    .calendar-hero-chip {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+        color: rgba(255,255,255,0.88) !important;
+    }
+    .calendar-hero-chip b {
+        color: #fff !important;
+    }
+
+    /* ── HERO META (right side of hero) ────────── */
+    .calendar-hero-meta {
+        background: rgba(8, 10, 14, 0.55) !important;
+    }
+    .calendar-section-label {
+        color: rgba(255,255,255,0.7) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-month-label {
+        color: #ffffff !important;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    }
+    .calendar-toolbar-note {
+        color: rgba(255,255,255,0.72) !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-legend-item {
+        color: rgba(255,255,255,0.72) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+    .calendar-nav-btn {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── CALENDAR SUMMARY CARDS ────────────────── */
+    .calendar-summary-card .calendar-summary-label,
+    .calendar-summary-grid [style*="font-size:10px"],
+    .calendar-summary-grid [style*="font-size:11px"] {
+        color: rgba(255,255,255,0.75) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+    .calendar-summary-grid [style*="font-size:28px"],
+    .calendar-summary-grid [style*="font-size:30px"],
+    .calendar-summary-grid [style*="font-size:26px"] {
+        color: #ffffff !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-summary-grid [style*="font-size:12px"],
+    .calendar-summary-grid [style*="font-size:13px"] {
+        color: rgba(255,255,255,0.68) !important;
+    }
+
+    /* ── CALENDAR GRID ─────────────────────────── */
+    .calendar-header-cell {
+        color: rgba(255,255,255,0.58) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+    .day-number {
+        color: rgba(255,255,255,0.88) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-day.other-month .day-number {
+        color: rgba(255,255,255,0.3) !important;
+    }
+    .event-chip {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.35) !important;
+    }
+    .event-time {
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── RIGHT COLUMN: SIDE CARDS ──────────────── */
+    .calendar-side-card {
+        background: rgba(10, 12, 16, 0.55) !important;
+    }
+    .calendar-side-title {
+        color: #ffffff !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.4) !important;
+        font-weight: 600 !important;
+    }
+    .calendar-side-link {
+        color: rgba(255,255,255,0.6) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+    .calendar-side-link:hover {
+        color: #fff !important;
+    }
+    /* Upcoming event items */
+    .calendar-side-card .calendar-upcoming-name,
+    .calendar-side-card [style*="font-weight:700"],
+    .calendar-side-card [style*="font-weight:600"] {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.35) !important;
+    }
+    .calendar-side-card [style*="font-size:12px"],
+    .calendar-side-card [style*="font-size:11px"] {
+        color: rgba(255,255,255,0.65) !important;
+    }
+    /* Recurring/template items */
+    .calendar-side-caption {
+        color: rgba(255,255,255,0.45) !important;
+    }
+
+    /* ── DASHBOARD ─────────────────────────────── */
+    .dash-card-title {
+        color: rgba(255,255,255,0.5) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+    .dash-big-num {
+        color: #ffffff !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.35) !important;
+    }
+    .dash-sub {
+        color: rgba(255,255,255,0.55) !important;
+    }
+
+    /* ── GENERAL HEADINGS ──────────────────────── */
+    .main-content h1 {
+        color: #ffffff !important;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+    }
+    .main-content h2 {
+        color: rgba(255,255,255,0.95) !important;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.35) !important;
+    }
+    .main-content h3 {
+        color: rgba(255,255,255,0.9) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── SIDEBAR ───────────────────────────────── */
+    .sidebar .nav-item {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.25) !important;
+    }
+    .sidebar .nav-item.active {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── TABLES ─────────────────────────────────── */
+    th {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.25) !important;
+    }
+    td {
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+    }
+
+    /* ── TOPBAR ─────────────────────────────────── */
+    .topbar-logo {
+        text-shadow: 0 1px 6px rgba(0,0,0,0.4) !important;
+    }
+    .topbar-user-email {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+    .topbar-clan {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── KM STAT BADGE ─────────────────────────── */
+    .km-stat-badge {
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── SECTION LABELS ────────────────────────── */
+    .section-label {
+        color: rgba(255,255,255,0.5) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── EVENT MODAL ───────────────────────────── */
+    .event-modal-card h2,
+    .event-modal-card h3,
+    .day-modal-card h2,
+    .day-modal-card h3 {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── INFO MODAL ────────────────────────────── */
+    .info-modal-title {
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── PACK CARDS ────────────────────────────── */
+    .pack-card h3, .pack-card h4 {
+        color: #ffffff !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+
+    /* ── PROFILE ───────────────────────────────── */
+    .profile-stat-val {
+        color: #ffffff !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    }
+    .profile-stat-label {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.25) !important;
+    }
+
+    /* ── DASH ALERTS ───────────────────────────── */
+    .dash-alert {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.25) !important;
+    }
+
+    /* ── LIGHT THEME: disable text-shadows (not needed on light) ── */
+    body.light * {
+        text-shadow: none !important;
+    }
+    /* Light theme: slightly denser side cards not needed */
+    body.light .calendar-side-card {
+        background: rgba(255,255,255,0.06) !important;
+    }
+    body.light .calendar-hero-meta {
+        background: rgba(255,255,255,0.06) !important;
+    }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
