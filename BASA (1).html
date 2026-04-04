@@ -2917,16 +2917,42 @@
         text-shadow: 0 1px 3px rgba(0,0,0,0.25) !important;
     }
 
-    /* ── LIGHT THEME: disable text-shadows (not needed on light) ── */
-    body.light * {
-        text-shadow: none !important;
-    }
-    /* Light theme: slightly denser side cards not needed */
+    /* ── LIGHT THEME: v1-shell-override keeps both themes dark,
+       text-shadows are needed in both modes.
+       Only reset shadows on elements that are genuinely light-on-light. ── */
     body.light .calendar-side-card {
-        background: rgba(255,255,255,0.06) !important;
+        background: rgba(10, 12, 16, 0.55) !important;
     }
     body.light .calendar-hero-meta {
-        background: rgba(255,255,255,0.06) !important;
+        background: rgba(8, 10, 14, 0.55) !important;
+    }
+
+    /* ── BOOST weakest text in both themes ──────── */
+    .calendar-section-label,
+    .calendar-toolbar-note,
+    .calendar-legend-item {
+        color: rgba(255,255,255,0.78) !important;
+        text-shadow: 0 1px 5px rgba(0,0,0,0.55) !important;
+    }
+    .calendar-hero-text {
+        color: rgba(255,255,255,0.88) !important;
+    }
+    .calendar-side-caption {
+        color: rgba(255,255,255,0.54) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-side-item-title,
+    .calendar-template-title {
+        color: rgba(255,255,255,0.92) !important;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+    }
+    .calendar-side-item-meta,
+    .calendar-template-meta {
+        color: rgba(255,255,255,0.58) !important;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.35) !important;
+    }
+    .calendar-side-empty {
+        color: rgba(255,255,255,0.4) !important;
     }
 
     </style>
@@ -3048,9 +3074,6 @@
 
 
     <aside class="sidebar">
-        <h2 class="text-blue-500 font-black text-xl tracking-tighter uppercase">Clan Control</h2>
-        <div style="font-size:9px;color:#475569;margin-top:-8px;margin-bottom:20px;letter-spacing:.05em">v12</div>
-        
         <nav>
             <div style="font-size:9px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:6px 16px 4px;margin-top:4px">Аналитика</div>
             <div onclick="showPage('dashboard')" id="nav-dashboard" class="nav-item">🏠 Дашборд</div>
