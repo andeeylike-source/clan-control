@@ -420,7 +420,7 @@
         ============================================= */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         .calendar-header-cell { background: var(--bg2); padding: 14px; text-align: center; font-size: 10px; font-weight: 800; color: var(--text4); text-transform: uppercase; letter-spacing: 0.08em; }
-        .calendar-day { background: var(--bg2); min-height: 96px; padding: 10px; transition: background 0.15s; cursor: pointer; position: relative; }
+        .calendar-day { background: var(--bg2); min-height: 96px; padding: 10px; cursor: pointer; position: relative; }
         .calendar-day:hover { background: var(--bg3); }
         .calendar-day.today { background: var(--bg); outline: 1px solid rgba(201,168,76,0.28); }
         .calendar-day.other-month { opacity: 0.22; pointer-events: none; }
@@ -1078,16 +1078,16 @@
             font-size: 11px;
             letter-spacing: 0.14em;
             color: var(--text5);
-            background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent), var(--bg2);
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0)), var(--bg2);
         }
         .calendar-day {
             min-height: 78px;
             padding: 9px 9px 22px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent), var(--bg2);
-            transition: background .16s ease, filter .16s ease;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0)), var(--bg2);
+            transition: filter .16s ease;
         }
         .calendar-day:hover {
-            background: linear-gradient(180deg, rgba(201,168,76,0.05), transparent), var(--bg3);
+            background: linear-gradient(180deg, rgba(201,168,76,0.05), rgba(201,168,76,0)), var(--bg3);
             filter: brightness(1.02);
         }
         .calendar-day.today {
@@ -1327,10 +1327,10 @@
             color: var(--text4);
         }
         body.light .calendar-day {
-            background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent), var(--bg2);
+            background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0)), var(--bg2);
         }
         body.light .calendar-day:hover {
-            background: linear-gradient(180deg, rgba(201,168,76,0.08), transparent), var(--bg3);
+            background: linear-gradient(180deg, rgba(201,168,76,0.08), rgba(201,168,76,0)), var(--bg3);
         }
         body.light .km-stat-badge {
             background: rgba(255,255,255,0.52);
