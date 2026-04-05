@@ -12895,6 +12895,13 @@ function _updBtn(email){
       orig.apply(this,arguments);
       if(pid==='calendar'){
         setTimeout(function(){
+          // If remote config already loaded (_cfg has heroImage or was set by _ldRemote),
+          // just re-apply it — do NOT overwrite with local storage.
+          if(_cfg){
+            cveApply(_cfg);
+            return;
+          }
+          // Fallback: no remote config loaded yet — read from localStorage/IDB
           var saved=_ld();
           if(saved){
             _cfg=_mg(CVE_DEF,saved);
