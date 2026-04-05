@@ -12294,6 +12294,46 @@ function _idbLoadHero(cb){
   });
 }
 
+// ── Supabase remote storage (shared across all browsers) ─────
+var CVE_REMOTE_CFG_KEY='cve_config';
+var CVE_REMOTE_IMG_KEY='cve_hero_image';
+
+function _svRemote(cfg){
+  var sb=window._supabase;if(!sb)return;
+  try{
+    var clone=JSON.parse(JSON.stringify(cfg));
+    var heroImage=clone.heroImage||'';
+    clone.heroImage=heroImage?'__REMOTE__':'';
+    sb.from('app_settings').upsert({key:CVE_REMOTE_CFG_KEY,value_json:clone},{onConflict:'key'}).then(function(r){
+      if(r&&r.error)console.warn('[CVE] remote config save:',r.error.message);
+    });
+    sb.from('app_settings').upsert({key:CVE_REMOTE_IMG_KEY,value_json:{dataUrl:heroImage}},{onConflict:'key'}).then(function(r){
+      if(r&&r.error)console.warn('[CVE] remote hero save:',r.error.message);
+    });
+  }catch(e){}
+}
+
+function _ldRemote(cb){
+  var sb=window._supabase;if(!sb){cb(null);return;}
+  try{
+    Promise.all([
+      sb.from('app_settings').select('value_json').eq('key',CVE_REMOTE_CFG_KEY).maybeSingle(),
+      sb.from('app_settings').select('value_json').eq('key',CVE_REMOTE_IMG_KEY).maybeSingle()
+    ]).then(function(results){
+      var cfgR=results[0],imgR=results[1];
+      if(cfgR.error||!cfgR.data||!cfgR.data.value_json){cb(null);return;}
+      var cfg=JSON.parse(JSON.stringify(cfgR.data.value_json));
+      var heroImage=(imgR.data&&imgR.data.value_json&&imgR.data.value_json.dataUrl)||'';
+      cfg.heroImage=heroImage;
+      cb(cfg);
+    }).catch(function(){cb(null);});
+  }catch(e){cb(null);}
+}
+
+function _migrateToRemoteIfNeeded(cfg){
+  _ldRemote(function(remoteCfg){if(!remoteCfg)_svRemote(cfg);});
+}
+
 // ── localStorage for small config (WITHOUT heroImage) ────────
 function _ld(){try{var r=localStorage.getItem(CVE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
 function _sv(c){
@@ -12304,8 +12344,10 @@ function _sv(c){
     clone.heroImage=hasHero?'__IDB__':'';
     localStorage.setItem(CVE_KEY,JSON.stringify(clone));
   }catch(e){}
-  // Save heroImage to IndexedDB
+  // Save heroImage to IndexedDB (local cache)
   _idbSaveHero(c.heroImage||'');
+  // Save to Supabase — shared source of truth for all browsers
+  _svRemote(c);
 }
 function _cp(o){return JSON.parse(JSON.stringify(o));}
 function _mg(a,b){var r=_cp(a);if(b){Object.keys(b).forEach(function(k){if(typeof b[k]==='object'&&b[k]!==null&&!Array.isArray(b[k])&&typeof r[k]==='object'){r[k]=_mg(r[k],b[k]);}else{r[k]=b[k];}});}return r;}
@@ -12765,9 +12807,11 @@ window.cveOpen=function(){
   if(_cfg.heroImage==='__IDB__'){
     _idbLoadHero(function(data){
       _cfg.heroImage=data||'';
+      _migrateToRemoteIfNeeded(_cfg);
       cveApply(_cfg);_enable();
     });
   } else {
+    _migrateToRemoteIfNeeded(_cfg);
     cveApply(_cfg);_enable();
   }
 };
@@ -12804,22 +12848,38 @@ function _updBtn(email){
 
 // ── Auto-apply on load ────────────────────────────────────────
 (function(){
-  var saved=_ld();if(!saved)return;
-  _cfg=_mg(CVE_DEF,saved);
   function _tryApply(n){
     if(_g('page-calendar')){cveApply(_cfg);}
     else if(n>0){setTimeout(function(){_tryApply(n-1);},400);}
   }
-  function _boot(){
-    // If heroImage marker present, load real data from IndexedDB first
+  function _bootFromLocal(){
+    var saved=_ld();if(!saved)return;
+    _cfg=_mg(CVE_DEF,saved);
     if(_cfg.heroImage==='__IDB__'){
-      _idbLoadHero(function(data){
-        _cfg.heroImage=data||'';
-        _tryApply(20);
-      });
+      _idbLoadHero(function(data){_cfg.heroImage=data||'';_tryApply(20);});
     } else {
       _tryApply(20);
     }
+  }
+  function _boot(){
+    // Try Supabase first — shared source of truth for all browsers
+    _ldRemote(function(remoteCfg){
+      if(remoteCfg){
+        _cfg=_mg(CVE_DEF,remoteCfg);
+        // Cache locally so fallback and synchronous _cveGetTexts work on next load
+        try{
+          var clone=JSON.parse(JSON.stringify(remoteCfg));
+          var hasHero=!!clone.heroImage;
+          clone.heroImage=hasHero?'__IDB__':'';
+          localStorage.setItem(CVE_KEY,JSON.stringify(clone));
+          if(hasHero)_idbSaveHero(remoteCfg.heroImage);
+        }catch(e){}
+        _tryApply(20);
+      } else {
+        // No remote config yet — fall back to localStorage / IndexedDB
+        _bootFromLocal();
+      }
+    });
   }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',function(){setTimeout(_boot,500);});
