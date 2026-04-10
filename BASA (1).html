@@ -12138,6 +12138,9 @@ function getClass2IconByClass3(c3) {
             var _sb = document.getElementById('shellToggleBtn');
             if (_sb) _sb.style.display = 'none';
             document.body.classList.remove('shell-off');
+            var _db = document.getElementById('dev-inspect-toggle');
+            if (_db) _db.style.display = 'none';
+            if (typeof window._devStop === 'function') window._devStop();
         };
 
         window.shellToggle = function() {
@@ -12168,6 +12171,9 @@ function getClass2IconByClass3(c3) {
             if (_ab) _ab.style.display = _isAdmin ? '' : 'none';
             var _sb = document.getElementById('shellToggleBtn');
             if (_sb) _sb.style.display = _isAdmin ? '' : 'none';
+            var _db = document.getElementById('dev-inspect-toggle');
+            if (_db) _db.style.display = _isAdmin ? '' : 'none';
+            if (!_isAdmin && typeof window._devStop === 'function') window._devStop();
         }
 
         function _showLoginScreen() {
@@ -13002,6 +13008,9 @@ function _updBtn(email){
   btn.style.display=(email||'').trim().toLowerCase()===CVE_EMAIL.toLowerCase()?'':'none';
   var stb=_g('shellToggleBtn');
   if(stb)stb.style.display=btn.style.display;
+  var db=_g('dev-inspect-toggle');
+  if(db)db.style.display=btn.style.display;
+  if(btn.style.display==='none'&&typeof window._devStop==='function')window._devStop();
 }
 
 // ── Auto-apply on load ────────────────────────────────────────
@@ -13361,11 +13370,12 @@ window._archRender = function() {
   ].join('');
   document.head.appendChild(styleEl);
 
-  // ── toggle-кнопка ──
+  // ── toggle-кнопка (hidden by default; shown only for admin via auth handlers) ──
   var toggleBtn = document.createElement('button');
   toggleBtn.id = 'dev-inspect-toggle';
   toggleBtn.textContent = '🔍 DEV';
   document.body.appendChild(toggleBtn);
+  toggleBtn.style.display = 'none';
 
   // ── панель ──
   var panel = document.createElement('div');
@@ -13482,16 +13492,23 @@ window._archRender = function() {
     else           { startInspect(); localStorage.setItem(STORAGE_KEY,'1'); }
   });
 
-  // ── Alt+Shift+I — клавиатурный ярлык ──
+  // ── Alt+Shift+I — клавиатурный ярлык (admin only) ──
   document.addEventListener('keydown', function(e){
     if (e.altKey && e.shiftKey && e.key === 'I'){
+      if (typeof _isAdm === 'function' && !_isAdm()) return;
       e.preventDefault();
       toggleBtn.click();
     }
   });
 
-  // ── авто-восстановление если был активен ──
-  if (isActive()) startInspect();
+  // ── глобальный хук для logout/non-admin: скрыть + остановить ──
+  window._devStop = function(){
+    stopInspect();
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  // ── авто-восстановление только для admin ──
+  if (isActive() && typeof _isAdm === 'function' && _isAdm()) startInspect();
 
 })();
 </script>
