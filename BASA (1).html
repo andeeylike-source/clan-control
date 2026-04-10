@@ -4100,16 +4100,11 @@
                     const grid = document.getElementById('calendarGrid');
                     const label = document.getElementById('calendarMonthLabel');
                     if (!grid || !label) return;
-                    grid.innerHTML = '';
 
                     const lang = localStorage.getItem('cc_lang') || 'ru';
                     const daysOfWeek = lang === 'en'
                         ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
                         : ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-
-                    daysOfWeek.forEach(day => {
-                        grid.innerHTML += `<div class="calendar-header-cell">${day}</div>`;
-                    });
 
                     const year = currentDate.getFullYear();
                     const month = currentDate.getMonth();
@@ -4119,6 +4114,9 @@
                     const firstDay = new Date(year, month, 1);
                     let startOffset = firstDay.getDay() - 1;
                     if (startOffset === -1) startOffset = 6;
+
+                    // Build all HTML in one pass, then set innerHTML once (avoids 49× serialize/parse cycles)
+                    const parts = daysOfWeek.map(day => `<div class="calendar-header-cell">${day}</div>`);
 
                     for (let i = 0; i < 42; i++) {
                         const dayNum = i - startOffset + 1;
@@ -4159,7 +4157,7 @@
                             }
                         }
 
-                        grid.innerHTML += `
+                        parts.push(`
                             <div class="${className}" onclick="${isCurrentMonth ? `openDayModal('${dateStr}')` : ''}">
                                 <div class="day-number">
                                     <span>${cellDate.getDate()}</span>
@@ -4168,8 +4166,9 @@
                                 <div class="flex flex-col gap-0.5">${eventsHtml}</div>
                                 ${kmBadge}
                             </div>
-                        `;
+                        `);
                     }
+                    grid.innerHTML = parts.join('');
                 }
 
         function changeMonth(delta) {
