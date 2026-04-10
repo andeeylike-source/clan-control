@@ -12220,6 +12220,15 @@ function getClass2IconByClass3(c3) {
 
         // Main auth entry point
         (async function() {
+            // Guard: Supabase SDK is loaded with `defer`, so window._supabase is created
+            // inside a DOMContentLoaded handler. If the async IIFE runs before that
+            // (during body parsing), wait for DOMContentLoaded before proceeding.
+            if (!window._supabase) {
+                await new Promise(function(resolve) {
+                    if (document.readyState !== 'loading') { resolve(); return; }
+                    document.addEventListener('DOMContentLoaded', resolve, { once: true });
+                });
+            }
             var url = new URL(window.location.href);
             var code = url.searchParams.get('code');
             var isRecovery = url.searchParams.get('type') === 'recovery' ||
