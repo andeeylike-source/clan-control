@@ -5,6 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google" content="notranslate">
     <title>Clan Control v12</title>
+    <!-- EARLY BG PRELOAD: suppress first-paint flash of stale CSS background.
+         Runs synchronously before any paint. Reads LS/IDB; if custom hero exists,
+         hides the hardcoded CSS background-image immediately, then applies the
+         cached IDB image as soon as the async IDB read completes. -->
+    <script>
+    (function(){
+      try{
+        var LS_KEY='clan_control_calendar_visual_editor_v1';
+        var IDB_NAME='cve_hero_store';
+        var IDB_STORE='images';
+        var IDB_KEY='heroImage';
+        var raw=localStorage.getItem(LS_KEY);
+        if(!raw)return; // no saved config → CSS default is fine
+        var cfg=JSON.parse(raw);
+        var hero=cfg&&cfg.heroImage;
+        if(!hero)return; // custom bg not set → CSS default is fine
+        // Custom background expected → suppress the hardcoded CSS bg immediately
+        // so first paint shows only the solid dark color (#0c0c10), not the old URL
+        var sup=document.createElement('style');
+        sup.id='cvePreloadBgSuppress';
+        sup.textContent='body,body:not(.light){background-image:none !important;}';
+        document.head.appendChild(sup);
+        function applyDataUrl(dataUrl){
+          if(!dataUrl)return;
+          var tag=document.getElementById('cveGlobalBgStyle');
+          if(!tag){tag=document.createElement('style');tag.id='cveGlobalBgStyle';document.head.appendChild(tag);}
+          tag.textContent='body{background-image:url("'+dataUrl+'") !important;background-size:cover !important;background-position:center center !important;background-attachment:fixed !important;}';
+          var s=document.getElementById('cvePreloadBgSuppress');if(s)s.remove();
+        }
+        if(hero==='__IDB__'){
+          // Load from local IndexedDB (fast, no network)
+          var req=indexedDB.open(IDB_NAME,1);
+          req.onsuccess=function(e){
+            try{
+              var db=e.target.result;
+              var tx=db.transaction(IDB_STORE,'readonly');
+              var gr=tx.objectStore(IDB_STORE).get(IDB_KEY);
+              gr.onsuccess=function(){applyDataUrl(gr.result);};
+            }catch(ex){}
+          };
+        }else if(hero.length>10){
+          // Direct data URL stored in LS (unlikely but safe to handle)
+          applyDataUrl(hero);
+        }
+      }catch(e){}
+    })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
