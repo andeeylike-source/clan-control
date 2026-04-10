@@ -13236,5 +13236,206 @@ window._archRender = function() {
 
 })();
 </script>
+
+<!-- =============================================
+     DEV-ONLY: IN-PAGE INSPECT OVERLAY
+     Активируется только когда localStorage.__devInspect === '1'
+     или при нажатии Ctrl+Shift+D.
+     Не влияет на prod-пользователей.
+============================================= -->
+<script>
+(function(){
+  'use strict';
+
+  // ── guard: не запускаем в prod если не активирован ──
+  var STORAGE_KEY = '__devInspect';
+  function isActive(){ return localStorage.getItem(STORAGE_KEY) === '1'; }
+
+  // ── состояние ──
+  var inspectOn = false;
+  var hoverEl   = null;
+  var pinnedEl  = null;
+
+  // ── стили для highlight / panel ──
+  var styleEl = document.createElement('style');
+  styleEl.id  = 'dev-inspect-styles';
+  styleEl.textContent = [
+    '#dev-inspect-toggle{',
+      'position:fixed;bottom:18px;right:18px;z-index:2147483646;',
+      'background:#1e2d3d;color:#7dd3fc;border:1.5px solid #38bdf8;',
+      'border-radius:8px;padding:5px 11px;font:700 11px/1.4 monospace;',
+      'cursor:pointer;opacity:.85;transition:opacity .15s,background .15s;',
+      'user-select:none;',
+    '}',
+    '#dev-inspect-toggle:hover{opacity:1;background:#0c1a27}',
+    '#dev-inspect-toggle.on{background:#0369a1;color:#fff;border-color:#7dd3fc}',
+
+    '.dev-inspect-hover{',
+      'outline:2px dashed #f59e0b !important;',
+      'outline-offset:1px !important;',
+      'cursor:crosshair !important;',
+    '}',
+    '.dev-inspect-pinned{',
+      'outline:2px solid #38bdf8 !important;',
+      'outline-offset:1px !important;',
+    '}',
+
+    '#dev-inspect-panel{',
+      'position:fixed;bottom:56px;right:18px;z-index:2147483647;',
+      'background:#0f172a;color:#e2e8f0;border:1.5px solid #38bdf8;',
+      'border-radius:10px;padding:12px 14px;width:340px;max-width:90vw;',
+      'font:12px/1.5 monospace;box-shadow:0 4px 24px #000a;',
+      'display:none;',
+    '}',
+    '#dev-inspect-panel .dip-row{margin-bottom:6px}',
+    '#dev-inspect-panel .dip-label{font-size:9px;font-weight:700;text-transform:uppercase;',
+      'letter-spacing:.08em;color:#64748b;margin-bottom:1px}',
+    '#dev-inspect-panel .dip-val{',
+      'word-break:break-all;white-space:pre-wrap;color:#7dd3fc;',
+      'max-height:60px;overflow:auto;font-size:11px;',
+    '}',
+    '#dev-inspect-panel .dip-html{color:#86efac;font-size:10px;max-height:72px;overflow:auto}',
+    '#dev-inspect-panel .dip-copy{',
+      'margin-top:8px;background:#1e3a5f;color:#7dd3fc;border:1px solid #38bdf8;',
+      'border-radius:5px;padding:3px 10px;font:700 10px monospace;cursor:pointer;',
+    '}',
+    '#dev-inspect-panel .dip-copy:hover{background:#0369a1}'
+  ].join('');
+  document.head.appendChild(styleEl);
+
+  // ── toggle-кнопка ──
+  var toggleBtn = document.createElement('button');
+  toggleBtn.id = 'dev-inspect-toggle';
+  toggleBtn.textContent = '🔍 DEV';
+  document.body.appendChild(toggleBtn);
+
+  // ── панель ──
+  var panel = document.createElement('div');
+  panel.id  = 'dev-inspect-panel';
+  panel.innerHTML = [
+    '<div class="dip-row"><div class="dip-label">Selector</div><div class="dip-val" id="dip-selector">—</div></div>',
+    '<div class="dip-row"><div class="dip-label">Tag / id / class</div><div class="dip-val" id="dip-meta">—</div></div>',
+    '<div class="dip-row"><div class="dip-label">outerHTML (фрагмент)</div><div class="dip-html" id="dip-html">—</div></div>',
+    '<button class="dip-copy" id="dip-copy-btn">Copy</button>'
+  ].join('');
+  document.body.appendChild(panel);
+
+  // ── helpers ──
+  function getCssSelector(el){
+    if (!el || el === document.body) return 'body';
+    var parts = [];
+    var cur = el;
+    while (cur && cur !== document.body && cur.nodeType === 1){
+      var seg = cur.tagName.toLowerCase();
+      if (cur.id){ seg += '#' + CSS.escape(cur.id); parts.unshift(seg); break; }
+      if (cur.parentElement){
+        var siblings = Array.prototype.filter.call(cur.parentElement.children, function(c){ return c.tagName === cur.tagName; });
+        if (siblings.length > 1) seg += ':nth-of-type(' + (siblings.indexOf(cur)+1) + ')';
+      }
+      parts.unshift(seg);
+      cur = cur.parentElement;
+    }
+    return parts.join(' > ');
+  }
+
+  function getMeta(el){
+    var tag = el.tagName.toLowerCase();
+    var id  = el.id ? '#'+el.id : '';
+    var cls = el.className && typeof el.className === 'string'
+              ? '.'+el.className.trim().replace(/\s+/g,'.')
+              : '';
+    return tag + id + cls;
+  }
+
+  function getHtmlSnippet(el){
+    var raw = el.outerHTML || '';
+    return raw.length > 300 ? raw.slice(0,300)+'…' : raw;
+  }
+
+  function populatePanel(el){
+    document.getElementById('dip-selector').textContent = getCssSelector(el);
+    document.getElementById('dip-meta').textContent     = getMeta(el);
+    document.getElementById('dip-html').textContent     = getHtmlSnippet(el);
+    panel.style.display = 'block';
+  }
+
+  function clearHover(){
+    if (hoverEl){ hoverEl.classList.remove('dev-inspect-hover'); hoverEl = null; }
+  }
+  function clearPinned(){
+    if (pinnedEl){ pinnedEl.classList.remove('dev-inspect-pinned'); pinnedEl = null; }
+  }
+
+  function startInspect(){
+    inspectOn = true;
+    toggleBtn.classList.add('on');
+    toggleBtn.textContent = '✕ DEV';
+    document.addEventListener('mouseover', onHover, true);
+    document.addEventListener('click',     onClick,  true);
+  }
+
+  function stopInspect(){
+    inspectOn = false;
+    toggleBtn.classList.remove('on');
+    toggleBtn.textContent = '🔍 DEV';
+    document.removeEventListener('mouseover', onHover, true);
+    document.removeEventListener('click',     onClick,  true);
+    clearHover();
+    clearPinned();
+    panel.style.display = 'none';
+  }
+
+  function onHover(e){
+    var t = e.target;
+    if (t === toggleBtn || panel.contains(t)) return;
+    clearHover();
+    t.classList.add('dev-inspect-hover');
+    hoverEl = t;
+  }
+
+  function onClick(e){
+    var t = e.target;
+    if (t === toggleBtn || panel.contains(t)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    clearPinned();
+    t.classList.add('dev-inspect-pinned');
+    pinnedEl = t;
+    populatePanel(t);
+  }
+
+  // ── copy ──
+  document.getElementById('dip-copy-btn').addEventListener('click', function(){
+    var sel  = document.getElementById('dip-selector').textContent;
+    var meta = document.getElementById('dip-meta').textContent;
+    var html = document.getElementById('dip-html').textContent;
+    var txt  = 'selector: '+sel+'\nmeta: '+meta+'\nhtml: '+html;
+    navigator.clipboard.writeText(txt).then(function(){
+      var btn = document.getElementById('dip-copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function(){ btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  // ── toggle-кнопка ──
+  toggleBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (inspectOn){ stopInspect(); localStorage.setItem(STORAGE_KEY,'0'); }
+    else           { startInspect(); localStorage.setItem(STORAGE_KEY,'1'); }
+  });
+
+  // ── Ctrl+Shift+D — клавиатурный ярлык ──
+  document.addEventListener('keydown', function(e){
+    if (e.ctrlKey && e.shiftKey && e.key === 'D'){
+      e.preventDefault();
+      toggleBtn.click();
+    }
+  });
+
+  // ── авто-восстановление если был активен ──
+  if (isActive()) startInspect();
+
+})();
+</script>
 </body>
 </html>
