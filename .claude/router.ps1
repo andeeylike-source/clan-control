@@ -1,7 +1,8 @@
-# Claude Code local model router (PowerShell) — batch/headless only.
-# Interactive sessions always run Sonnet (model cannot be changed mid-session).
+# Claude Code model router (PowerShell) — batch/headless only (-p flag).
+# For starting a NEW interactive session with auto-routing use cc.cmd / .claude/cc.ps1.
+# A running session cannot switch models mid-session — selection must happen before start.
 #
-# Usage:
+# Usage (batch/headless):
 #   .claude/router.ps1 "fix typo in button"            # auto-route by keyword
 #   .claude/router.ps1 --cheap  "rename variable"      # force Haiku
 #   .claude/router.ps1 --normal "debug login flow"     # force Sonnet
