@@ -1,23 +1,32 @@
 #!/usr/bin/env bash
-# Claude Code local model router
-# Usage:
-#   .claude/router.sh "fix typo in button"
-#   echo "redesign auth schema" | .claude/router.sh
+# Claude Code local model router — batch/headless only.
+# Interactive sessions always run Sonnet (model cannot be changed mid-session).
 #
-# Routing: heavy > normal > cheap, default = sonnet
-# No swarm, no memory, no external deps.
+# Usage:
+#   bash .claude/router.sh "fix typo in button"         # auto-route by keyword
+#   bash .claude/router.sh --cheap  "rename variable"   # force Haiku
+#   bash .claude/router.sh --normal "debug login flow"  # force Sonnet
+#   bash .claude/router.sh --heavy  "redesign auth schema" # force Opus
+
+FORCE_MODEL=""
+if [[ "$1" == "--cheap" ]];  then FORCE_MODEL="claude-haiku-4-5-20251001"; shift; fi
+if [[ "$1" == "--normal" ]]; then FORCE_MODEL="claude-sonnet-4-6";          shift; fi
+if [[ "$1" == "--heavy" ]];  then FORCE_MODEL="claude-opus-4-6";            shift; fi
 
 TASK="${*:-$(cat)}"
 
-HEAVY='architect|system design|schema|security audit|full refactor|overhaul|migrate|audit|design decision|rewrite|restructure|redesign'
-CHEAP='typo|rename|update text|update label|color|padding|margin|quick fix|simple|one.?line|css variable|spelling|wording'
-
-if echo "$TASK" | grep -qiE "$HEAVY"; then
-  MODEL="claude-opus-4-6"
-elif echo "$TASK" | grep -qiE "$CHEAP"; then
-  MODEL="claude-haiku-4-5-20251001"
+if [[ -n "$FORCE_MODEL" ]]; then
+  MODEL="$FORCE_MODEL"
 else
-  MODEL="claude-sonnet-4-6"
+  HEAVY='architect|system design|schema|security audit|full refactor|overhaul|migrate|audit|design decision|rewrite|restructure|redesign'
+  CHEAP='typo|rename|update text|update label|color|padding|margin|quick fix|simple|one.?line|css variable|spelling|wording'
+  if echo "$TASK" | grep -qiE "$HEAVY"; then
+    MODEL="claude-opus-4-6"
+  elif echo "$TASK" | grep -qiE "$CHEAP"; then
+    MODEL="claude-haiku-4-5-20251001"
+  else
+    MODEL="claude-sonnet-4-6"
+  fi
 fi
 
 echo "→ routing to: $MODEL" >&2
