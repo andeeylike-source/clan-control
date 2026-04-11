@@ -13096,23 +13096,21 @@ function _updBtn(){
     }
   }
   function _boot(){
-    // Try Supabase first — shared source of truth for all browsers
+    // Apply local cache immediately — no network wait, instant hero display
+    _bootFromLocal();
+    // Fetch from Supabase in background; update IDB cache and re-apply when ready
     _ldRemote(function(remoteCfg){
-      if(remoteCfg){
-        _cfg=_mg(CVE_DEF,remoteCfg);
-        // Cache locally so fallback and synchronous _cveGetTexts work on next load
-        try{
-          var clone=JSON.parse(JSON.stringify(remoteCfg));
-          var hasHero=!!clone.heroImage;
-          clone.heroImage=hasHero?'__IDB__':'';
-          localStorage.setItem(CVE_KEY,JSON.stringify(clone));
-          if(hasHero)_idbSaveHero(remoteCfg.heroImage);
-        }catch(e){}
-        _tryApply(20);
-      } else {
-        // No remote config yet — fall back to localStorage / IndexedDB
-        _bootFromLocal();
-      }
+      if(!remoteCfg)return; // local already applied above
+      _cfg=_mg(CVE_DEF,remoteCfg);
+      // Cache locally so fallback and synchronous _cveGetTexts work on next load
+      try{
+        var clone=JSON.parse(JSON.stringify(remoteCfg));
+        var hasHero=!!clone.heroImage;
+        clone.heroImage=hasHero?'__IDB__':'';
+        localStorage.setItem(CVE_KEY,JSON.stringify(clone));
+        if(hasHero)_idbSaveHero(remoteCfg.heroImage);
+      }catch(e){}
+      _tryApply(20);
     });
   }
   if(document.readyState==='loading'){
