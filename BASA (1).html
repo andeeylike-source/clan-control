@@ -4225,8 +4225,9 @@
             else subtitle = '🔵 Предстоящий день';
             document.getElementById('dayModalSubtitle').innerText = subtitle;
 
-            // Инициализируем превью скриншотов для этого дня
+            // Загружаем скриншоты из Supabase (если есть) и рендерим превью
             renderDayScreenshotPreviews(dateStr);
+            loadDayScreenshotsFromDB(dateStr).then(() => renderDayScreenshotPreviews(dateStr));
 
             // Копируем текущее состояние в pending-буферы для этого дня
             pendingStatuses = Object.assign({}, eventStatuses);
@@ -4400,6 +4401,7 @@
             eventOverrides = Object.assign({}, pendingOverrides);
             // 3. Удаляем скрины — при сохранении всегда очищаем
             if (activeDayDate && dayScreenshots[activeDayDate]) {
+                _clearDayScreenshotsFromStorage(activeDayDate);
                 delete dayScreenshots[activeDayDate];
                 renderDayScreenshotPreviews(activeDayDate);
             }
@@ -7631,9 +7633,58 @@ function getClass2IconByClass3(c3) {
             }).join('');
         }
 
-        // ===== СКРИНШОТЫ В МОДАЛКЕ ДНЯ =====
-        // dayScreenshots: { [dateStr]: [{id, dataUrl, name}] }
+        // ===== СКРИНШОТЫ В МОДАЛКЕ ДНЯ (Supabase Storage) =====
+        // dayScreenshots: { [dateStr]: [{id, dataUrl, name, dbId?, storagePath?}] }
+        // dataUrl — base64 (local upload) или signed URL (loaded from storage)
+        // dbId — uuid строки в km_screenshots (set after upload)
+        // storagePath — путь в bucket km-screenshots (set after upload)
         let dayScreenshots = {};
+        let _kmScreenshotsLoaded = {}; // { dateStr: true } — какие даты уже подгружены из БД
+
+        // Получить src для отображения (dataUrl или signedUrl)
+        function _shotSrc(s) { return s.dataUrl || s.signedUrl || ''; }
+
+        // Загрузить скриншоты из Supabase для даты (если ещё не загружены)
+        async function loadDayScreenshotsFromDB(dateStr) {
+            if (_kmScreenshotsLoaded[dateStr]) return;
+            if (!window._supabase || !window._currentUserId) return;
+            try {
+                const { data, error } = await window._supabase
+                    .from('km_screenshots')
+                    .select('id, storage_path, file_name')
+                    .eq('user_id', window._currentUserId)
+                    .eq('date_str', dateStr)
+                    .order('created_at', { ascending: true });
+                if (error) { console.warn('km_screenshots load error:', error); return; }
+                if (!data || data.length === 0) { _kmScreenshotsLoaded[dateStr] = true; return; }
+
+                // Получаем signed URLs пачкой (до 25)
+                const paths = data.map(r => r.storage_path);
+                const { data: urlData, error: urlErr } = await window._supabase.storage
+                    .from('km-screenshots')
+                    .createSignedUrls(paths, 3600); // 1 hour
+                if (urlErr) { console.warn('signed urls error:', urlErr); return; }
+
+                const urlMap = {};
+                (urlData || []).forEach(u => { if (u.signedUrl) urlMap[u.path] = u.signedUrl; });
+
+                if (!dayScreenshots[dateStr]) dayScreenshots[dateStr] = [];
+                // Не дублируем уже загруженные (по dbId)
+                const existingDbIds = new Set(dayScreenshots[dateStr].filter(s => s.dbId).map(s => s.dbId));
+                data.forEach(row => {
+                    if (existingDbIds.has(row.id)) return;
+                    dayScreenshots[dateStr].push({
+                        id: row.id,
+                        dbId: row.id,
+                        storagePath: row.storage_path,
+                        name: row.file_name,
+                        dataUrl: urlMap[row.storage_path] || '',
+                        signedUrl: urlMap[row.storage_path] || ''
+                    });
+                });
+                _kmScreenshotsLoaded[dateStr] = true;
+            } catch(e) { console.warn('loadDayScreenshotsFromDB error:', e); }
+        }
 
         function renderDayScreenshotPreviews(dateStr) {
             const container = document.getElementById('dayScreenshotPreviews');
@@ -7645,13 +7696,50 @@ function getClass2IconByClass3(c3) {
             }
             container.innerHTML = shots.map((s, i) => `
                 <div style="position:relative;display:inline-block">
-                    <img src="${s.dataUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #1e2530;cursor:pointer" onclick="viewDayShot('${dateStr}',${i})" title="${s.name}">
-                    <button onclick="removeDayShot('${dateStr}',${i})" style="position:absolute;top:-4px;right:-4px;background:#ef4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+                    <img src="${_shotSrc(s)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #1e2530;cursor:pointer" onclick="viewDayShot('${dateStr}',${i})" title="${s.name}">
+                    <button onclick="removeDayShot('${dateStr}',${i})" style="position:absolute;top:-4px;right:-4px;background:#ef4444;border:none;border-radius:50%;width:16px;height:16px;color:white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1"${s._uploading ? ' disabled' : ''}>✕</button>
                 </div>
             `).join('');
         }
 
-        function handleDayScreenshots(event) {
+        // Загрузить один файл в Supabase Storage + metadata в km_screenshots
+        async function _uploadScreenshotToStorage(file, dateStr, localEntry) {
+            if (!window._supabase || !window._currentUserId) return null;
+            const uid = window._currentUserId;
+            const ext = (file.name.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase();
+            const fileId = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+            const storagePath = `${uid}/${dateStr}/${fileId}.${ext}`;
+
+            // Upload file to storage
+            const { error: upErr } = await window._supabase.storage
+                .from('km-screenshots')
+                .upload(storagePath, file, { contentType: file.type || 'image/png', upsert: false });
+            if (upErr) throw new Error('Storage upload: ' + (upErr.message || upErr));
+
+            // Insert metadata row
+            const { data: row, error: dbErr } = await window._supabase
+                .from('km_screenshots')
+                .insert({
+                    user_id: uid,
+                    date_str: dateStr,
+                    file_name: file.name,
+                    storage_path: storagePath,
+                    file_size: file.size,
+                    mime_type: file.type || 'image/png',
+                    created_by: uid
+                })
+                .select('id')
+                .single();
+            if (dbErr) {
+                // Rollback: remove uploaded file
+                await window._supabase.storage.from('km-screenshots').remove([storagePath]);
+                throw new Error('DB insert: ' + (dbErr.message || dbErr));
+            }
+
+            return { dbId: row.id, storagePath };
+        }
+
+        async function handleDayScreenshots(event) {
             if (typeof window._cc === 'function' && !window._cc().canUploadScreens) {
                 if (event.target) event.target.value = '';
                 setDayStatus('error', '❌ Загрузка скриншотов доступна только на плане Pro.');
@@ -7669,30 +7757,79 @@ function getClass2IconByClass3(c3) {
             const toAdd = files.slice(0, canAdd);
 
             if (files.length > canAdd) {
-                setDayStatus(`warning`, `⚠️ Можно добавить ещё ${canAdd} шт. (лимит 25). Загружено первые ${canAdd}.`);
+                setDayStatus('warning', `⚠️ Можно добавить ещё ${canAdd} шт. (лимит 25). Загружено первые ${canAdd}.`);
             }
 
-            let loaded = 0;
-            toAdd.forEach(file => {
+            const useStorage = !!(window._supabase && window._currentUserId);
+
+            // Phase 1: read all files as dataUrl for immediate preview
+            const localEntries = [];
+            await Promise.all(toAdd.map((file, fi) => new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    dayScreenshots[dateStr].push({ id: Date.now() + Math.random(), dataUrl: e.target.result, name: file.name });
-                    loaded++;
-                    if (loaded === toAdd.length) {
-                        renderDayScreenshotPreviews(dateStr);
-                        setDayStatus('success', `✅ Добавлено ${toAdd.length} скриншотов (всего: ${dayScreenshots[dateStr].length})`);
-                        updateAnalyzeBlock(dateStr);
-                        renderCalendar();
-                        if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
-                    }
+                    const entry = { id: Date.now() + Math.random() + fi, dataUrl: e.target.result, name: file.name, _file: file, _uploading: useStorage };
+                    localEntries[fi] = entry;
+                    resolve();
                 };
                 reader.readAsDataURL(file);
-            });
+            })));
+
+            // Add to memory immediately for preview
+            localEntries.forEach(entry => dayScreenshots[dateStr].push(entry));
+            renderDayScreenshotPreviews(dateStr);
+            updateAnalyzeBlock(dateStr);
+            renderCalendar();
+            if (document.getElementById('page-screenshots').classList.contains('active')) renderScreenshotArchive();
+
+            if (!useStorage) {
+                setDayStatus('success', `✅ Добавлено ${toAdd.length} скриншотов (всего: ${dayScreenshots[dateStr].length}) — локально`);
+                return;
+            }
+
+            // Phase 2: upload to Supabase Storage in background
+            setDayStatus('loading', `⏳ Загружаю ${toAdd.length} скриншотов в облако...`);
+            let uploaded = 0, failed = 0;
+            for (const entry of localEntries) {
+                try {
+                    const result = await _uploadScreenshotToStorage(entry._file, dateStr, entry);
+                    entry.dbId = result.dbId;
+                    entry.storagePath = result.storagePath;
+                    entry._uploading = false;
+                    delete entry._file;
+                    uploaded++;
+                } catch(e) {
+                    console.warn('Screenshot upload failed:', e);
+                    failed++;
+                    entry._uploading = false;
+                    entry._uploadError = true;
+                    delete entry._file;
+                }
+            }
+            renderDayScreenshotPreviews(dateStr);
+            if (failed > 0) {
+                setDayStatus('warning', `⚠️ Загружено ${uploaded}/${toAdd.length}. Ошибок: ${failed}`);
+            } else {
+                setDayStatus('success', `✅ Загружено ${uploaded} скриншотов в облако (всего: ${dayScreenshots[dateStr].length})`);
+            }
         }
 
-        function removeDayShot(dateStr, idx) {
-            dayScreenshots[dateStr].splice(idx, 1);
-            if (dayScreenshots[dateStr].length === 0) delete dayScreenshots[dateStr];
+        async function removeDayShot(dateStr, idx) {
+            const shots = dayScreenshots[dateStr];
+            if (!shots || !shots[idx]) return;
+            const shot = shots[idx];
+
+            // Delete from Supabase Storage + DB if uploaded
+            if (shot.dbId && shot.storagePath && window._supabase) {
+                try {
+                    // Delete DB row first (has FK, no orphan metadata)
+                    await window._supabase.from('km_screenshots').delete().eq('id', shot.dbId);
+                    // Delete file from storage
+                    await window._supabase.storage.from('km-screenshots').remove([shot.storagePath]);
+                } catch(e) { console.warn('Screenshot delete error:', e); }
+            }
+
+            shots.splice(idx, 1);
+            if (shots.length === 0) delete dayScreenshots[dateStr];
             renderDayScreenshotPreviews(dateStr);
             updateAnalyzeBlock(dateStr);
             renderCalendar();
@@ -7712,11 +7849,25 @@ function getClass2IconByClass3(c3) {
         // Просмотр скриншота в большом виде
         function viewDayShot(dateStr, idx) {
             const s = dayScreenshots[dateStr][idx];
+            if (!s) return;
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
             overlay.onclick = () => overlay.remove();
-            overlay.innerHTML = `<img src="${s.dataUrl}" style="max-width:90vw;max-height:90vh;border-radius:12px;border:1px solid #2d3748">`;
+            overlay.innerHTML = `<img src="${_shotSrc(s)}" style="max-width:90vw;max-height:90vh;border-radius:12px;border:1px solid #2d3748">`;
             document.body.appendChild(overlay);
+        }
+
+        // Bulk-delete all screenshots for a date from Storage + DB
+        async function _clearDayScreenshotsFromStorage(dateStr) {
+            const shots = dayScreenshots[dateStr] || [];
+            if (!window._supabase || shots.length === 0) return;
+            const dbIds = shots.filter(s => s.dbId).map(s => s.dbId);
+            const paths = shots.filter(s => s.storagePath).map(s => s.storagePath);
+            try {
+                if (dbIds.length) await window._supabase.from('km_screenshots').delete().in('id', dbIds);
+                if (paths.length) await window._supabase.storage.from('km-screenshots').remove(paths);
+            } catch(e) { console.warn('Bulk screenshot cleanup error:', e); }
+            _kmScreenshotsLoaded[dateStr] = false;
         }
 
 
@@ -8849,6 +9000,7 @@ function getClass2IconByClass3(c3) {
             // Если есть несостыковки — скрины остаются для повторного анализа
             // При нажатии "Сохранить" скрины удалятся в saveDayModal()
             if (activeDayDate && mismatches.length === 0) {
+                _clearDayScreenshotsFromStorage(activeDayDate);
                 delete dayScreenshots[activeDayDate];
                 renderDayScreenshotPreviews(activeDayDate);
             } else if (activeDayDate && mismatches.length > 0) {
@@ -10591,6 +10743,9 @@ function getClass2IconByClass3(c3) {
                 tank:   { presence: 30, deaths: 25, classRank: 25, kda: 20 }
             };
             window._appDataReady = false;
+            // Clear screenshot in-memory cache on logout
+            dayScreenshots = {};
+            _kmScreenshotsLoaded = {};
         }
 
         function exportData() {
