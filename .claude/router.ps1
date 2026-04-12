@@ -1,51 +1,41 @@
-# Claude Code model router (PowerShell) — batch/headless only (-p flag).
-# For starting a NEW interactive session with auto-routing use cc.cmd / .claude/cc.ps1.
-# A running session cannot switch models mid-session — selection must happen before start.
+# Claude Code model router (PowerShell)
+# Interactive: shows model-choice menu (Sonnet / Opus)
+# Batch/headless: defaults to Sonnet (no menu)
+# Explicit --model arg: passed through unchanged
 #
-# Usage (batch/headless):
-#   .claude/router.ps1 "fix typo in button"            # auto-route by keyword
-#   .claude/router.ps1 --cheap  "rename variable"      # force Haiku
-#   .claude/router.ps1 --normal "debug login flow"     # force Sonnet
-#   .claude/router.ps1 --heavy  "redesign auth schema" # force Opus
+# Usage:
+#   claude                         # interactive menu -> choose model
+#   claude --model claude-opus-4-6 # explicit model, no menu
+#   claude -p "fix typo"           # headless, defaults to Sonnet
 
-param([Parameter(ValueFromRemainingArguments=$true)] [string[]]$TaskArgs)
+param([Parameter(ValueFromRemainingArguments=$true)] [string[]]$PassArgs)
 
-$forceModel = ''
-if ($TaskArgs.Count -gt 0 -and $TaskArgs[0] -in '--cheap','--normal','--heavy') {
-    switch ($TaskArgs[0]) {
-        '--cheap'  { $forceModel = 'claude-haiku-4-5-20251001' }
-        '--normal' { $forceModel = 'claude-sonnet-4-6' }
-        '--heavy'  { $forceModel = 'claude-opus-4-6' }
-    }
-    $TaskArgs = $TaskArgs[1..($TaskArgs.Count-1)]
-}
-
-$task = if ($TaskArgs) { $TaskArgs -join ' ' } else { $input | Out-String }
-$task = $task.Trim()
-
-if ($forceModel) {
-    $model = $forceModel
-} else {
-    $heavy = 'architect|system design|schema|security audit|full refactor|overhaul|migrate|audit|design decision|rewrite|restructure|redesign'
-    $cheap = 'typo|rename|update text|update label|color|padding|margin|quick fix|simple|one.?line|css variable|spelling|wording'
-    if ($task -match $heavy) {
-        $model = 'claude-opus-4-6'
-    } elseif ($task -match $cheap) {
-        $model = 'claude-haiku-4-5-20251001'
-    } else {
-        $model = 'claude-sonnet-4-6'
-    }
-}
-
-Write-Host "-> routing to: $model" -ForegroundColor Cyan
-
-$claudeExe = (Get-Command claude -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+$claudeExe = (Get-Command claude -CommandType Application -ErrorAction SilentlyContinue |
+              Select-Object -First 1).Source
 if (-not $claudeExe) { Write-Error "claude not found in PATH"; exit 1 }
 
-if ([string]::IsNullOrWhiteSpace($task)) {
-    & $claudeExe --model $model
+# If --model already present — pass everything through unchanged
+if ($PassArgs -contains '--model') {
+    & $claudeExe @PassArgs
     exit $LASTEXITCODE
 }
 
-& $claudeExe --model $model -p $task
+# Detect non-interactive (piped input or -p flag)
+$isHeadless = [Console]::IsInputRedirected -or ($PassArgs -contains '-p')
+
+if ($isHeadless) {
+    $model = 'claude-sonnet-4-6'
+} else {
+    Write-Host ""
+    Write-Host "  Select model:" -ForegroundColor Cyan
+    Write-Host "  1) Sonnet 4.6"
+    Write-Host "  2) Opus 4.6"
+    Write-Host ""
+    $choice = Read-Host "  Enter 1 or 2 [default: 1]"
+    $model = if ($choice -eq '2') { 'claude-opus-4-6' } else { 'claude-sonnet-4-6' }
+    Write-Host "  -> $model" -ForegroundColor Cyan
+    Write-Host ""
+}
+
+& $claudeExe --model $model @PassArgs
 exit $LASTEXITCODE
