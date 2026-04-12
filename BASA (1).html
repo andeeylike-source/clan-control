@@ -3489,6 +3489,7 @@
                             onfocus="this.style.borderColor='#6366f1'"
                             onblur="this.style.borderColor='#1e2530'">
                     </div>
+                    <button onclick="openManualKmEditor(null)" style="background:#14532d;color:#4ade80;border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-weight:700" title="Создать КМ вручную — для Free и Pro">✍️ + Создать КМ</button>
                     <button onclick="debugSnapshotData()" style="background:#1e2530;border:1px solid #2d3748;color:#f59e0b;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer" title="Диагностика">🔍 Диагностика</button>
                 </div>
             </div>
@@ -9687,7 +9688,10 @@ function getClass2IconByClass3(c3) {
                                 <span style="font-size:13px;font-weight:700;color:#22c55e">🐉 ${totalPve.toLocaleString()}</span>
                             </div>` : ''}
                         </div>
-                        <button onclick="openCalendarDay('${dateStr}')" title="Открыть день в календаре — загрузить скриншоты или переанализировать" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Загрузить скриншоты</button>
+                        ${dayData && dayData._manual
+                            ? `<button onclick="openManualKmEditor('${dateStr}')" title="Редактировать ручную запись КМ" style="background:none;border:1px solid rgba(34,197,94,0.35);color:#4ade80;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#22c55e';this.style.color='#86efac'" onmouseout="this.style.borderColor='rgba(34,197,94,0.35)';this.style.color='#4ade80'">✏️ Редактировать</button>`
+                            : `<button onclick="openCalendarDay('${dateStr}')" title="Открыть день в календаре — загрузить скриншоты или переанализировать" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Загрузить скриншоты</button>`
+                        }
                     </div>
                     ${hasCommandChannel ? `
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -9722,9 +9726,264 @@ function getClass2IconByClass3(c3) {
             }).filter(Boolean).join('') || `<div class="card text-center py-16 text-slate-600">
                     <div class="text-4xl mb-4">📭</div>
                     <p class="text-lg font-medium">История пуста</p>
-                    <p class="text-sm mt-2">Отмечай события в Календаре КМ — они появятся здесь</p>
+                    <p class="text-sm mt-2">Отмечай события в Календаре КМ или создай КМ вручную</p>
+                    <button onclick="openManualKmEditor(null)" style="margin-top:16px;background:#14532d;color:#4ade80;border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer">✍️ Создать КМ вручную</button>
                 </div>`;
         }
+
+        // ===== MANUAL KM EDITOR =====
+        (function() {
+            var _st = null; // editor state
+
+            function _esc(s) {
+                if (s == null) return '';
+                return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+
+            window.openManualKmEditor = function(dateStr) {
+                var existing = dateStr ? appliedStatsByDate[dateStr] : null;
+                var today = new Date().toISOString().slice(0,10);
+                var parties = [];
+
+                if (existing && existing.screenPlayersMap && Object.keys(existing.screenPlayersMap).length > 0) {
+                    parties = Object.entries(existing.screenPlayersMap).map(function(e) {
+                        return {
+                            name: e[0],
+                            leader: (existing.packLeaders && existing.packLeaders[e[0]]) ? existing.packLeaders[e[0]] : (e[1].length > 0 ? e[1][0].name : ''),
+                            players: e[1].map(function(p) { return { name: p.name||'', kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 }; })
+                        };
+                    });
+                } else if (existing && existing.players && existing.players.length > 0) {
+                    parties = [{ name: 'Пати 1', leader: existing._leader||'', players: existing.players.map(function(p) { return { name: p.name||'', kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 }; }) }];
+                } else {
+                    parties = [{ name: 'Пати 1', leader: '', players: [] }];
+                }
+
+                _st = {
+                    origDate: dateStr || null,
+                    date: dateStr || today,
+                    type: (existing && existing._eventType) ? existing._eventType : 'КМ',
+                    leader: (existing && existing._leader) ? existing._leader : '',
+                    parties: parties,
+                    ptyIdx: 0
+                };
+
+                var el = document.getElementById('mkeOverlay');
+                if (el) el.remove();
+                var ov = document.createElement('div');
+                ov.id = 'mkeOverlay';
+                ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9990;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto';
+                document.body.appendChild(ov);
+                ov.addEventListener('click', function(e) { if (e.target === ov) _mkeClose(); });
+                _mkeRender();
+            };
+
+            window._mkeClose = function() {
+                var el = document.getElementById('mkeOverlay');
+                if (el) el.remove();
+                _st = null;
+            };
+
+            window._mkeRender = function() {
+                if (!_st) return;
+                var ov = document.getElementById('mkeOverlay');
+                if (!ov) return;
+                var s = _st;
+                var pty = s.parties[s.ptyIdx];
+
+                var totalPlayers = s.parties.reduce(function(acc, p) { return acc + p.players.length; }, 0);
+
+                var tabsHtml = s.parties.map(function(p, i) {
+                    var active = i === s.ptyIdx;
+                    var del = s.parties.length > 1
+                        ? '<span onclick="event.stopPropagation();_mkeDelParty(' + i + ')" style="color:#ef4444;margin-left:5px;font-size:10px;opacity:.7;cursor:pointer" title="Удалить">✕</span>'
+                        : '';
+                    return '<button onclick="_mkePtyIdx(' + i + ')" style="padding:5px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' +
+                        (active ? '#6366f1;background:#1e1b4b;color:#a5b4fc' : '#2d3748;background:#1e2530;color:#64748b') + '">' + _esc(p.name) + del + '</button>';
+                }).join('');
+
+                var rowsHtml = pty.players.length === 0
+                    ? '<tr><td colspan="7" style="padding:14px;text-align:center;color:#475569;font-size:12px;font-style:italic">— нет игроков, нажми «+ Игрок»</td></tr>'
+                    : pty.players.map(function(p, i) {
+                        var isLdr = pty.leader !== '' && pty.leader === p.name;
+                        return '<tr>' +
+                            '<td style="padding:3px 5px"><input oninput="_mkeUpd(' + i + ',\'name\',this.value)" value="' + _esc(p.name) + '" placeholder="Ник" style="width:120px;background:#0b0e14;border:1px solid #2d3748;border-radius:5px;padding:4px 7px;color:#e2e8f0;font-size:12px;outline:none"></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><input type="number" oninput="_mkeUpd(' + i + ',\'kills\',+this.value||0)" value="' + (p.kills||0) + '" min="0" style="width:56px;background:#0b0e14;border:1px solid #2d3748;border-radius:5px;padding:4px 5px;color:#f59e0b;font-size:12px;text-align:center;outline:none"></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><input type="number" oninput="_mkeUpd(' + i + ',\'deaths\',+this.value||0)" value="' + (p.deaths||0) + '" min="0" style="width:56px;background:#0b0e14;border:1px solid #2d3748;border-radius:5px;padding:4px 5px;color:#ef4444;font-size:12px;text-align:center;outline:none"></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><input type="number" oninput="_mkeUpd(' + i + ',\'pvp_dmg\',+this.value||0)" value="' + (p.pvp_dmg||0) + '" min="0" style="width:72px;background:#0b0e14;border:1px solid #2d3748;border-radius:5px;padding:4px 5px;color:#818cf8;font-size:12px;text-align:center;outline:none"></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><input type="number" oninput="_mkeUpd(' + i + ',\'pve_dmg\',+this.value||0)" value="' + (p.pve_dmg||0) + '" min="0" style="width:72px;background:#0b0e14;border:1px solid #2d3748;border-radius:5px;padding:4px 5px;color:#22c55e;font-size:12px;text-align:center;outline:none"></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><button onclick="_mkeLdr(' + i + ')" title="Лидер пати" style="background:' + (isLdr ? '#f59e0b;color:#000' : '#1e2530;color:#64748b') + ';border:none;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:700">' + (isLdr ? '★' : '☆') + '</button></td>' +
+                            '<td style="padding:3px 5px;text-align:center"><button onclick="_mkeDelRow(' + i + ')" style="background:none;border:none;color:#475569;cursor:pointer;font-size:13px;padding:0 4px" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'#475569\'">✕</button></td>' +
+                        '</tr>';
+                    }).join('');
+
+                ov.innerHTML = '<div style="background:#0f1319;border:1px solid #2d3748;border-radius:14px;width:100%;max-width:800px;overflow:hidden;margin:auto">' +
+                    '<div style="padding:18px 22px;border-bottom:1px solid #1e2530;display:flex;justify-content:space-between;align-items:center">' +
+                        '<div style="font-size:15px;font-weight:800;color:#e2e8f0">✍️ ' + (s.origDate ? 'Редактировать КМ' : 'Создать КМ вручную') + '</div>' +
+                        '<button onclick="_mkeClose()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px">✕</button>' +
+                    '</div>' +
+                    '<div style="padding:14px 22px;border-bottom:1px solid #1e2530;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">' +
+                        '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:5px">Дата</div>' +
+                            '<input type="date" id="mkeDate" value="' + _esc(s.date) + '" style="background:#12171f;border:1px solid #2d3748;border-radius:7px;padding:7px 10px;color:#e2e8f0;font-size:13px;outline:none"></div>' +
+                        '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:5px">Тип события</div>' +
+                            '<input type="text" id="mkeType" value="' + _esc(s.type) + '" placeholder="КМ" style="width:110px;background:#12171f;border:1px solid #2d3748;border-radius:7px;padding:7px 10px;color:#e2e8f0;font-size:13px;outline:none"></div>' +
+                        '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:5px">Лидер / Глава</div>' +
+                            '<input type="text" id="mkeLeader" value="' + _esc(s.leader) + '" placeholder="Ник лидера" style="width:140px;background:#12171f;border:1px solid #2d3748;border-radius:7px;padding:7px 10px;color:#e2e8f0;font-size:13px;outline:none"></div>' +
+                        '<div style="margin-left:auto;text-align:right">' +
+                            '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4px">Итого</div>' +
+                            '<div style="font-size:13px;color:#94a3b8">👥 ' + totalPlayers + ' · ' + s.parties.length + ' пати</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="padding:10px 22px;border-bottom:1px solid #1e2530;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+                        '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569;margin-right:2px">Пати:</span>' +
+                        tabsHtml +
+                        '<button onclick="_mkeAddParty()" style="padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px dashed #2d3748;background:none;color:#64748b" onmouseover="this.style.color=\'#a5b4fc\';this.style.borderColor=\'#6366f1\'" onmouseout="this.style.color=\'#64748b\';this.style.borderColor=\'#2d3748\'">+ Пати</button>' +
+                    '</div>' +
+                    '<div style="padding:8px 22px 0;display:flex;align-items:center;gap:10px">' +
+                        '<span style="font-size:10px;font-weight:700;text-transform:uppercase;color:#475569">Название:</span>' +
+                        '<input type="text" id="mkePtyName" value="' + _esc(pty.name) + '" style="width:150px;background:#12171f;border:1px solid #2d3748;border-radius:6px;padding:5px 9px;color:#e2e8f0;font-size:12px;outline:none">' +
+                    '</div>' +
+                    '<div style="padding:12px 22px">' +
+                        '<table style="width:100%;border-collapse:collapse">' +
+                        '<thead><tr>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#475569;text-align:left;border-bottom:1px solid #1e2530">Ник</th>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#f59e0b;text-align:center;border-bottom:1px solid #1e2530">⚔️ Kills</th>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#ef4444;text-align:center;border-bottom:1px solid #1e2530">💀 Deaths</th>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#818cf8;text-align:center;border-bottom:1px solid #1e2530">🗡️ PvP урон</th>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#22c55e;text-align:center;border-bottom:1px solid #1e2530">🐉 PvE урон</th>' +
+                        '<th style="padding:5px 5px 8px;font-size:9px;text-align:center;border-bottom:1px solid #1e2530;color:#475569">Лидер</th>' +
+                        '<th style="border-bottom:1px solid #1e2530"></th>' +
+                        '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+                        '<button onclick="_mkeAddRow()" style="margin-top:8px;width:100%;background:none;border:1px dashed #2d3748;color:#64748b;border-radius:7px;padding:7px;cursor:pointer;font-size:12px;font-weight:600" onmouseover="this.style.color=\'#a5b4fc\';this.style.borderColor=\'#6366f1\'" onmouseout="this.style.color=\'#64748b\';this.style.borderColor=\'#2d3748\'">+ Игрок</button>' +
+                    '</div>' +
+                    '<div style="padding:14px 22px;border-top:1px solid #1e2530;display:flex;justify-content:flex-end;gap:12px">' +
+                        '<button onclick="_mkeClose()" style="background:#1e2530;border:none;color:#64748b;border-radius:9px;padding:9px 20px;cursor:pointer;font-weight:600;font-size:13px">Отмена</button>' +
+                        '<button onclick="_mkeSave()" style="background:#6366f1;border:none;color:#fff;border-radius:9px;padding:9px 22px;cursor:pointer;font-weight:700;font-size:13px">💾 Сохранить</button>' +
+                    '</div>' +
+                '</div>';
+            };
+
+            function _mkeRead() {
+                if (!_st) return;
+                var dateEl = document.getElementById('mkeDate');
+                var typeEl = document.getElementById('mkeType');
+                var ldrEl  = document.getElementById('mkeLeader');
+                var ptnEl  = document.getElementById('mkePtyName');
+                if (dateEl) _st.date   = dateEl.value;
+                if (typeEl) _st.type   = typeEl.value;
+                if (ldrEl)  _st.leader = ldrEl.value;
+                if (ptnEl)  _st.parties[_st.ptyIdx].name = ptnEl.value || ('Пати ' + (_st.ptyIdx + 1));
+                // Read table rows
+                var pty = _st.parties[_st.ptyIdx];
+                var rows = document.querySelectorAll('#mkeOverlay tbody tr');
+                rows.forEach(function(row, i) {
+                    if (!pty.players[i]) return;
+                    var ins = row.querySelectorAll('input');
+                    if (ins[0]) pty.players[i].name    = ins[0].value;
+                    if (ins[1]) pty.players[i].kills   = +ins[1].value || 0;
+                    if (ins[2]) pty.players[i].deaths  = +ins[2].value || 0;
+                    if (ins[3]) pty.players[i].pvp_dmg = +ins[3].value || 0;
+                    if (ins[4]) pty.players[i].pve_dmg = +ins[4].value || 0;
+                });
+            }
+
+            window._mkePtyIdx = function(idx) {
+                _mkeRead();
+                _st.ptyIdx = idx;
+                _mkeRender();
+            };
+
+            window._mkeAddParty = function() {
+                _mkeRead();
+                var n = _st.parties.length + 1;
+                _st.parties.push({ name: 'Пати ' + n, leader: '', players: [] });
+                _st.ptyIdx = _st.parties.length - 1;
+                _mkeRender();
+            };
+
+            window._mkeDelParty = function(idx) {
+                if (!_st || _st.parties.length <= 1) return;
+                _st.parties.splice(idx, 1);
+                if (_st.ptyIdx >= _st.parties.length) _st.ptyIdx = _st.parties.length - 1;
+                _mkeRender();
+            };
+
+            window._mkeAddRow = function() {
+                _mkeRead();
+                _st.parties[_st.ptyIdx].players.push({ name: '', kills: 0, deaths: 0, pvp_dmg: 0, pve_dmg: 0 });
+                _mkeRender();
+                setTimeout(function() {
+                    var rows = document.querySelectorAll('#mkeOverlay tbody tr');
+                    if (rows.length) { var inp = rows[rows.length-1].querySelector('input'); if (inp) inp.focus(); }
+                }, 40);
+            };
+
+            window._mkeDelRow = function(idx) {
+                _mkeRead();
+                var pty = _st.parties[_st.ptyIdx];
+                var delName = pty.players[idx] ? pty.players[idx].name : '';
+                pty.players.splice(idx, 1);
+                if (pty.leader === delName) pty.leader = pty.players.length > 0 ? pty.players[0].name : '';
+                _mkeRender();
+            };
+
+            window._mkeLdr = function(idx) {
+                _mkeRead();
+                var pty = _st.parties[_st.ptyIdx];
+                pty.leader = pty.players[idx] ? pty.players[idx].name : '';
+                _mkeRender();
+            };
+
+            window._mkeUpd = function(idx, field, val) {
+                if (!_st) return;
+                var pty = _st.parties[_st.ptyIdx];
+                if (pty.players[idx]) pty.players[idx][field] = val;
+            };
+
+            window._mkeSave = function() {
+                if (!_st) return;
+                _mkeRead();
+                var s = _st;
+                if (!s.date) { alert('Укажи дату'); return; }
+
+                var spm = {}, pls = {}, cc = [], flat = [], seen = {};
+                s.parties.forEach(function(pty) {
+                    var valid = pty.players.filter(function(p) { return p.name && p.name.trim(); });
+                    if (!valid.length) return;
+                    var pname = pty.name || ('Пати ' + (Object.keys(spm).length + 1));
+                    spm[pname] = valid;
+                    var ldr = pty.leader || valid[0].name;
+                    pls[pname] = ldr;
+                    var sk = 0, sd = 0, sp = 0, sv = 0;
+                    valid.forEach(function(p) {
+                        sk += p.kills||0; sd += p.deaths||0; sp += p.pvp_dmg||0; sv += p.pve_dmg||0;
+                        var nk = normalizeNick(p.name);
+                        if (!seen[nk]) { seen[nk] = 1; flat.push({ name: p.name, kills: p.kills||0, deaths: p.deaths||0, pvp_dmg: p.pvp_dmg||0, pve_dmg: p.pve_dmg||0 }); }
+                    });
+                    if (ldr) cc.push({ leader: ldr, kills: sk, deaths: sd, pvp_dmg: sp, pve_dmg: sv, members: valid.length });
+                });
+
+                if (!flat.length) { alert('Добавь хотя бы одного игрока'); return; }
+
+                if (s.origDate && s.origDate !== s.date) delete appliedStatsByDate[s.origDate];
+
+                appliedStatsByDate[s.date] = {
+                    _manual: true,
+                    _eventType: s.type || 'КМ',
+                    _leader: s.leader || '',
+                    players: flat,
+                    commandChannel: cc,
+                    screenPlayersMap: spm,
+                    packLeaders: pls,
+                    raidTotal: flat.length
+                };
+
+                saveToStorage();
+                syncRosterStatsFromSnapshots();
+                _mkeClose();
+                renderKmHistory();
+            };
+        })();
 
         // Переименование игрока в Истории КМ — синхронизируется с ростером
         function toggleProfaMenu(btn) { /* deprecated */ }
