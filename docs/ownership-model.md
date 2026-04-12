@@ -16,7 +16,7 @@ Defines who owns what, and who can do what. Direct input for SQL migrations and 
 
 ## Ownership Columns (standard set)
 
-Every owned entity table must have:
+Every **owned** (parent) entity table must have. Child tables (access via parent FK) omit `user_id`, `created_by`, `updated_by` — see Design Decisions #3, #4.
 
 | Column | Type | Required | Purpose |
 |--------|------|----------|---------|
@@ -84,7 +84,7 @@ Already implemented in migration 0004. Reference pattern.
 | Admin | SELECT all (read-only). |
 | Storage path | `{user_id}/{date_str}/{uuid}.{ext}` — ownership encoded in path. Storage RLS matches first path segment to `auth.uid()`. |
 
-**No migration needed** — already done.
+**Migration needed**: existing admin policy in 0004 uses direct `profiles` join — must be replaced with `private.is_admin(auth.uid())` in migration 0005. Ownership columns already present.
 
 ### 4. screenshot_analysis (future table)
 
