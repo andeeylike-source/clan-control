@@ -9630,6 +9630,24 @@ function getClass2IconByClass3(c3) {
                 const [y,m,d] = dateStr.split('-');
                 const dateObj = new Date(Number(y), Number(m)-1, Number(d));
                 const dateFormatted = dateObj.toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+                // [DEBUG] Временный диагностический перехват Invalid Date — удалить после поимки
+                if (isNaN(dateObj.getTime())) {
+                    const idx = allDates.indexOf(dateStr);
+                    const fromSnap = Object.prototype.hasOwnProperty.call(appliedStatsByDate, dateStr);
+                    const fromEvt  = Object.keys(eventStatuses).some(k => k.split('|')[0] === dateStr);
+                    console.error('[KM-DEBUG] Invalid Date caught', {
+                        rawDateStr: dateStr,
+                        splitResult: [y, m, d],
+                        indexInAllDates: idx,
+                        allDates: allDates.slice(),
+                        prevDate: allDates[idx - 1],
+                        nextDate: allDates[idx + 1],
+                        fromAppliedStatsByDate: fromSnap,
+                        fromEventStatuses: fromEvt,
+                        matchingEventStatusKeys: Object.keys(eventStatuses).filter(k => k.split('|')[0] === dateStr),
+                    });
+                }
+                // [/DEBUG]
 
                 // События дня
                 const events = getAllEventsForDate(dateStr);
