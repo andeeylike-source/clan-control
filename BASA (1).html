@@ -3788,13 +3788,16 @@
 
         // ===== КАСТОМНЫЕ ОКНА =====
         let confirmCallback = null;
-        function showConfirm(title, text, callback, isDanger = true) {
+        function showConfirm(title, text, callback, isDanger = true, confirmLabel, cancelLabel) {
             document.getElementById('confirmTitle').innerText = title;
             document.getElementById('confirmText').innerText = text;
             const btn = document.getElementById('confirmBtn');
             btn.className = isDanger
                 ? "bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg text-sm font-bold"
                 : "bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-bold";
+            btn.textContent = confirmLabel || 'Подтвердить';
+            const cancelBtn = document.querySelector('#confirmModal button[onclick="closeConfirm()"]');
+            if (cancelBtn) cancelBtn.textContent = cancelLabel || 'Отмена';
             confirmCallback = callback;
             document.getElementById('confirmModal').style.display = 'flex';
         }
@@ -9363,6 +9366,17 @@ function getClass2IconByClass3(c3) {
             });
         }
 
+        function deleteKmEvent(dateStr) {
+            showConfirm('Точно хотите удалить?', 'Запись КМ за ' + dateStr + ' будет удалена из истории.', function() {
+                Object.keys(eventStatuses).forEach(function(k) { if (k.startsWith(dateStr + '|')) delete eventStatuses[k]; });
+                Object.keys(eventOverrides).forEach(function(k) { if (k.startsWith(dateStr + '|')) delete eventOverrides[k]; });
+                delete appliedStatsByDate[dateStr];
+                saveToStorage();
+                renderKmHistory();
+                renderCalendar();
+            }, true, 'Да', 'Нет');
+        }
+
         function renderKmHistory() {
             const el = document.getElementById('kmHistoryContent');
             if (!el) return;
@@ -9690,10 +9704,13 @@ function getClass2IconByClass3(c3) {
                                 <span style="font-size:13px;font-weight:700;color:#22c55e">🐉 ${totalPve.toLocaleString()}</span>
                             </div>` : ''}
                         </div>
-                        ${dayData && dayData._manual
-                            ? `<button onclick="openManualKmEditor('${dateStr}')" title="Редактировать ручную запись КМ" style="background:none;border:1px solid rgba(34,197,94,0.35);color:#4ade80;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#22c55e';this.style.color='#86efac'" onmouseout="this.style.borderColor='rgba(34,197,94,0.35)';this.style.color='#4ade80'">✏️ Редактировать</button>`
-                            : `<button onclick="openCalendarDay('${dateStr}')" title="Открыть день в календаре — загрузить скриншоты или переанализировать" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Загрузить скриншоты</button>`
-                        }
+                        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+                            ${dayData && dayData._manual
+                                ? `<button onclick="openManualKmEditor('${dateStr}')" title="Редактировать ручную запись КМ" style="background:none;border:1px solid rgba(34,197,94,0.35);color:#4ade80;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#22c55e';this.style.color='#86efac'" onmouseout="this.style.borderColor='rgba(34,197,94,0.35)';this.style.color='#4ade80'">✏️ Редактировать</button>`
+                                : `<button onclick="openCalendarDay('${dateStr}')" title="Открыть день в календаре — загрузить скриншоты или переанализировать" style="background:none;border:1px solid #2d3748;color:#94a3b8;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#6366f1';this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='#2d3748';this.style.color='#94a3b8'">📅 Загрузить скриншоты</button>`
+                            }
+                            <button onclick="deleteKmEvent('${dateStr}')" title="Удалить запись КМ" style="background:none;border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#ef4444';this.style.color='#fca5a5'" onmouseout="this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='#f87171'">🗑</button>
+                        </div>
                     </div>
                     ${hasCommandChannel ? `
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
